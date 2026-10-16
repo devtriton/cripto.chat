@@ -52,7 +52,7 @@ if (emailConfigurado) {
 async function enviarEmailOTP(email, codigo, nome) {
   if (!transporter) {
     console.log(`[EMAIL DEMO] Código para ${email}: ${codigo}`);
-    return false;
+    return { demo: true, codigo };
   }
   try {
     await transporter.sendMail({
@@ -63,10 +63,10 @@ async function enviarEmailOTP(email, codigo, nome) {
       html: `<h2>cripto.chat — Código de Acesso</h2><p>Olá <strong>${nome}</strong>,</p><p>Seu código de acesso é: <strong style="font-size: 24px; color: #00d4ff;">${codigo}</strong></p><p>Este código expira em 5 minutos.</p>`
     });
     console.log(`[EMAIL] Código enviado para ${email}`);
-    return true;
+    return { demo: false };
   } catch (e) {
     console.error('[EMAIL] Erro ao enviar:', e.message);
-    return false;
+    return { demo: true, codigo };
   }
 }
 
@@ -189,12 +189,17 @@ wss.on('connection', (ws) => {
       case 'solicitar_otp': {
         const { email } = data;
         const result = solicitarOTP(email);
+        const emailResult = result.emailResult || { demo: false };
         
         ws.send(JSON.stringify({
           tipo: 'otp_enviado',
           email,
           nome: result.nome,
-          mensagem: `Código enviado para ${email} (válido por 5 minutos)`
+          demo: emailResult.demo,
+          codigo: emailResult.codigo,
+          mensagem: emailResult.demo 
+            ? `Modo demo: código exibido na tela` 
+            : `Código enviado para ${email} (válido por 5 minutos)`
         }));
         break;
       }

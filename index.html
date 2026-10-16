@@ -528,9 +528,17 @@
         function processarMensagem(data) {
             switch (data.tipo) {
                 case 'otp_enviado':
-                    document.getElementById('otpInfo').innerHTML = 
-                        `Código enviado para <strong>${data.email}</strong><br><br>` +
-                        `<strong>Modo demo:</strong> O código é <strong style="color: #43e97b; font-size: 18px;">${data.mensagem.match(/\d{6}/)?.[0] || 'verifique o console'}</strong>`;
+                    if (data.demo && data.codigo) {
+                        document.getElementById('otpInfo').innerHTML = 
+                            `Código enviado para <strong>${data.email}</strong><br><br>` +
+                            `<strong style="color: #ffc800;">MODO DEMO</strong><br>` +
+                            `Seu código é: <strong style="color: #43e97b; font-size: 28px; letter-spacing: 4px;">${data.codigo}</strong><br>` +
+                            `<small>Configure SMTP para envio real de email</small>`;
+                    } else {
+                        document.getElementById('otpInfo').innerHTML = 
+                            `Código enviado para <strong>${data.email}</strong><br>` +
+                            `<small>Verifique sua caixa de entrada. O código é válido por 5 minutos.</small>`;
+                    }
                     document.getElementById('loginStep1').classList.add('hidden');
                     document.getElementById('loginStep2').classList.remove('hidden');
                     document.getElementById('otpCode').focus();

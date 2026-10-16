@@ -78,13 +78,31 @@ Representa a visão do servidor:
 
 ```
 OBJ-EDU/
+├── index.html          # Interface completa (HTML+CSS+JS)
 ├── server/
 │   ├── server.js       # Servidor WebSocket + HTTP
 │   └── mail-config.js  # Config OTP por email (opcional)
-├── client/
-│   └── index.html      # Interface completa (HTML+CSS+JS)
 └── README.md
 ```
+
+## GitHub Pages
+
+O projeto está disponível em: **https://devtriton.github.io/OBJ-EDU/**
+
+No GitHub Pages, o sistema funciona em modo `BroadcastChannel`:
+- Abra a página em **múltiplas abas ou janelas** do navegador
+- Cada aba representa um usuário diferente
+- As mensagens são trocadas entre as abas sem servidor
+
+### Como fazer deploy de atualizações
+
+```bash
+git add .
+git commit -m "descricao das mudancas"
+git push origin master
+```
+
+O GitHub Pages atualiza automaticamente em ~1 minuto após o push.
 
 ## Conceitos Educacionais Demonstrados
 

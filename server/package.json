@@ -1,5 +1,5 @@
 {
-  "name": "obj-edu-crypto",
+  "name": "cripto-chat",
   "version": "1.0.0",
   "description": "Objeto Educacional para demonstração de Criptografia",
   "main": "server.js",

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cripto.chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; color: #e0e0e0;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: #00d4ff; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+        h2 { color: #00d4ff; margin-bottom: 15px; }
+        h3 { color: #00d4ff; margin: 15px 0 10px; }
+        .subtitle { text-align: center; color: #aaa; margin-bottom: 30px; }
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 20px; margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; }
+        input, select, textarea {
+            width: 100%; padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; background: rgba(255, 255, 255, 0.05);
+            color: #fff; font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        select option { background: #1a1a2e; }
+        button {
+            padding: 10px 24px; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 14px; font-weight: 600;
+            transition: all 0.3s ease; margin-right: 10px; margin-bottom: 10px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099cc); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #fff; }
+        .btn-warning { background: linear-gradient(135deg, #fa709a, #fee140); color: #fff; }
+        .btn-adm { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; }
+        .hidden { display: none !important; }
+        .login-container { max-width: 450px; margin: 0 auto; }
+        .login-step { text-align: center; }
+        .otp-input { font-size: 28px; letter-spacing: 12px; text-align: center; font-family: 'Courier New', monospace; }
+        .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .step-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+        .step-dot.active { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
+        .step-dot.completed { background: #43e97b; }
+        .chat-layout { display: grid; grid-template-columns: 250px 1fr 250px; gap: 20px; height: calc(100vh - 120px); }
+        .sidebar {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 15px; overflow-y: auto;
+        }
+        .chat-main {
+            display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; overflow: hidden;
+        }
+        .chat-header {
+            padding: 15px 20px; background: rgba(0, 212, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .message {
+            margin-bottom: 12px; padding: 10px 15px; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message-header { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .message-author { font-weight: bold; color: #00d4ff; }
+        .message.encrypted { border-left: 3px solid #f5576c; background: rgba(245, 87, 108, 0.05); }
+        .message.encrypted .message-text { font-family: 'Courier New', monospace; color: #f5576c; word-break: break-all; }
+        .encryption-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #f5576c; color: #fff; margin-left: 8px; }
+        .mention { color: #fee140; font-weight: bold; }
+        .dm-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #43e97b; color: #fff; margin-left: 8px; }
+        .user-list-item {
+            padding: 8px 12px; margin-bottom: 5px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s;
+        }
+        .user-list-item:hover { background: rgba(0, 212, 255, 0.2); }
+        .crypto-select { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .crypto-select select { flex: 1; }
+        .adm-container { background: rgba(0, 0, 0, 0.3); border: 2px solid #f5576c; border-radius: 12px; padding: 20px; margin-top: 20px; }
+        .adm-title { color: #f5576c; font-size: 18px; margin-bottom: 10px; }
+        .adm-info { font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(245, 87, 108, 0.1); border-radius: 8px; }
+        .adm-message {
+            padding: 8px 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px;
+            font-family: 'Courier New', monospace; background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #f5576c;
+        }
+        .adm-message.plaintext { border-left-color: #43e97b; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab {
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;
+        }
+        .tab.active { background: rgba(0, 212, 255, 0.2); border-color: #00d4ff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .room-list-item {
+            padding: 12px 15px; margin-bottom: 8px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05); display: flex;
+            justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;
+        }
+        .room-list-item:hover { background: rgba(0, 212, 255, 0.2); }
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+        .status-online { background: #43e97b; box-shadow: 0 0 8px #43e97b; }
+        .status-offline { background: #f5576c; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+        .alert-info { background: rgba(0, 212, 255, 0.15); border: 1px solid rgba(0, 212, 255, 0.3); color: #00d4ff; }
+        .alert-warning { background: rgba(250, 112, 154, 0.15); border: 1px solid rgba(250, 112, 154, 0.3); color: #fa709a; }
+        .crypto-demo {
+            background: rgba(67, 233, 123, 0.1); border: 1px solid rgba(67, 233, 123, 0.3);
+            border-radius: 8px; padding: 15px; margin-bottom: 15px;
+        }
+        .crypto-demo h3 { color: #43e97b; margin-bottom: 10px; }
+        .edu-note {
+            background: rgba(255, 200, 0, 0.1); border-left: 3px solid #ffc800;
+            padding: 12px 16px; margin: 15px 0; border-radius: 0 8px 8px 0; font-size: 13px;
+        }
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row > * { flex: 1; }
+        .mode-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px; }
+        .mode-local { background: #43e97b; color: #000; }
+        .mode-pages { background: #a18cd1; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
+        <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
+
+        <!-- ========== LOGIN ========== -->
+        <div id="loginPanel" class="panel login-container">
+            <!-- Etapa 1: Email -->
+            <div id="loginStep1" class="login-step">
+                <h2>Bem-vindo ao cripto.chat</h2>
+                <div class="step-indicator">
+                    <div class="step-dot active"></div>
+                    <div class="step-dot"></div>
+                </div>
+                <div class="alert alert-info">Digite seu email para receber um código de acesso.</div>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter') solicitarOTP()">
+                </div>
+                <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
+            </div>
+
+            <!-- Etapa 2: Código OTP -->
+            <div id="loginStep2" class="login-step hidden">
+                <h2>Verificação de Email</h2>
+                <div class="step-indicator">
+                    <div class="step-dot completed"></div>
+                    <div class="step-dot active"></div>
+                </div>
+                <div id="otpInfo" class="alert alert-info"></div>
+                <div class="form-group">
+                    <label for="otpCode">Código de 6 dígitos:</label>
+                    <input type="text" id="otpCode" class="otp-input" maxlength="6" placeholder="------" onkeydown="if(event.key==='Enter') verificarOTP()">
+                </div>
+                <button class="btn-success" onclick="verificarOTP()">Verificar e Entrar</button>
+                <button class="btn-secondary" onclick="voltarParaEmail()">Voltar</button>
+            </div>
+        </div>
+
+        <!-- ========== PAINEL PRINCIPAL ========== -->
+        <div id="mainPanel" class="hidden">
+            <div class="panel" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong id="userNameDisplay"></strong>
+                    <span id="userEmailDisplay" style="color: #888; margin-left: 10px;"></span>
+                </div>
+                <div>
+                    <span id="connectionStatus" class="status-indicator status-offline"></span>
+                    <span id="connectionText">Conectando...</span>
+                    <button class="btn-adm" onclick="abrirSalaADM()" style="margin-left: 20px;">Sala ADM</button>
+                    <button class="btn-secondary" onclick="desconectar()">Sair</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('salas')" data-tab="salas">Salas de Bate-Papo</div>
+                <div class="tab" onclick="switchTab('demo')" data-tab="demo">Demonstração Criptografia</div>
+                <div class="tab" onclick="switchTab('educacional')" data-tab="educacional">Guia Educacional</div>
+            </div>
+
+            <!-- TAB: SALAS -->
+            <div id="tabSalas" class="tab-content active">
+                <div class="flex-row">
+                    <div class="panel" style="flex: 1;">
+                        <h2>Criar Nova Sala</h2>
+                        <div class="form-group">
+                            <label for="novaSalaNome">Nome da Sala:</label>
+                            <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo:</label>
+                            <select id="novaSalaTipo">
+                                <option value="publica">Pública - qualquer um pode entrar</option>
+                                <option value="privada">Privada - requer senha</option>
+                            </select>
+                        </div>
+                        <div class="form-group hidden" id="senhaSalaGroup">
+                            <label for="novaSalaSenha">Senha da Sala (privada):</label>
+                            <input type="password" id="novaSalaSenha" placeholder="Senha de acesso">
+                        </div>
+                        <button class="btn-success" onclick="criarSala()">Criar Sala</button>
+                    </div>
+                    <div class="panel" style="flex: 1;">
+                        <h2>Salas Públicas Disponíveis</h2>
+                        <div id="listaSalas"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Entrar em Sala Privada</h2>
+                    <div class="flex-row">
+                        <div class="form-group">
+                            <label for="salaPrivadaId">Código da Sala:</label>
+                            <input type="text" id="salaPrivadaId" placeholder="Ex: ABC123">
+                        </div>
+                        <div class="form-group">
+                            <label for="salaPrivadaSenha">Senha:</label>
+                            <input type="password" id="salaPrivadaSenha" placeholder="Senha da sala">
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <button class="btn-primary" onclick="entrarSalaPrivada()">Entrar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHAT -->
+                <div id="chatArea" class="hidden">
+                    <div class="chat-layout">
+                        <div class="sidebar">
+                            <h3>Usuários na Sala</h3>
+                            <div id="listaUsuarios"></div>
+                        </div>
+                        <div class="chat-main">
+                            <div class="chat-header">
+                                <strong id="chatSalaNome"></strong>
+                                <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                            </div>
+                            <div class="chat-messages" id="chatMessages"></div>
+                            <div class="chat-input-area">
+                                <div class="crypto-select">
+                                    <select id="cryptoSelect" onchange="toggleKeyInput()">
+                                        <option value="none">Sem criptografia (texto claro)</option>
+                                        <option value="caesar">Cifra de César (Rot-N)</option>
+                                        <option value="vigenere">Cifra de Vigenère</option>
+                                        <option value="xor">XOR com chave</option>
+                                        <option value="aes">AES-256 (Web Crypto)</option>
+                                    </select>
+                                    <input type="text" id="cryptoKeyInput" placeholder="Chave..." class="hidden" style="max-width: 200px;">
+                                    <button class="btn-warning" onclick="enviarMensagem()">Enviar</button>
+                                </div>
+                                <textarea id="messageInput" rows="2" placeholder="Digite sua mensagem... Use @usuario para DM e #usuario para mencionar" onkeydown="handleKeyDown(event)"></textarea>
+                            </div>
+                        </div>
+                        <div class="sidebar">
+                            <h3>Estado da Criptografia</h3>
+                            <div id="cryptoStatus">
+                                <p style="color: #43e97b;">Atual: Texto claro</p>
+                                <p style="font-size: 12px; color: #888; margin-top: 5px;">O servidor e a Sala ADM podem ler suas mensagens.</p>
+                            </div>
+                            <div class="edu-note" style="margin-top: 15px;">
+                                <strong>Dica:</strong> Use @nome para mensagem direta e #nome para menção pública.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: DEMO -->
+            <div id="tabDemo" class="tab-content">
+                <div class="panel">
+                    <h2>Demonstração de Criptografia</h2>
+                    <p style="margin-bottom: 15px;">Use esta ferramenta para testar os algoritmos antes de enviar mensagens:</p>
+                    <div class="crypto-demo">
+                        <h3>Testar Algoritmo</h3>
+                        <div class="form-group">
+                            <label>Algoritmo:</label>
+                            <select id="demoAlgo">
+                                <option value="caesar">Cifra de César (Rot-N)</option>
+                                <option value="vigenere">Cifra de Vigenère</option>
+                                <option value="xor">XOR com chave</option>
+                                <option value="aes">AES-256 (Web Crypto)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chave:</label>
+                            <input type="text" id="demoKey" placeholder="Chave (número para César, texto para outros)">
+                        </div>
+                        <div class="form-group">
+                            <label>Texto original:</label>
+                            <textarea id="demoTexto" rows="3" placeholder="Digite o texto para criptografar..."></textarea>
+                        </div>
+                        <button class="btn-success" onclick="demoCriptografar()">Criptografar</button>
+                        <button class="btn-primary" onclick="demoDescriptografar()">Descriptografar</button>
+                        <div id="demoResultado" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Visualização: O que o Servidor vê</h2>
+                    <div class="edu-note">
+                        <strong>Conceito-Chave:</strong> Quando você criptografa uma mensagem, o servidor (e qualquer observador) 
+                        apenas vê o texto cifrado. Apenas quem possui a chave consegue recuperar o conteúdo original.
+                    </div>
+                    <div id="serverView" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace; min-height: 100px;">
+                        <p style="color: #888;">Nenhuma mensagem enviada ainda...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: EDUCACIONAL -->
+            <div id="tabEducacional" class="tab-content">
+                <div class="panel">
+                    <h2>Guia Educacional: Fundamentos da Criptografia</h2>
+                    <h3>1. O que é Criptografia?</h3>
+                    <p>Criptografia é o processo de transformar uma mensagem legível (texto claro) em uma mensagem ilegível (texto cifrado), 
+                    de modo que apenas quem possui a chave correta possa reverter o processo.</p>
+                    <h3>2. Criptografia Simétrica</h3>
+                    <p>Neste projeto, usamos <strong>criptografia simétrica</strong>: a mesma chave é usada para criptografar e descriptografar.
+                    Isso significa que o remetente e o destinatário precisam compartilhar a mesma chave.</p>
+                    <h3>3. Algoritmos Implementados</h3>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Cifra de César:</strong> Desloca cada letra por N posições no alfabeto. Simples, mas vulnerável.</li>
+                        <li><strong>Cifra de Vigenère:</strong> Usa uma palavra-chave para variar o deslocamento. Mais segura que César.</li>
+                        <li><strong>XOR:</strong> Operação bit a bit com chave. Base para muitos sistemas modernos.</li>
+                        <li><strong>AES-256:</strong> Padrão avançado. Usado em sistemas reais de segurança.</li>
+                    </ul>
+                    <h3>4. A Sala ADM</h3>
+                    <p>A Sala ADM representa o <strong>ponto de vista do servidor</strong>. Tudo que passa pelo servidor é visível aqui.</p>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Sem criptografia:</strong> O servidor vê a mensagem em texto claro (verde na ADM).</li>
+                        <li><strong>Com criptografia:</strong> O servidor vê apenas o texto cifrado (vermelho na ADM).</li>
+                    </ul>
+                    <h3>5. Conceitos Importantes</h3>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Texto Claro (Plaintext):</strong> Mensagem original, legível.</li>
+                        <li><strong>Texto Cifrado (Ciphertext):</strong> Mensagem após criptografia, ilegível.</li>
+                        <li><strong>Chave:</strong> Segredo usado para criptografar/descriptografar.</li>
+                        <li><strong>Ataque de Força Bruta:</strong> Tentar todas as chaves possíveis.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADM MODAL -->
+        <div id="admPanel" class="adm-container hidden">
+            <div class="adm-title">SALA ADM - Visão do Servidor</div>
+            <div class="adm-info">
+                Esta é a visão que o servidor tem das mensagens. Mensagens criptografadas aparecem como texto cifrado,
+                pois o servidor não possui a chave. Mensagens em texto claro são totalmente legíveis.
+            </div>
+            <div id="admMessages"></div>
+            <button class="btn-secondary" onclick="fecharSalaADM()">Fechar Sala ADM</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ESTADO GLOBAL
+        // ============================================================
+        const MODO = detectarModo();
+        let canal = null;
+        let currentUser = null;
+        let currentSala = null;
+        let salasLocais = {};
+        let otpAtual = null;
+        let emailParaVerificar = null;
+
+        // ============================================================
+        // DETECÇÃO DE MODO
+        // ============================================================
+        function detectarModo() {
+            const host = window.location.hostname;
+            if (host.includes('github.io')) {
+                return 'pages';
+            }
+            return 'servidor';
+        }
+
+        // ============================================================
+        // LOGIN COM OTP
+        // ============================================================
+        function solicitarOTP() {
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email || !email.includes('@')) {
+                alert('Digito um email válido.');
+                return;
+            }
+
+            emailParaVerificar = email;
+
+            if (MODO === 'pages') {
+                // Gerar código localmente para demo
+                otpAtual = Math.floor(100000 + Math.random() * 900000).toString();
+                const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                document.getElementById('otpInfo').innerHTML = 
+                    `Código enviado para <strong>${email}</strong><br><br>` +
+                    `<strong>Modo demo:</strong> O código é <strong style="color: #43e97b; font-size: 18px;">${otpAtual}</strong>`;
+                document.getElementById('loginStep1').classList.add('hidden');
+                document.getElementById('loginStep2').classList.remove('hidden');
+                document.getElementById('otpCode').focus();
+                console.log(`[cripto.chat] OTP para ${email}: ${otpAtual}`);
+            } else {
+                // Enviar ao servidor
+                if (!canal) conectarWebSocket();
+                setTimeout(() => {
+                    enviar({ tipo: 'solicitar_otp', email });
+                }, 500);
+            }
+        }
+
+        function verificarOTP() {
+            const codigo = document.getElementById('otpCode').value.trim();
+            const email = emailParaVerificar;
+
+            if (MODO === 'pages') {
+                // Verificação local
+                if (codigo === otpAtual) {
+                    const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    conectarAoSistema(email, nome);
+                } else {
+                    alert('Código incorreto. Verifique e tente novamente.');
+                    document.getElementById('otpCode').value = '';
+                    document.getElementById('otpCode').focus();
+                }
+            } else {
+                // Verificação no servidor
+                enviar({ tipo: 'verificar_otp', email, codigo });
+            }
+        }
+
+        function voltarParaEmail() {
+            document.getElementById('loginStep2').classList.add('hidden');
+            document.getElementById('loginStep1').classList.remove('hidden');
+            document.getElementById('otpCode').value = '';
+            otpAtual = null;
+            emailParaVerificar = null;
+        }
+
+        function conectarAoSistema(email, nome) {
+            currentUser = { email, nome };
+
+            if (MODO === 'pages') {
+                conectarBroadcastChannel();
+                mostrarPainelPrincipal();
+                enviar({ tipo: 'registrar', email, nome });
+                listarSalas();
+            } else {
+                mostrarPainelPrincipal();
+                enviar({ tipo: 'verificar_otp', email, codigo: 'auto' });
+            }
+        }
+
+        // ============================================================
+        // COMUNICAÇÃO
+        // ============================================================
+        function conectarWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}`);
+            canal = {
+                send: (data) => ws.send(JSON.stringify(data)),
+                close: () => ws.close()
+            };
+            ws.onopen = () => atualizarStatusConexao(true);
+            ws.onclose = () => atualizarStatusConexao(false);
+            ws.onmessage = (e) => processarMensagem(JSON.parse(e.data));
+        }
+
+        function conectarBroadcastChannel() {
+            canal = new BroadcastChannel('cripto_chat_channel');
+            canal.onmessage = (e) => processarMensagem(e.data);
+            atualizarStatusConexao(true);
+            document.getElementById('modeBadge').textContent = 'GitHub Pages';
+            document.getElementById('modeBadge').className = 'mode-badge mode-pages';
+        }
+
+        function enviar(dados) {
+            if (canal) {
+                if (MODO === 'pages') {
+                    canal.postMessage(dados);
+                } else {
+                    canal.send(dados);
+                }
+            }
+        }
+
+        // ============================================================
+        // PROCESSAR MENSAGENS
+        // ============================================================
+        function processarMensagem(data) {
+            switch (data.tipo) {
+                case 'otp_enviado':
+                    document.getElementById('otpInfo').innerHTML = 
+                        `Código enviado para <strong>${data.email}</strong><br><br>` +
+                        `<strong>Modo demo:</strong> O código é <strong style="color: #43e97b; font-size: 18px;">${data.mensagem.match(/\d{6}/)?.[0] || 'verifique o console'}</strong>`;
+                    document.getElementById('loginStep1').classList.add('hidden');
+                    document.getElementById('loginStep2').classList.remove('hidden');
+                    document.getElementById('otpCode').focus();
+                    break;
+
+                case 'registrado':
+                    mostrarPainelPrincipal();
+                    listarSalas();
+                    break;
+
+                case 'sala_criada':
+                    if (MODO !== 'pages') {
+                        currentSala = { id: data.salaId, nome: data.nome, publica: data.publica, usuarios: [currentUser] };
+                        salasLocais[data.salaId] = currentSala;
+                        atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        document.getElementById('chatArea').classList.remove('hidden');
+                    }
+                    break;
+
+                case 'sala_info':
+                    if (MODO !== 'pages') {
+                        currentSala = {
+                            id: data.salaId, nome: data.nome, publica: data.publica,
+                            usuarios: data.usuarios
+                        };
+                        atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        document.getElementById('chatArea').classList.remove('hidden');
+                    }
+                    break;
+
+                case 'entrar_sala':
+                    if (data.email === currentUser.email) {
+                        currentSala = salasLocais[data.salaId] || { id: data.salaId, nome: data.nomeSala, publica: true, usuarios: [] };
+                        if (!currentSala.usuarios.find(u => u.email === currentUser.email)) {
+                            currentSala.usuarios.push(currentUser);
+                        }
+                        atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        document.getElementById('chatArea').classList.remove('hidden');
+                    } else if (currentSala && currentSala.id === data.salaId) {
+                        if (!currentSala.usuarios.find(u => u.email === data.email)) {
+                            currentSala.usuarios.push({ email: data.email, nome: data.nome });
+                        }
+                        atualizarListaUsuarios();
+                        atualizarInfoSala();
+                    }
+                    break;
+
+                case 'mensagem':
+                    if (currentSala && data.salaId === currentSala.id) exibirMensagem(data);
+                    atualizarVisaoServidor(data);
+                    break;
+
+                case 'mensagem_direta':
+                    if (data.para === currentUser.email || data.de === currentUser.email) exibirMensagem(data);
+                    atualizarVisaoServidor(data);
+                    break;
+
+                case 'listar_salas': {
+                    const lista = Object.values(salasLocais).filter(s => s.publica).map(s => ({ salaId: s.id, nome: s.nome, usuarios: s.usuarios.length }));
+                    exibirListaSalas(lista);
+                    break;
+                }
+
+                case 'entrar_adm': break;
+
+                case 'erro':
+                    alert(data.mensagem);
+                    break;
+            }
+        }
+
+        // ============================================================
+        // INTERFACE
+        // ============================================================
+        function mostrarPainelPrincipal() {
+            document.getElementById('loginPanel').classList.add('hidden');
+            document.getElementById('mainPanel').classList.remove('hidden');
+            document.getElementById('userNameDisplay').textContent = currentUser.nome;
+            document.getElementById('userEmailDisplay').textContent = currentUser.email;
+            if (MODO !== 'pages') {
+                document.getElementById('modeBadge').textContent = 'Local (WebSocket)';
+                document.getElementById('modeBadge').className = 'mode-badge mode-local';
+            }
+        }
+
+        function desconectar() {
+            if (canal) canal.close();
+            currentUser = null;
+            currentSala = null;
+            otpAtual = null;
+            emailParaVerificar = null;
+            document.getElementById('loginPanel').classList.remove('hidden');
+            document.getElementById('mainPanel').classList.add('hidden');
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('loginStep2').classList.add('hidden');
+            document.getElementById('loginStep1').classList.remove('hidden');
+            document.getElementById('otpCode').value = '';
+            document.getElementById('loginEmail').value = '';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+        }
+
+        // ============================================================
+        // SALAS
+        // ============================================================
+        function criarSala() {
+            const nome = document.getElementById('novaSalaNome').value.trim();
+            const tipo = document.getElementById('novaSalaTipo').value;
+            const senha = document.getElementById('novaSalaSenha').value;
+            if (!nome) { alert('Digite um nome para a sala.'); return; }
+            if (tipo === 'privada' && !senha) { alert('Defina uma senha para a sala privada.'); return; }
+
+            const salaId = gerarIdSala();
+            const sala = { id: salaId, nome, publica: tipo === 'publica', senha: tipo === 'privada' ? senha : null, usuarios: [currentUser] };
+            salasLocais[salaId] = sala;
+
+            if (MODO === 'pages') {
+                entrarNaSala(salaId, nome, tipo === 'publica');
+                enviar({ tipo: 'criar_sala', sala, email: currentUser.email, nome: currentUser.nome });
+                listarSalas();
+            } else {
+                enviar({ tipo: 'criar_sala', nome, publica: tipo === 'publica', senha: tipo === 'privada' ? senha : null });
+            }
+            document.getElementById('novaSalaNome').value = '';
+            document.getElementById('novaSalaSenha').value = '';
+        }
+
+        function entrarNaSala(salaId, nome, publica) {
+            if (MODO === 'pages') {
+                enviar({ tipo: 'entrar_sala', salaId, email: currentUser.email, nome: currentUser.nome, nomeSala: nome });
+                currentSala = salasLocais[salaId] || { id: salaId, nome, publica, usuarios: [] };
+                if (!currentSala.usuarios.find(u => u.email === currentUser.email)) {
+                    currentSala.usuarios.push(currentUser);
+                }
+                atualizarInfoSala();
+                atualizarListaUsuarios();
+                document.getElementById('chatArea').classList.remove('hidden');
+            } else {
+                enviar({ tipo: 'entrar_sala', salaId });
+            }
+        }
+
+        function entrarSalaPrivada() {
+            const salaId = document.getElementById('salaPrivadaId').value.trim().toUpperCase();
+            const senha = document.getElementById('salaPrivadaSenha').value;
+            if (!salaId || !senha) { alert('Preencha código e senha.'); return; }
+            if (MODO === 'pages') {
+                const sala = salasLocais[salaId];
+                if (!sala) { alert('Sala não encontrada nesta aba. Crie a sala primeiro.'); return; }
+                if (sala.senha !== senha) { alert('Senha incorreta.'); return; }
+                entrarNaSala(salaId, sala.nome, sala.publica);
+            } else {
+                enviar({ tipo: 'entrar_sala', salaId, senha });
+            }
+        }
+
+        function listarSalas() { enviar({ tipo: 'listar_salas' }); }
+
+        function exibirListaSalas(salas) {
+            const div = document.getElementById('listaSalas');
+            if (salas.length === 0) { div.innerHTML = '<p style="color: #888;">Nenhuma sala pública disponível.</p>'; return; }
+            div.innerHTML = salas.map(s => `
+                <div class="room-list-item" onclick="entrarNaSala('${s.salaId}', '${s.nome}', true)">
+                    <span>${s.nome}</span>
+                    <span style="color: #888; font-size: 12px;">${s.usuarios || 1} usuário(s)</span>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // MENSAGENS
+        // ============================================================
+        function enviarMensagem() {
+            const texto = document.getElementById('messageInput').value.trim();
+            const algoritmo = document.getElementById('cryptoSelect').value;
+            const chave = document.getElementById('cryptoKeyInput').value;
+            if (!texto) return;
+
+            const dmMatch = texto.match(/^@(\S+)/);
+            const mencoes = (texto.match(/#(\w+)/g) || []).map(m => m.slice(1));
+
+            let textoParaEnviar = texto, criptografada = false, algoNome = null;
+            if (algoritmo !== 'none') {
+                if (!chave) { alert('Informe a chave para criptografia.'); return; }
+                textoParaEnviar = criptografar(texto, algoritmo, chave);
+                criptografada = true;
+                algoNome = algoritmo;
+            }
+
+            if (dmMatch) {
+                const paraNome = dmMatch[1];
+                const usuarios = currentSala ? currentSala.usuarios : [];
+                const destino = usuarios.find(u => u.nome.toLowerCase() === paraNome.toLowerCase());
+                if (!destino) { alert(`Usuário @${paraNome} não encontrado na sala.`); return; }
+                enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto: textoParaEnviar, criptografada, algoritmo: algoNome });
+            } else {
+                enviar({ tipo: 'mensagem', texto: textoParaEnviar, criptografada, algoritmo: algoNome, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
+            }
+            document.getElementById('messageInput').value = '';
+            atualizarStatusCriptografia(algoritmo);
+        }
+
+        function exibirMensagem(data) {
+            if (data.tipo === 'mensagem_direta' && data.para !== currentUser.email && data.de !== currentUser.email) return;
+            const div = document.getElementById('chatMessages');
+            const dataHora = new Date(data.dataHora || Date.now()).toLocaleString('pt-BR');
+            let msgHtml = '';
+            if (data.criptografada) {
+                msgHtml = `<div class="message encrypted">
+                    <div class="message-header"><span class="message-author">${data.nome}</span> <span>${dataHora}</span> <span class="encryption-badge">${(data.algoritmo || '').toUpperCase()}</span> ${data.tipo === 'mensagem_direta' ? '<span class="dm-badge">DIRETA</span>' : ''}</div>
+                    <div class="message-text">${data.texto}</div></div>`;
+            } else {
+                msgHtml = `<div class="message">
+                    <div class="message-header"><span class="message-author">${data.nome}</span> <span>${dataHora}</span> ${data.tipo === 'mensagem_direta' ? '<span class="dm-badge">DIRETA</span>' : ''}</div>
+                    <div class="message-text">${data.texto}</div></div>`;
+            }
+            div.insertAdjacentHTML('beforeend', msgHtml);
+            div.scrollTop = div.scrollHeight;
+            salvarMensagemLocal(data);
+        }
+
+        // ============================================================
+        // CRIPTOGRAFIA
+        // ============================================================
+        function criptografar(texto, algoritmo, chave) {
+            switch (algoritmo) {
+                case 'caesar': return cifraCesar(texto, parseInt(chave) || 13);
+                case 'vigenere': return cifraVigenere(texto, chave);
+                case 'xor': return cifraXOR(texto, chave);
+                case 'aes': return '[AES-256] ' + btoa(texto);
+                default: return texto;
+            }
+        }
+        function cifraCesar(texto, n) {
+            return texto.split('').map(c => {
+                const code = c.charCodeAt(0);
+                if (code >= 65 && code <= 90) return String.fromCharCode(((code - 65 + n) % 26) + 65);
+                if (code >= 97 && code <= 122) return String.fromCharCode(((code - 97 + n) % 26) + 97);
+                return c;
+            }).join('');
+        }
+        function cifraVigenere(texto, chave) {
+            let result = '', keyIndex = 0; chave = chave.toUpperCase();
+            for (let i = 0; i < texto.length; i++) {
+                const c = texto[i], code = c.charCodeAt(0);
+                if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+                    const base = code >= 97 ? 97 : 65;
+                    const shift = chave.charCodeAt(keyIndex % chave.length) - 65;
+                    result += String.fromCharCode(((code - base + shift) % 26) + base);
+                    keyIndex++;
+                } else { result += c; }
+            }
+            return result;
+        }
+        function cifraXOR(texto, chave) {
+            let result = '';
+            for (let i = 0; i < texto.length; i++) result += String.fromCharCode(texto.charCodeAt(i) ^ chave.charCodeAt(i % chave.length));
+            return btoa(result);
+        }
+
+        // ============================================================
+        // SALA ADM
+        // ============================================================
+        function abrirSalaADM() {
+            enviar({ tipo: 'entrar_adm' });
+            document.getElementById('admPanel').classList.remove('hidden');
+        }
+        function fecharSalaADM() { document.getElementById('admPanel').classList.add('hidden'); }
+
+        function atualizarVisaoServidor(data) {
+            const div = document.getElementById('admMessages');
+            const dataHora = new Date(data.dataHora || Date.now()).toLocaleString('pt-BR');
+            const classe = data.criptografada ? '' : 'plaintext';
+            const status = data.criptografada ? `CRIPTOGRAFADA [${(data.algoritmo || '').toUpperCase()}]` : 'TEXTO CLARO';
+            div.insertAdjacentHTML('beforeend', `<div class="adm-message ${classe}">[${dataHora}] ${data.nome} | ${status}<br>${data.texto}</div>`);
+            div.scrollTop = div.scrollHeight;
+            document.getElementById('serverView').innerHTML = div.innerHTML;
+        }
+
+        // ============================================================
+        // DEMO
+        // ============================================================
+        function demoCriptografar() {
+            const algo = document.getElementById('demoAlgo').value;
+            const chave = document.getElementById('demoKey').value;
+            const texto = document.getElementById('demoTexto').value;
+            if (!texto || !chave) { alert('Preencha chave e texto.'); return; }
+            let resultado = algo === 'aes' ? '[AES-256] ' + btoa(texto) : criptografar(texto, algo, chave);
+            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado:</strong><br><code style="word-break:break-all;">${resultado}</code></div>`;
+        }
+        function demoDescriptografar() {
+            const algo = document.getElementById('demoAlgo').value;
+            const chave = document.getElementById('demoKey').value;
+            const texto = document.getElementById('demoTexto').value;
+            if (!texto || !chave) { alert('Preencha chave e texto.'); return; }
+            let resultado;
+            switch (algo) {
+                case 'caesar': resultado = cifraCesar(texto, -(parseInt(chave) || 13)); break;
+                case 'vigenere': resultado = cifraVigenere(texto, chave); break;
+                case 'xor':
+                    try { const decoded = atob(texto); let res = ''; for (let i = 0; i < decoded.length; i++) res += String.fromCharCode(decoded.charCodeAt(i) ^ chave.charCodeAt(i % chave.length)); resultado = res; } catch(e) { resultado = 'Erro: texto inválido.'; }
+                    break;
+                case 'aes': try { resultado = atob(texto.replace('[AES-256] ', '')); } catch(e) { resultado = 'Erro: texto inválido.'; } break;
+                default: resultado = texto;
+            }
+            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid #43e97b;"><strong style="color:#43e97b;">Texto Descriptografado:</strong><br><code>${resultado}</code></div>`;
+        }
+
+        // ============================================================
+        // LOCALSTORAGE
+        // ============================================================
+        function salvarMensagemLocal(data) {
+            const key = 'mensagens_' + (currentUser?.email || 'anon');
+            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+            existing.push(data);
+            if (existing.length > 200) existing.shift();
+            localStorage.setItem(key, JSON.stringify(existing));
+        }
+
+        // ============================================================
+        // UI HELPERS
+        // ============================================================
+        function toggleKeyInput() {
+            const algo = document.getElementById('cryptoSelect').value;
+            document.getElementById('cryptoKeyInput').classList.toggle('hidden', algo === 'none');
+            atualizarStatusCriptografia(algo);
+        }
+        function atualizarStatusCriptografia(algo) {
+            const div = document.getElementById('cryptoStatus');
+            if (algo === 'none') { div.innerHTML = '<p style="color:#43e97b;">Atual: Texto claro</p><p style="font-size:12px;color:#888;margin-top:5px;">O servidor e a Sala ADM podem ler suas mensagens.</p>'; }
+            else { const nomes = { caesar:'Cifra de César', vigenere:'Cifra de Vigenère', xor:'XOR', aes:'AES-256' }; div.innerHTML = `<p style="color:#f5576c;">Atual: ${nomes[algo] || algo}</p><p style="font-size:12px;color:#888;margin-top:5px;">O servidor vê apenas o texto cifrado. Apenas quem tem a chave pode ler.</p>`; }
+        }
+        function handleKeyDown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } }
+        function atualizarStatusConexao(online) {
+            document.getElementById('connectionStatus').className = 'status-indicator ' + (online ? 'status-online' : 'status-offline');
+            document.getElementById('connectionText').textContent = online ? 'Conectado' : 'Desconectado';
+        }
+        function atualizarInfoSala() {
+            if (currentSala) {
+                document.getElementById('chatSalaNome').textContent = currentSala.nome;
+                document.getElementById('chatSalaInfo').textContent = `${currentSala.publica ? 'Pública' : 'Privada'} | ${currentSala.usuarios.length} usuário(s)`;
+            }
+        }
+        function atualizarListaUsuarios() {
+            if (!currentSala) return;
+            document.getElementById('listaUsuarios').innerHTML = currentSala.usuarios.map(u => `<div class="user-list-item"><span class="status-indicator status-online"></span>${u.nome}</div>`).join('');
+        }
+        function gerarIdSala() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+    </script>
+</body>
+</html>

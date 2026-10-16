@@ -163,6 +163,17 @@
         <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
         <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
 
+        <!-- ========== MODO DEMO ========== -->
+        <div id="demoPanel" class="panel login-container">
+            <h2>Modo Demo</h2>
+            <div id="demoStatus" class="alert alert-info">Status: verificando...</div>
+            <div class="form-group">
+                <label for="demoPassword">Senha Mestre:</label>
+                <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+            </div>
+            <button id="demoButton" class="btn-success" onclick="toggleDemo()">Modo Demo</button>
+        </div>
+
         <!-- ========== LOGIN ========== -->
         <div id="loginPanel" class="panel login-container">
             <!-- Etapa 1: Email -->
@@ -378,17 +389,6 @@
                     </ul>
                 </div>
             </div>
-        </div>
-
-        <!-- CONTROLE DO MODO DEMO -->
-        <div id="demoPanel" class="panel" style="max-width: 450px; margin: 20px auto; border-color: #ffc800;">
-            <h2 style="color: #ffc800;">Modo Demo</h2>
-            <div id="demoStatus" class="alert alert-warning">Status: verificando...</div>
-            <div class="form-group">
-                <label for="demoPassword">Senha Mestre:</label>
-                <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
-            </div>
-            <button id="demoButton" class="btn-success" onclick="toggleDemo()">Modo Demo</button>
         </div>
 
         <!-- ADM MODAL -->

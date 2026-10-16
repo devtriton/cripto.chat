@@ -317,9 +317,23 @@ function gerarIdSala() {
 // ============================================================
 
 const PORTA = process.env.PORT || 3000;
-server.listen(PORTA, () => {
+const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 aceita conexões externas
+
+server.listen(PORTA, HOST, () => {
   console.log('========================================');
   console.log('  OBJ-EDU: Servidor de Criptografia');
   console.log(`  Rodando em http://localhost:${PORTA}`);
+  console.log(`  Host: ${HOST}`);
   console.log('========================================');
+  
+  // Descobrir IP local para facilitar o acesso na rede
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        console.log(`  Acesso na rede local: http://${iface.address}:${PORTA}`);
+      }
+    }
+  }
 });

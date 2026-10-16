@@ -163,15 +163,9 @@
         <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
         <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
 
-        <!-- ========== MODO DEMO ========== -->
-        <div id="demoPanel" class="panel login-container">
-            <h2>Modo Demo</h2>
-            <div id="demoStatus" class="alert alert-info">Status: verificando...</div>
-            <div class="form-group">
-                <label for="demoPassword">Senha Mestre:</label>
-                <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
-            </div>
-            <button id="demoButton" class="btn-success" onclick="toggleDemo()">Modo Demo</button>
+        <!-- ========== MODO DEMO (botão discreto) ========== -->
+        <div style="text-align: center; margin-bottom: 10px;">
+            <button id="demoButton" onclick="toggleDemo()" style="font-size: 12px; padding: 4px 12px; opacity: 0.7;">Modo Demo</button>
         </div>
 
         <!-- ========== LOGIN ========== -->
@@ -426,6 +420,13 @@
             return 'servidor';
         }
 
+        // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
+        if (MODO !== 'pages') {
+            window.addEventListener('load', () => {
+                conectarWebSocket();
+            });
+        }
+
         // ============================================================
         // LOGIN COM OTP
         // ============================================================
@@ -659,32 +660,28 @@
         }
 
         // ============================================================
-        // MODO DEMO: Botão único para alternar
+        // MODO DEMO: Botão discreto com prompt de senha
         // ============================================================
         let demoAtivo = false;
 
         function toggleDemo() {
-            const senha = document.getElementById('demoPassword').value.trim();
-            if (!senha) { alert('Digite a senha mestre.'); return; }
+            const senha = prompt('Senha mestre para ' + (demoAtivo ? 'DESABILITAR' : 'HABILITAR') + ' o modo demo:');
+            if (!senha) return;
             const tipo = demoAtivo ? 'desabilitar_demo' : 'habilitar_demo';
             enviar({ tipo, senha });
-            document.getElementById('demoPassword').value = '';
         }
 
         function atualizarDemoStatus(ativo) {
             demoAtivo = ativo;
             const btn = document.getElementById('demoButton');
-            const status = document.getElementById('demoStatus');
             if (ativo) {
                 btn.textContent = 'Desabilitar Modo Demo';
-                btn.className = 'btn-secondary';
-                status.className = 'alert alert-warning';
-                status.innerHTML = '<strong>Modo Demo ATIVO</strong> - códigos serão exibidos na tela';
+                btn.style.opacity = '1';
+                btn.style.background = 'linear-gradient(135deg, #f093fb, #f5576c)';
             } else {
                 btn.textContent = 'Modo Demo';
-                btn.className = 'btn-success';
-                status.className = 'alert alert-info';
-                status.innerHTML = '<strong>Modo Demo INATIVO</strong> - requer SMTP para login';
+                btn.style.opacity = '0.7';
+                btn.style.background = 'linear-gradient(135deg, #43e97b, #38f9d7)';
             }
         }
 

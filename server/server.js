@@ -50,9 +50,9 @@ if (emailConfigurado) {
 }
 
 async function enviarEmailOTP(email, codigo, nome) {
+  // PRODUÇÃO: Se SMTP não estiver configurado, rejeita o envio
   if (!transporter) {
-    console.log(`[EMAIL DEMO] Código para ${email}: ${codigo}`);
-    return { demo: true, codigo };
+    throw new Error('SMTP nãoConfigureido. Defina as variáveis SMTP_HOST, SMTP_USER e SMTP_PASS.');
   }
   try {
     await transporter.sendMail({
@@ -63,10 +63,9 @@ async function enviarEmailOTP(email, codigo, nome) {
       html: `<h2>cripto.chat — Código de Acesso</h2><p>Olá <strong>${nome}</strong>,</p><p>Seu código de acesso é: <strong style="font-size: 24px; color: #00d4ff;">${codigo}</strong></p><p>Este código expira em 5 minutos.</p>`
     });
     console.log(`[EMAIL] Código enviado para ${email}`);
-    return { demo: false };
   } catch (e) {
     console.error('[EMAIL] Erro ao enviar:', e.message);
-    return { demo: true, codigo };
+    throw e;
   }
 }
 
@@ -187,19 +186,34 @@ wss.on('connection', (ws) => {
       // --------------------------------------------------------
       case 'solicitar_otp': {
         const { email } = data;
-        const result = solicitarOTP(email);
-        const emailResult = result.emailResult || { demo: false };
+        const codigo = gerarOTP();
+        const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         
-        ws.send(JSON.stringify({
-          tipo: 'otp_enviado',
-          email,
-          nome: result.nome,
-          demo: emailResult.demo,
-          codigo: emailResult.codigo,
-          mensagem: emailResult.demo 
-            ? `Modo demo: código exibido na tela` 
-            : `Código enviado para ${email} (válido por 5 minutos)`
-        }));
+        otps.set(email, {
+          codigo,
+          nome,
+          expira: Date.now() + 5 * 60 * 1000
+        });
+        
+        console.log(`[cripto.chat] OTP para ${email}: ${codigo}`);
+        
+        // PRODUÇÃO: Enviar por email ou rejeitar se SMTP não configurado
+        enviarEmailOTP(email, codigo, nome)
+          .then(() => {
+            ws.send(JSON.stringify({
+              tipo: 'otp_enviado',
+              email,
+              nome,
+              demo: false,
+              mensagem: `Código enviado para ${email} (válido por 5 minutos)`
+            }));
+          })
+          .catch(err => {
+            ws.send(JSON.stringify({
+              tipo: 'erro',
+              mensagem: 'Serviço de email não configureido. Contate o administrador.'
+            }));
+          });
         break;
       }
       

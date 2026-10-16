@@ -382,17 +382,13 @@
 
         <!-- CONTROLE DO MODO DEMO -->
         <div id="demoPanel" class="panel" style="max-width: 450px; margin: 20px auto; border-color: #ffc800;">
-            <h2 style="color: #ffc800;">Controle do Modo Demo</h2>
-            <div id="demoStatus" class="alert alert-warning">Verificando status...</div>
+            <h2 style="color: #ffc800;">Modo Demo</h2>
+            <div id="demoStatus" class="alert alert-warning">Status: verificando...</div>
             <div class="form-group">
                 <label for="demoPassword">Senha Mestre:</label>
                 <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-success" onclick="habilitarDemo()">Habilitar Demo</button>
-                <button class="btn-secondary" onclick="desabilitarDemo()">Desabilitar Demo</button>
-            </div>
-            <button class="btn-primary" onclick="verificarDemo()" style="margin-top: 10px;">Verificar Status</button>
+            <button id="demoButton" class="btn-success" onclick="toggleDemo()">Modo Demo</button>
         </div>
 
         <!-- ADM MODAL -->
@@ -620,6 +616,11 @@
                     break;
                 }
 
+                case 'demo_status':
+                    atualizarDemoStatus(data.ativo);
+                    if (data.mensagem) alert(data.mensagem);
+                    break;
+
                 case 'entrar_adm': break;
 
                 case 'erro':
@@ -658,31 +659,33 @@
         }
 
         // ============================================================
-        // MODO DEMO: Habilitar/Desabilitar
+        // MODO DEMO: Botão único para alternar
         // ============================================================
-        function verificarDemo() {
-            enviar({ tipo: 'verificar_demo' });
-        }
-
-        function habilitarDemo() {
-            const senha = document.getElementById('demoPassword').value.trim();
-            if (!senha) { alert('Digite a senha mestre.'); return; }
-            enviar({ tipo: 'habilitar_demo', senha });
-            document.getElementById('demoPassword').value = '';
-        }
-
-        function desabilitarDemo() {
-            const senha = document.getElementById('demoPassword').value.trim();
-            if (!senha) { alert('Digite a senha mestre.'); return; }
-            enviar({ tipo: 'desabilitar_demo', senha });
-            document.getElementById('demoPassword').value = '';
-        }
+        let demoAtivo = false;
 
         function toggleDemo() {
             const senha = document.getElementById('demoPassword').value.trim();
             if (!senha) { alert('Digite a senha mestre.'); return; }
-            enviar({ tipo: 'habilitar_demo', senha });
+            const tipo = demoAtivo ? 'desabilitar_demo' : 'habilitar_demo';
+            enviar({ tipo, senha });
             document.getElementById('demoPassword').value = '';
+        }
+
+        function atualizarDemoStatus(ativo) {
+            demoAtivo = ativo;
+            const btn = document.getElementById('demoButton');
+            const status = document.getElementById('demoStatus');
+            if (ativo) {
+                btn.textContent = 'Desabilitar Modo Demo';
+                btn.className = 'btn-secondary';
+                status.className = 'alert alert-warning';
+                status.innerHTML = '<strong>Modo Demo ATIVO</strong> - códigos serão exibidos na tela';
+            } else {
+                btn.textContent = 'Modo Demo';
+                btn.className = 'btn-success';
+                status.className = 'alert alert-info';
+                status.innerHTML = '<strong>Modo Demo INATIVO</strong> - requer SMTP para login';
+            }
         }
 
         function switchTab(tabName) {

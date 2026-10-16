@@ -163,11 +163,6 @@
         <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
         <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
 
-        <!-- ========== MODO DEMO (botão discreto) ========== -->
-        <div style="text-align: center; margin-bottom: 10px;">
-            <button id="demoButton" onclick="toggleDemo()" style="font-size: 12px; padding: 4px 12px; opacity: 0.7;">Modo Demo</button>
-        </div>
-
         <!-- ========== LOGIN ========== -->
         <div id="loginPanel" class="panel login-container">
             <!-- Etapa 1: Email -->
@@ -182,7 +177,20 @@
                     <label for="loginEmail">Email:</label>
                     <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter') solicitarOTP()">
                 </div>
-                <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
+                    <button id="demoButton" onclick="mostrarSenhaDemo()" style="font-size: 12px; padding: 10px 16px;">Modo Demo</button>
+                </div>
+                <div id="demoPasswordInput" style="margin-top: 10px; display: none;">
+                    <div class="form-group" style="margin-bottom: 5px;">
+                        <label for="demoPassword">Senha Mestre:</label>
+                        <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-success" onclick="toggleDemo()" style="font-size: 12px; padding: 8px 16px;">Confirmar</button>
+                        <button class="btn-secondary" onclick="document.getElementById('demoPasswordInput').style.display='none'" style="font-size: 12px; padding: 8px 16px;">Cancelar</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Etapa 2: Código OTP -->
@@ -660,15 +668,38 @@
         }
 
         // ============================================================
-        // MODO DEMO: Botão discreto com prompt de senha
+        // MODO DEMO: Botão ao lado de Enviar Código
         // ============================================================
         let demoAtivo = false;
 
+        function mostrarSenhaDemo() {
+            let input = document.getElementById('demoPasswordInput');
+            if (!input) {
+                input = document.createElement('div');
+                input.id = 'demoPasswordInput';
+                input.style.marginTop = '10px';
+                input.innerHTML = `
+                    <div class="form-group" style="margin-bottom: 5px;">
+                        <label for="demoPassword">Senha Mestre:</label>
+                        <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-success" onclick="toggleDemo()" style="font-size: 12px; padding: 8px 16px;">Confirmar</button>
+                        <button class="btn-secondary" onclick="document.getElementById('demoPasswordInput').remove()" style="font-size: 12px; padding: 8px 16px;">Cancelar</button>
+                    </div>
+                `;
+                document.getElementById('loginStep1').appendChild(input);
+            }
+            input.style.display = 'block';
+        }
+
         function toggleDemo() {
-            const senha = prompt('Senha mestre para ' + (demoAtivo ? 'DESABILITAR' : 'HABILITAR') + ' o modo demo:');
-            if (!senha) return;
+            const senha = document.getElementById('demoPassword').value.trim();
+            if (!senha) { alert('Digite a senha mestre.'); return; }
             const tipo = demoAtivo ? 'desabilitar_demo' : 'habilitar_demo';
             enviar({ tipo, senha });
+            const input = document.getElementById('demoPasswordInput');
+            if (input) input.style.display = 'none';
         }
 
         function atualizarDemoStatus(ativo) {

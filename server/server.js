@@ -3,12 +3,13 @@
  * 
  * Fluxo de autenticação:
  * 1. Usuário informa email
- * 2. Servidor gera código de 6 dígitos e "envia" por email (simulado)
+ * 2. Servidor gera código de 6 dígitos e envia por email (SMTP)
  * 3. Usuário digita o código recebido
  * 4. Servidor valida e registra o usuário
  * 
- * Para produção: integrar com serviço SMTP real (SendGrid, Mailgun, etc.)
- * Para demo: o código é exibido na tela e no console
+ * Configuração de email:
+ * - Defina as variáveis de ambiente SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+ * - Sem configuração, o código é exibido no console (modo demo)
  */
 
 const WebSocket = require('ws');
@@ -16,6 +17,58 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+
+// ============================================================
+// CONFIGURAÇÃO DE EMAIL (SMTP)
+// ============================================================
+
+const SMTP_CONFIG = {
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === 'true',
+  user: process.env.SMTP_USER || '',
+  pass: process.env.SMTP_PASS || '',
+  from: process.env.SMTP_FROM || 'cripto.chat <noreply@cripto.chat>'
+};
+
+const emailConfigurado = !!(SMTP_CONFIG.user && SMTP_CONFIG.pass);
+
+let transporter = null;
+if (emailConfigurado) {
+  try {
+    const nodemailer = require('nodemailer');
+    transporter = nodemailer.createTransport({
+      host: SMTP_CONFIG.host,
+      port: SMTP_CONFIG.port,
+      secure: SMTP_CONFIG.secure,
+      auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass }
+    });
+    console.log('[EMAIL] SMTP configurado para:', SMTP_CONFIG.user);
+  } catch (e) {
+    console.warn('[EMAIL] nodemailer não instalado. Execute: npm install nodemailer');
+  }
+}
+
+async function enviarEmailOTP(email, codigo, nome) {
+  if (!transporter) {
+    console.log(`[EMAIL DEMO] Código para ${email}: ${codigo}`);
+    return false;
+  }
+  try {
+    await transporter.sendMail({
+      from: SMTP_CONFIG.from,
+      to: email,
+      subject: 'Seu código de acesso - cripto.chat',
+      text: `Olá ${nome}, seu código de acesso é: ${codigo}`,
+      html: `<h2>cripto.chat — Código de Acesso</h2><p>Olá <strong>${nome}</strong>,</p><p>Seu código de acesso é: <strong style="font-size: 24px; color: #00d4ff;">${codigo}</strong></p><p>Este código expira em 5 minutos.</p>`
+    });
+    console.log(`[EMAIL] Código enviado para ${email}`);
+    return true;
+  } catch (e) {
+    console.error('[EMAIL] Erro ao enviar:', e.message);
+    return false;
+  }
+}
 
 // ============================================================
 // ESTADO DO SERVIDOR
@@ -97,7 +150,8 @@ function solicitarOTP(email) {
     expira: Date.now() + 5 * 60 * 1000  // 5 minutos de validade
   });
   
-  // Em produção: enviar por email aqui (SendGrid, Mailgun, etc.)
+  // Enviar por email (ou exibir no console em modo demo)
+  enviarEmailOTP(email, codigo, nome);
   console.log(`[cripto.chat] OTP para ${email}: ${codigo}`);
   
   return { nome };

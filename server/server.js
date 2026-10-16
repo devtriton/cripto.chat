@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * cripto.chat — Servidor WebSocket com Login por Email + OTP
  * 
  * Fluxo de autenticação:
@@ -9,12 +10,21 @@
  * 
  * Para produção: integrar com serviço SMTP real (SendGrid, Mailgun, etc.)
  * Para demo: o código é exibido na tela e no console
+=======
+ * OBJ-EDU: Servidor WebSocket para demonstração de Criptografia
+ * 
+ * PRINCÍPIO FUNDAMENTAL:
+ * - O servidor NUNCA descriptografa mensagens
+ * - Se o usuário criptografa, o servidor vê apenas o texto cifrado
+ * - A sala ADM exibe o que o servidor "vê" (texto cifrado sem chave)
+>>>>>>> origin/master
  */
 
 const WebSocket = require('ws');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+<<<<<<< HEAD
 const os = require('os');
 
 // ============================================================
@@ -25,6 +35,16 @@ const salas = new Map();       // salaId -> { nome, publica, usuarios: Set, senh
 const usuarios = new Map();    // email -> { ws, nome, salaAtual }
 const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
+=======
+
+// ============================================================
+// ESTADO DO SERVIDOR (em memória, sem banco de dados)
+// ============================================================
+
+const salas = new Map();      // salaId -> { nome, publica, usuarios: Set, senhaHash }
+const usuarios = new Map();   // email -> { ws, nome, salaAtual }
+const salaAdmWs = new Set();  // Conexões da sala ADM
+>>>>>>> origin/master
 
 // ============================================================
 // SERVIDOR HTTP (arquivos estáticos)
@@ -79,6 +99,7 @@ function enviarParaAdm(msg) {
   }
 }
 
+<<<<<<< HEAD
 // ============================================================
 // GERAR CÓDIGO OTP
 // ============================================================
@@ -124,12 +145,16 @@ wss.on('connection', (ws) => {
   ws.isAdm = false;
   ws.email = null;
 
+=======
+wss.on('connection', (ws) => {
+>>>>>>> origin/master
   ws.on('message', (raw) => {
     const data = JSON.parse(raw);
     
     switch (data.tipo) {
       
       // --------------------------------------------------------
+<<<<<<< HEAD
       // LOGIN PASSO 1: Solicitar OTP
       // --------------------------------------------------------
       case 'solicitar_otp': {
@@ -169,6 +194,21 @@ wss.on('connection', (ws) => {
         }));
         
         console.log(`[LOGIN] ${result.nome} (${email}) autenticou via OTP`);
+=======
+      // AUTENTICAÇÃO: registro de usuário via email
+      // --------------------------------------------------------
+      case 'registrar': {
+        const { email, nome } = data;
+        usuarios.set(email, { ws, nome, salaAtual: null });
+        ws.email = email;
+        ws.send(JSON.stringify({ 
+          tipo: 'registrado', 
+          email, 
+          nome,
+          mensagem: `Bem-vindo, ${nome}!` 
+        }));
+        console.log(`[LOGIN] ${nome} (${email}) conectou`);
+>>>>>>> origin/master
         break;
       }
       
@@ -182,7 +222,11 @@ wss.on('connection', (ws) => {
         salas.set(salaId, {
           nome,
           publica: publica !== false,
+<<<<<<< HEAD
           senha: senha || null,
+=======
+          senha: senha || null,        // para salas privadas
+>>>>>>> origin/master
           usuarios: new Set([ws.email]),
           criador: ws.email
         });
@@ -272,6 +316,7 @@ wss.on('connection', (ws) => {
           dataHora: new Date().toISOString(),
           criptografada: data.criptografada || false,
           algoritmo: data.algoritmo || null,
+<<<<<<< HEAD
           texto: data.texto,
           mencoes: data.mencoes || []
         };
@@ -279,6 +324,18 @@ wss.on('connection', (ws) => {
         // O servidor apenas repassa. Se criptografado, ele vê o ciphertext.
         broadcast(salaId, msg);
         enviarParaAdm(msg);
+=======
+          texto: data.texto,           // texto original OU cifrado
+          mencoes: data.mencoes || []  // usuários mencionados com #
+        };
+        
+        // === DEMONSTRAÇÃO DA CRIPTOGRAFIA ===
+        // O servidor apenas repassa. Se criptografado, ele vê o ciphertext.
+        // A sala ADM também recebe o que o servidor "vê".
+        
+        broadcast(salaId, msg);
+        enviarParaAdm(msg);  // ADM vê exatamente o que passa pelo servidor
+>>>>>>> origin/master
         
         console.log(`[MSG] ${user.nome} em ${sala.nome}${data.criptografada ? ' [CRIPTOGRAFADA: ' + data.algoritmo + ']' : ' [CLARA]'}`);
         break;
@@ -310,7 +367,11 @@ wss.on('connection', (ws) => {
         // Enviar ao remetente (para exibição no próprio chat)
         ws.send(JSON.stringify(msg));
         
+<<<<<<< HEAD
         // ADM vê apenas o que passa pelo servidor
+=======
+        // ADM vê apenas o que passa pelo servidor (texto cifrado se criptografado)
+>>>>>>> origin/master
         enviarParaAdm({ ...msg, privada: true });
         
         console.log(`[DM] ${ws.email} -> ${paraEmail}${criptografada ? ' [CRIPTOGRAFADA]' : ' [CLARA]'}`);
@@ -373,10 +434,14 @@ wss.on('connection', (ws) => {
       }
     }
     salaAdmWs.delete(ws);
+<<<<<<< HEAD
     if (ws.email) {
       usuarios.delete(ws.email);
       console.log(`[LOGOUT] ${ws.email} desconectou`);
     }
+=======
+    console.log(`[LOGOUT] ${ws.email} desconectou`);
+>>>>>>> origin/master
   });
 });
 
@@ -393,7 +458,11 @@ function gerarIdSala() {
 // ============================================================
 
 const PORTA = process.env.PORT || 3000;
+<<<<<<< HEAD
 const HOST = process.env.HOST || '0.0.0.0';
+=======
+const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 aceita conexões externas
+>>>>>>> origin/master
 
 server.listen(PORTA, HOST, () => {
   console.log('========================================');
@@ -402,6 +471,11 @@ server.listen(PORTA, HOST, () => {
   console.log(`  Host: ${HOST}`);
   console.log('========================================');
   
+<<<<<<< HEAD
+=======
+  // Descobrir IP local para facilitar o acesso na rede
+  const os = require('os');
+>>>>>>> origin/master
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {

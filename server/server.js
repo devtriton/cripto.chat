@@ -19,6 +19,13 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 
+// Carregar variáveis de ambiente do arquivo .env (apenas local)
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv não instalado - usar variáveis de ambiente do sistema
+}
+
 // ============================================================
 // MODO DEMO - Configuração com senha
 // ============================================================

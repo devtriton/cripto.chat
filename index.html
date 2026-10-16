@@ -656,11 +656,34 @@
             return false;
         }
 
+        // Controle de reconexão: backoff exponencial + limite de tentativas
+        // Evita loop infinito que trava o navegador quando o WebSocket não conecta
+        let tentativasWs = 0;
+        const MAX_TENTATIVAS_WS = 5;
+        let desistiuWs = false;
+
+        function agendarReconexao() {
+            if (desistiuWs) return;
+            if (tentativasWs >= MAX_TENTATIVAS_WS) {
+                console.warn('[WebSocket] Máximo de tentativas atingido. Parando reconexão automática.');
+                return;
+            }
+            const espera = Math.min(1000 * Math.pow(2, tentativasWs), 16000); // 1s, 2s, 4s, 8s, 16s max
+            tentativasWs++;
+            console.log(`[WebSocket] Tentativa ${tentativasWs}/${MAX_TENTATIVAS_WS} em ${espera}ms`);
+            setTimeout(() => {
+                if (!desistiuWs && (!canal || canal.readyState !== WebSocket.OPEN)) {
+                    conectarWebSocket();
+                }
+            }, espera);
+        }
+
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
         if (MODO !== 'pages') {
             window.addEventListener('load', () => {
                 console.log('[cripto.chat] Conectando WebSocket...');
                 const sessaoRestaurada = restaurarSessaoSalva();
+                tentativasWs = 0;
                 conectarWebSocket();
                 setTimeout(() => {
                     if (canal && canal.readyState === WebSocket.OPEN) {
@@ -670,8 +693,8 @@
                             enviar({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome });
                         }
                     } else {
-                        console.log('[cripto.chat] WebSocket NÃO conectado. Tentando novamente...');
-                        conectarWebSocket();
+                        console.log('[cripto.chat] WebSocket NÃO conectado. Aguardando backoff...');
+                        agendarReconexao();
                     }
                 }, 1000);
             });
@@ -769,6 +792,7 @@
             ws.onopen = () => {
                 console.log('[WebSocket] Conectado!');
                 if (canal) canal.readyState = WebSocket.OPEN;
+                tentativasWs = 0; // sucesso: zera o backoff para a próxima eventual queda
                 atualizarStatusConexao(true);
                 // Enviar mensagens enfileiradas
                 while (filaEnvio.length > 0) {

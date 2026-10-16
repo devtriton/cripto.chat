@@ -26,8 +26,13 @@ Abra `http://localhost:3000` em duas ou mais abas/janelas para simular múltiplo
 ## Funcionalidades
 
 ### Autenticação
-- Login com nome e email (sem senha)
-- Para demonstração: use o código `123456` quando solicitado
+- Login com email + código OTP de 6 dígitos
+- O código é enviado por email (SMTP) ou exibido no console (modo demo)
+- Configure as variáveis de ambiente SMTP para ativar o envio real:
+  - `SMTP_HOST`: smtp.gmail.com
+  - `SMTP_PORT`: 587
+  - `SMTP_USER`: seu-email@gmail.com
+  - `SMTP_PASS`: senha de app do Gmail (16 caracteres)
 
 ### Salas de Bate-Papo
 - **Pública**: qualquer usuário pode entrar listando as salas disponíveis

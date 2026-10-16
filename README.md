@@ -1,6 +1,6 @@
-# OBJ-EDU: Criptografia em Prática
+# cripto.chat — Criptografia em Prática
 
-Objeto Educacional para demonstração de criptografia e comunicação segura.
+Sistema de comunicação segura com demonstração prática de criptografia.
 
 ## Como Executar
 
@@ -77,17 +77,20 @@ Representa a visão do servidor:
 ## Estrutura do Projeto
 
 ```
-OBJ-EDU/
+cripto.chat/
 ├── index.html          # Interface completa (HTML+CSS+JS)
 ├── server/
 │   ├── server.js       # Servidor WebSocket + HTTP
 │   └── mail-config.js  # Config OTP por email (opcional)
-└── README.md
+├── start.bat           # Script de inicialização local
+├── README.md           # Documentação completa
+├── .gitignore
+└── .gitattributes
 ```
 
 ## GitHub Pages
 
-O projeto está disponível em: **https://devtriton.github.io/OBJ-EDU/**
+O projeto está disponível em: **https://devtriton.github.io/cripto/**
 
 No GitHub Pages, o sistema funciona em modo `BroadcastChannel`:
 - Abra a página em **múltiplas abas ou janelas** do navegador
@@ -99,7 +102,7 @@ No GitHub Pages, o sistema funciona em modo `BroadcastChannel`:
 ```bash
 git add .
 git commit -m "descricao das mudancas"
-git push origin master
+git push origin main
 ```
 
 O GitHub Pages atualiza automaticamente em ~1 minuto após o push.

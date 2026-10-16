@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBJ-EDU: Criptografia em Prática</title>
+    <title>cripto.chat — Criptografia em Prática</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -161,13 +161,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>OBJ-EDU: Criptografia em Prática <span id="modeBadge" class="mode-badge"></span></h1>
-        <p class="subtitle">Objeto Educacional para demonstração de comunicação segura</p>
+        <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
+        <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
 
         <!-- LOGIN -->
         <div id="loginPanel" class="panel">
             <h2>Identificação do Usuário</h2>
-            <div id="loginInfo" class="alert alert-info"></div>
+            <div class="alert alert-info">Informe seu nome e email para entrar no cripto.chat.</div>
             <div class="form-group">
                 <label for="loginNome">Nome:</label>
                 <input type="text" id="loginNome" placeholder="Seu nome">
@@ -418,7 +418,7 @@
         }
 
         function conectarBroadcastChannel() {
-            canal = new BroadcastChannel('obj_edu_channel');
+            canal = new BroadcastChannel('cripto_chat_channel');
             canal.onmessage = (e) => processarMensagem(e.data);
             atualizarStatusConexao(true);
             document.getElementById('modeBadge').textContent = 'GitHub Pages';

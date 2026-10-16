@@ -321,7 +321,7 @@ const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 aceita conexões externas
 
 server.listen(PORTA, HOST, () => {
   console.log('========================================');
-  console.log('  OBJ-EDU: Servidor de Criptografia');
+  console.log('  cripto.chat: Servidor de Criptografia');
   console.log(`  Rodando em http://localhost:${PORTA}`);
   console.log(`  Host: ${HOST}`);
   console.log('========================================');

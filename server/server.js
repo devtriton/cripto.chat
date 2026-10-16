@@ -34,7 +34,7 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  const filePath = path.join(__dirname, '..', 'client', req.url === '/' ? 'index.html' : req.url.split('?')[0]);
+  const filePath = path.join(__dirname, '..', req.url === '/' ? 'index.html' : req.url.split('?')[0]);
   
   fs.readFile(filePath, (err, data) => {
     if (err) {

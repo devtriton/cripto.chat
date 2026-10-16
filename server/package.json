@@ -1,0 +1,12 @@
+{
+  "name": "obj-edu-crypto",
+  "version": "1.0.0",
+  "description": "Objeto Educacional para demonstração de Criptografia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

@@ -10,6 +10,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh; color: #e0e0e0;
+            padding-bottom: 64px; /* espaço para o rodapé fixo */
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         h1 { text-align: center; color: #00d4ff; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
@@ -55,14 +56,15 @@
         .step-dot.active { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
         .step-dot.completed { background: #43e97b; }
         .chat-layout {
-            display: grid; grid-template-columns: 250px 1fr 250px;
+            display: grid; grid-template-columns: 1fr;
             gap: 20px; height: calc(100vh - 120px);
         }
-        .sidebar {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; padding: 15px; overflow-y: auto;
+        .sair-sala-bar {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 12px;
         }
+        /* Ajusta a altura do chat quando a barra de saída está visível */
+        #sairSalaBar:not(.hidden) + #chatArea .chat-layout { height: calc(100vh - 180px); }
         .chat-main {
             display: flex; flex-direction: column;
             background: rgba(255, 255, 255, 0.05);
@@ -76,6 +78,17 @@
         }
         .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
         .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .mention-wrap { position: relative; }
+        .mention-popup {
+            position: absolute; left: 0; right: 0; bottom: 100%;
+            margin-bottom: 6px; z-index: 100;
+            background: #1c1740; border: 1px solid rgba(0, 212, 255, 0.35);
+            border-radius: 10px; overflow-y: auto; max-height: 180px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        .mention-popup .user-list-item { margin-bottom: 0; border-radius: 0; }
+        .mention-popup .user-list-item.selected { background: rgba(0, 212, 255, 0.3); }
+        .mention-popup .mention-email { font-size: 11px; color: #888; margin-left: 8px; }
         .message {
             margin-bottom: 12px; padding: 10px 15px; border-radius: 10px;
             background: rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease;
@@ -84,13 +97,24 @@
         .message-header { font-size: 12px; color: #888; margin-bottom: 5px; }
         .message-author { font-weight: bold; color: #00d4ff; }
         .message.encrypted { border-left: 3px solid #f5576c; background: rgba(245, 87, 108, 0.05); }
-        .message.encrypted .message-text {
-            font-family: 'Courier New', monospace; color: #f5576c; word-break: break-all;
-        }
+        /* Mensagem "encrypted": viajou cifrada, mas é exibida DESCRIPTOGRAFADA na sala */
+        .message.encrypted { border-left: 3px solid #f5576c; }
+        /* Qualquer texto longo (ciphertext, URLs, palavras gigantes) quebra dentro do balão */
+        .message-text { word-break: break-word; overflow-wrap: anywhere; }
         .encryption-badge {
             display: inline-block; padding: 2px 8px; border-radius: 4px;
             font-size: 11px; background: #f5576c; color: #fff; margin-left: 8px;
         }
+        .encryption-badge.e2e-badge { background: #00d4ff; color: #000; }
+        .message-note { font-size: 10px; color: #7a8aa0; margin-top: 5px; font-family: inherit; overflow-wrap: anywhere; }
+        .message-note.aviso-entrega { color: #ffc800; }
+        .message-note.nao-recebida { color: #ff6b6b; }
+        .crypto-hint { font-size: 11px; color: #9ab; margin-top: 8px; line-height: 1.5; }
+        .btn-adm-decrypt {
+            margin-top: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+            background: #ffc800; color: #000; border: none; border-radius: 6px;
+        }
+        .btn-adm-decrypt:disabled { opacity: 0.6; cursor: wait; }
         .mention { color: #fee140; font-weight: bold; }
         .dm-badge {
             display: inline-block; padding: 2px 8px; border-radius: 4px;
@@ -116,6 +140,12 @@
             padding: 8px 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px;
             font-family: 'Courier New', monospace; background: rgba(255, 255, 255, 0.05);
             border-left: 3px solid #f5576c;
+            overflow-wrap: anywhere; word-break: break-word; /* ciphertext longo não vaza do container */
+        }
+        .adm-message code {
+            display: block; margin-top: 4px; padding: 6px 8px; border-radius: 6px;
+            background: rgba(0, 0, 0, 0.35); font-size: 12px;
+            white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere;
         }
         .adm-message.plaintext { border-left-color: #43e97b; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -150,18 +180,186 @@
         }
         .flex-row { display: flex; gap: 10px; }
         .flex-row > * { flex: 1; }
-        .mode-badge {
-            display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 11px; font-weight: bold; margin-left: 10px;
+
+        /* ===== BARRA SUPERIOR (sempre visível) ===== */
+        .topbar {
+            position: sticky; top: 0; z-index: 2000;
+            background: rgba(15, 12, 41, 0.96);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            padding: 10px 20px;
         }
-        .mode-local { background: #43e97b; color: #000; }
-        .mode-pages { background: #a18cd1; color: #000; }
+        .topbar-main {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .topbar-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+        .topbar-right button { margin: 0; }
+        .topbar-logo { font-size: 18px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 12px rgba(0, 212, 255, 0.5); }
+        .mode-indicator {
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 10px; font-weight: bold; letter-spacing: 0.5px;
+            cursor: pointer; user-select: none;
+            transition: all 0.2s ease;
+        }
+        .mode-indicator:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .mode-login { background: rgba(0, 212, 255, 0.18); color: #00d4ff; border: 1px solid rgba(0, 212, 255, 0.45); }
+        .mode-demo { background: rgba(67, 233, 123, 0.18); color: #43e97b; border: 1px solid rgba(67, 233, 123, 0.45); }
+        .topbar-email {
+            color: #ccc; font-size: 13px; padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.08); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15); max-width: 280px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .topbar-btn { padding: 7px 16px; font-size: 12px; margin: 0; }
+        .demo-x {
+            display: inline-block; margin-left: 4px; padding: 0 4px;
+            color: #fff; background: #ff2d2d; font-weight: bold;
+            border-radius: 3px; font-size: 9px; line-height: 1.5;
+            box-shadow: 0 0 5px rgba(255, 45, 45, 0.8);
+        }
+        .demo-open {
+            display: inline-block; margin-left: 4px; padding: 0 4px;
+            color: #062033; background: #00d4ff; font-weight: bold;
+            border-radius: 3px; font-size: 9px; line-height: 1.5;
+            box-shadow: 0 0 5px rgba(0, 212, 255, 0.7);
+            animation: openPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes openPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .demo-on { animation: demoPulse 1.6s ease-in-out infinite; }
+        @keyframes demoPulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(67, 233, 123, 0); }
+            50% { box-shadow: 0 0 14px rgba(67, 233, 123, 0.85); }
+        }
+        .topbar-pass {
+            max-width: 1200px; margin: 10px auto 0;
+            display: flex; gap: 8px; align-items: center; justify-content: flex-end;
+        }
+        .topbar-pass input { width: 220px; padding: 7px 12px; margin: 0; }
+        .topbar-pass button { margin: 0; }
+
+        /* ===== RODAPÉ FIXO: usuário + conexão ===== */
+        .footer-bar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 2000;
+            display: flex; align-items: center; justify-content: flex-start;
+            gap: 8px; flex-wrap: nowrap;
+            padding: 8px 20px;
+            background: rgba(15, 12, 41, 0.96);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
+        }
+        .fb-name {
+            font-size: 13px; font-weight: 600; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 40%;
+        }
+        .fb-edit {
+            padding: 2px 8px; margin: 0; font-size: 14px; line-height: 1.4;
+            background: transparent; color: #9ad0ff; border: none;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .fb-edit:hover { background: rgba(0, 212, 255, 0.15); transform: scale(1.1); }
+        .fb-edit:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; transform: none; }
+        .fb-input {
+            margin: 0; padding: 8px 14px; font-size: 15px;
+            min-width: 220px; max-width: 300px;
+            border-radius: 8px; border-color: #00d4ff;
+        }
+        .tu-email {
+            flex: 1; min-width: 0;
+            font-size: 12px; color: #9ad0ff; padding: 4px 10px;
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        /* Ícone de conexão (rodapé) */
+        .conn-icon {
+            display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            flex-shrink: 0; cursor: default;
+        }
+        .conn-online { background: #43e97b; box-shadow: 0 0 8px #43e97b; }
+        .conn-offline { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: demoPulse 1.2s ease-in-out infinite; }
+        .fb-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+        .fb-right { display: flex; align-items: center; margin-left: auto; }
+        .tu-btn { padding: 5px 12px; font-size: 12px; margin: 0; border-radius: 6px; }
+
+        /* ===== RESPONSIVO (dispositivos móveis) ===== */
+        @media (max-width: 768px) {
+            .container { padding: 12px; }
+            /* TOPO: tudo em uma única linha */
+            .topbar { padding: 6px 10px; }
+            .topbar-main { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
+            .topbar-left { flex: 1 1 auto; min-width: 0; width: auto; gap: 8px; }
+            .topbar-logo { font-size: 15px; }
+            .topbar-right { flex: 0 0 auto; }
+            .topbar-right .tu-btn { flex: none; }
+            .mode-indicator { font-size: 9px; padding: 2px 7px; }
+            .tu-btn { padding: 4px 8px; font-size: 11px; }
+            .topbar-pass { flex-direction: column; align-items: stretch; }
+            .topbar-pass input { width: 100%; }
+            /* RODAPÉ: tudo em uma única linha */
+            .footer-bar { padding: 6px 10px; gap: 6px; }
+            .fb-name { max-width: 45%; font-size: 12px; }
+            .tu-email { font-size: 11px; padding: 4px 8px; }
+            .fb-input { min-width: 150px; max-width: 200px; padding: 6px 10px; font-size: 13px; }
+            h1 { font-size: 24px; }
+            .flex-row { flex-direction: column; }
+            .flex-row > * { flex: auto; }
+            .tabs { flex-wrap: wrap; }
+            .tab { flex: 1 1 45%; text-align: center; font-size: 13px; padding: 12px 8px; }
+            .chat-layout { grid-template-columns: 1fr; height: auto; }
+            .otp-input { font-size: 22px; letter-spacing: 8px; }
+            button { width: auto; }
+        }
+        @media (max-width: 480px) {
+            /* TOPO ainda mais compacto, mantendo uma linha */
+            .topbar-logo { font-size: 13px; }
+            .topbar-left { gap: 6px; }
+            .mode-indicator { font-size: 8px; padding: 2px 5px; }
+            .tu-btn { padding: 4px 7px; font-size: 10px; }
+            /* RODAPÉ ainda mais compacto, mantendo uma linha */
+            .fb-name { max-width: 40%; font-size: 11px; }
+            .tu-email { font-size: 10px; }
+            .fb-input { min-width: 120px; max-width: 160px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
+    <!-- ===== BARRA SUPERIOR (sempre visível em todas as etapas) ===== -->
+    <div class="topbar">
+        <!-- LINHA 1: Identidade + modo + ações -->
+        <div class="topbar-main">
+            <div class="topbar-left">
+                <span class="topbar-logo">🔐 cripto.chat</span>
+                <span id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
+                      title="Modo demo desativado — clique para abrir/ativar">MODO DEMO <span class="demo-open">＋</span></span>
+            </div>
+            <div id="topbarActions" class="topbar-right hidden">
+                <button id="btnSalaADM" class="btn-adm tu-btn" onclick="abrirSalaADM()">Sala ADM</button>
+            </div>
+        </div>
+        <!-- LINHA 2 (usuário) movida para o rodapé fixo -->
+        <!-- Input da senha mestre (aparece ao clicar no indicador) -->
+        <div id="demoPasswordInput" class="topbar-pass hidden">
+            <input type="password" id="demoPassword" placeholder="Senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+            <button class="btn-success" onclick="toggleDemo()">Confirmar</button>
+            <button class="btn-secondary" onclick="fecharSenhaDemo()">Cancelar</button>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>cripto.chat <span id="modeBadge" class="mode-badge"></span></h1>
-        <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
+        <div id="pageHeader">
+            <h1>cripto.chat</h1>
+            <p class="subtitle">Comunicação segura com demonstração prática de criptografia</p>
+        </div>
 
         <!-- ========== LOGIN ========== -->
         <div id="loginPanel" class="panel login-container">
@@ -179,17 +377,6 @@
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: center;">
                     <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
-                    <button id="demoButton" onclick="mostrarSenhaDemo()" style="font-size: 12px; padding: 10px 16px;">Modo Demo</button>
-                </div>
-                <div id="demoPasswordInput" style="margin-top: 10px; display: none;">
-                    <div class="form-group" style="margin-bottom: 5px;">
-                        <label for="demoPassword">Senha Mestre:</label>
-                        <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-success" onclick="toggleDemo()" style="font-size: 12px; padding: 8px 16px;">Confirmar</button>
-                        <button class="btn-secondary" onclick="document.getElementById('demoPasswordInput').style.display='none'" style="font-size: 12px; padding: 8px 16px;">Cancelar</button>
-                    </div>
                 </div>
             </div>
 
@@ -212,20 +399,7 @@
 
         <!-- ========== PAINEL PRINCIPAL ========== -->
         <div id="mainPanel" class="hidden">
-            <div class="panel" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong id="userNameDisplay"></strong>
-                    <span id="userEmailDisplay" style="color: #888; margin-left: 10px;"></span>
-                </div>
-                <div>
-                    <span id="connectionStatus" class="status-indicator status-offline"></span>
-                    <span id="connectionText">Conectando...</span>
-                    <button class="btn-adm" onclick="abrirSalaADM()" style="margin-left: 20px;">Sala ADM</button>
-                    <button class="btn-secondary" onclick="desconectar()">Sair</button>
-                </div>
-            </div>
-
-            <div class="tabs">
+            <div id="tabsBar" class="tabs">
                 <div class="tab active" onclick="switchTab('salas')" data-tab="salas">Salas de Bate-Papo</div>
                 <div class="tab" onclick="switchTab('demo')" data-tab="demo">Demonstração Criptografia</div>
                 <div class="tab" onclick="switchTab('educacional')" data-tab="educacional">Guia Educacional</div>
@@ -233,6 +407,7 @@
 
             <!-- TAB: SALAS -->
             <div id="tabSalas" class="tab-content active">
+                <div id="dashboardArea">
                 <div class="flex-row">
                     <div class="panel" style="flex: 1;">
                         <h2>Criar Nova Sala</h2>
@@ -275,14 +450,16 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- /dashboardArea -->
+
+                <!-- BARRA DE SAIR DA SALA -->
+                <div id="sairSalaBar" class="sair-sala-bar hidden">
+                    <button class="btn-secondary" onclick="sairDaSala()">← Sair da Sala</button>
+                </div>
 
                 <!-- CHAT -->
                 <div id="chatArea" class="hidden">
                     <div class="chat-layout">
-                        <div class="sidebar">
-                            <h3>Usuários na Sala</h3>
-                            <div id="listaUsuarios"></div>
-                        </div>
                         <div class="chat-main">
                             <div class="chat-header">
                                 <strong id="chatSalaNome"></strong>
@@ -290,28 +467,24 @@
                             </div>
                             <div class="chat-messages" id="chatMessages"></div>
                             <div class="chat-input-area">
-                                <div class="crypto-select">
+                                <div class="mention-wrap">
+                                    <div id="mentionPopup" class="mention-popup hidden"></div>
+                                    <textarea id="messageInput" rows="3" placeholder="Digite sua mensagem... Use @usuario para DM e #usuario para mencionar"
+                                              onkeydown="handleKeyDown(event)" oninput="verificarMention()" onblur="fecharMentionSoon()"></textarea>
+                                </div>
+                                <div class="crypto-select" style="margin-bottom: 0; margin-top: 10px;">
                                     <select id="cryptoSelect" onchange="toggleKeyInput()">
                                         <option value="none">Sem criptografia (texto claro)</option>
                                         <option value="caesar">Cifra de César (Rot-N)</option>
                                         <option value="vigenere">Cifra de Vigenère</option>
                                         <option value="xor">XOR com chave</option>
-                                        <option value="aes">AES-256 (Web Crypto)</option>
+                                        <option value="aes">AES-256-GCM (Web Crypto)</option>
+                                        <option value="e2e">E2E — RSA-2048 (ponta a ponta)</option>
                                     </select>
                                     <input type="text" id="cryptoKeyInput" placeholder="Chave..." class="hidden" style="max-width: 200px;">
                                     <button class="btn-warning" onclick="enviarMensagem()">Enviar</button>
                                 </div>
-                                <textarea id="messageInput" rows="2" placeholder="Digite sua mensagem... Use @usuario para DM e #usuario para mencionar" onkeydown="handleKeyDown(event)"></textarea>
-                            </div>
-                        </div>
-                        <div class="sidebar">
-                            <h3>Estado da Criptografia</h3>
-                            <div id="cryptoStatus">
-                                <p style="color: #43e97b;">Atual: Texto claro</p>
-                                <p style="font-size: 12px; color: #888; margin-top: 5px;">O servidor e a Sala ADM podem ler suas mensagens.</p>
-                            </div>
-                            <div class="edu-note" style="margin-top: 15px;">
-                                <strong>Dica:</strong> Use @nome para mensagem direta e #nome para menção pública.
+                                <div id="cryptoHint" class="crypto-hint"></div>
                             </div>
                         </div>
                     </div>
@@ -397,11 +570,27 @@
         <div id="admPanel" class="adm-container hidden">
             <div class="adm-title">SALA ADM - Visão do Servidor</div>
             <div class="adm-info">
-                Esta é a visão que o servidor tem das mensagens. Mensagens criptografadas aparecem como texto cifrado,
-                pois o servidor não possui a chave. Mensagens em texto claro são totalmente legíveis.
+                Esta é a visão que o servidor tem das mensagens.
+                <strong>SIMÉTRICAS</strong> (César, Vigenère, XOR, AES): a chave viaja junto com a mensagem → o servidor captura e <strong>consegue descriptografar</strong> (botão 🔓).
+                <strong>E2E (RSA-2048)</strong>: cifrada com a chave pública de cada destinatário; a chave privada nunca sai do computador do usuário → o servidor vê apenas ciphertext e <strong>não pode ler</strong>.
             </div>
             <div id="admMessages"></div>
-            <button class="btn-secondary" onclick="fecharSalaADM()">Fechar Sala ADM</button>
+            <button class="btn-secondary" onclick="fecharSalaADM()">← Sair da Sala ADM</button>
+        </div>
+    </div>
+
+    <!-- ===== RODAPÉ FIXO (usuário) ===== -->
+    <div id="topbarUserRow" class="footer-bar hidden">
+        <div class="fb-left">
+            <span id="connIcon" class="conn-icon conn-offline" title="Conexão"></span>
+            <span id="userNameDisplay" class="fb-name"></span>
+            <button class="fb-edit" onclick="editarNome()" title="Editar nome de usuário">✎</button>
+            <input type="text" id="userNameInput" class="fb-input hidden" maxlength="30" placeholder="Digite seu nome"
+                   onkeydown="if(event.key==='Enter') this.blur()" onblur="salvarNomeUsuario()">
+            <span id="userEmailDisplay" class="tu-email"></span>
+        </div>
+        <div class="fb-right">
+            <button class="btn-secondary tu-btn fb-sair" onclick="desconectar()">Sair</button>
         </div>
     </div>
 
@@ -417,21 +606,69 @@
         let otpAtual = null;
         let emailParaVerificar = null;
 
+        // A Web Crypto API (AES-256-GCM e E2E/RSA) só existe em contexto seguro:
+        // HTTPS ou localhost. Sem ela, essas opções ficam indisponíveis.
+        const TEM_WEB_CRYPTO = !!(window.crypto && window.crypto.subtle);
+        if (!TEM_WEB_CRYPTO) {
+            ['aes', 'e2e'].forEach(v => {
+                const opt = document.querySelector('#cryptoSelect option[value="' + v + '"]');
+                if (opt) { opt.disabled = true; opt.textContent += ' — requer HTTPS ou localhost'; }
+            });
+            console.warn('[cripto.chat] Web Crypto API indisponível neste endereço. Acesse via http://localhost:3000 (ou HTTPS) para usar AES-256-GCM e E2E (RSA).');
+        }
+
         // ============================================================
         // DETECÇÃO DE MODO
         // ============================================================
         function detectarModo() {
             const host = window.location.hostname;
+            console.log('[detectarModo] Host:', host);
             if (host.includes('github.io')) {
+                console.log('[detectarModo] Modo: pages (BroadcastChannel)');
                 return 'pages';
             }
+            console.log('[detectarModo] Modo: servidor (WebSocket)');
             return 'servidor';
+        }
+
+        // Aba exclusiva da SALA ADM (?adm=1) — aberta em separado, com topo e rodapé
+        const MODO_ADM = new URLSearchParams(window.location.search).get('adm') === '1';
+
+        // Restaurar sessão salva (para não sair ao atualizar a página)
+        function restaurarSessaoSalva() {
+            if (MODO === 'pages') return; // pages: verificar depois
+            let salvo = null;
+            try { salvo = JSON.parse(localStorage.getItem('cripto_chat_sessao')); } catch (e) { salvo = null; }
+            if (salvo && salvo.email) {
+                currentUser = { email: salvo.email, nome: salvo.nome };
+                console.log('[Sessão] Restaurando:', salvo.email);
+                mostrarPainelPrincipal();
+                // Re-registrar no servidor (fila envia quando conectar)
+                enviar({ tipo: 'restaurar_sessao', email: salvo.email, nome: salvo.nome });
+                iniciarModoADM(); // se esta aba é a da SALA ADM (?adm=1)
+                return true;
+            }
+            return false;
         }
 
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
         if (MODO !== 'pages') {
             window.addEventListener('load', () => {
+                console.log('[cripto.chat] Conectando WebSocket...');
+                const sessaoRestaurada = restaurarSessaoSalva();
                 conectarWebSocket();
+                setTimeout(() => {
+                    if (canal && canal.readyState === WebSocket.OPEN) {
+                        console.log('[cripto.chat] WebSocket conectado!');
+                        enviar({ tipo: 'verificar_demo' });
+                        if (sessaoRestaurada && currentUser) {
+                            enviar({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome });
+                        }
+                    } else {
+                        console.log('[cripto.chat] WebSocket NÃO conectado. Tentando novamente...');
+                        conectarWebSocket();
+                    }
+                }, 1000);
             });
         }
 
@@ -513,32 +750,71 @@
         // COMUNICAÇÃO
         // ============================================================
         function conectarWebSocket() {
+            if (canal && (canal.readyState === WebSocket.OPEN || canal.readyState === WebSocket.CONNECTING)) return;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}`);
+            // Servidor Node roda em localhost:3000 (Laragon não roteia porta 3000)
+            const wsUrl = `${protocol}//localhost:3000`;
+            const ws = new WebSocket(wsUrl);
             canal = {
-                send: (data) => ws.send(JSON.stringify(data)),
-                close: () => ws.close()
+                send: (data) => enviarViaWebSocket(data),
+                close: () => ws.close(),
+                readyState: WebSocket.CONNECTING,
+                _ws: ws
             };
-            ws.onopen = () => atualizarStatusConexao(true);
-            ws.onclose = () => atualizarStatusConexao(false);
+            ws.onopen = () => {
+                console.log('[WebSocket] Conectado!');
+                if (canal) canal.readyState = WebSocket.OPEN;
+                atualizarStatusConexao(true);
+                // Enviar mensagens enfileiradas
+                while (filaEnvio.length > 0) {
+                    const pendente = filaEnvio.shift();
+                    console.log('[WebSocket] Enviando pendente:', pendente.tipo);
+                    ws.send(JSON.stringify(pendente));
+                }
+                // Consultar status do demo ao conectar
+                ws.send(JSON.stringify({ tipo: 'verificar_demo' }));
+            };
+            ws.onclose = () => { if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; };
+            ws.onerror = () => { if (canal) canal.readyState = WebSocket.CLOSED; canal = null; };
             ws.onmessage = (e) => processarMensagem(JSON.parse(e.data));
+        }
+
+        // Fila de mensagens enviadas antes de a conexão abrir
+        let filaEnvio = [];
+
+        function enviarViaWebSocket(dados) {
+            const wsAberto = canal && canal._ws && canal._ws.readyState === WebSocket.OPEN;
+            if (wsAberto) {
+                canal._ws.send(JSON.stringify(dados));
+            } else {
+                console.log('[WebSocket] Enfileirando (estado:', canal ? canal.readyState : 'null', '):', dados.tipo);
+                filaEnvio.push(dados);
+            }
         }
 
         function conectarBroadcastChannel() {
             canal = new BroadcastChannel('cripto_chat_channel');
             canal.onmessage = (e) => processarMensagem(e.data);
             atualizarStatusConexao(true);
-            document.getElementById('modeBadge').textContent = 'GitHub Pages';
-            document.getElementById('modeBadge').className = 'mode-badge mode-pages';
         }
 
         function enviar(dados) {
-            if (canal) {
-                if (MODO === 'pages') {
-                    canal.postMessage(dados);
-                } else {
-                    canal.send(dados);
-                }
+            if (MODO === 'pages') {
+                if (canal) canal.postMessage(dados);
+                return;
+            }
+            // Servidor: conectar se necessário e enfileirar se ainda CONNECTING
+            if (!canal || canal.readyState === WebSocket.CLOSED) {
+                console.log('[enviar] Sem conexão. Conectando...', dados.tipo);
+                filaEnvio.push(dados);
+                conectarWebSocket();
+                return;
+            }
+            if (canal.readyState === WebSocket.OPEN) {
+                canal.send(dados);
+            } else {
+                console.log('[enviar] Conectando... enfileirando:', dados.tipo);
+                filaEnvio.push(dados);
             }
         }
 
@@ -565,8 +841,30 @@
                     break;
 
                 case 'registrado':
+                    // Definir usuário atual (modo servidor) antes de mostrar o painel
+                    if (data.email) {
+                        currentUser = { email: data.email, nome: data.nome };
+                        // Persistir sessão para não sair ao atualizar a página
+                        try {
+                            localStorage.setItem('cripto_chat_sessao', JSON.stringify({ email: data.email, nome: data.nome }));
+                        } catch (e) { console.warn('[Sessão] Falha ao salvar:', e); }
+                    }
                     mostrarPainelPrincipal();
                     listarSalas();
+                    iniciarModoADM(); // se esta aba é a da SALA ADM (?adm=1)
+                    // Gera/recupera o par de chaves RSA e publica a pública (E2E)
+                    prepararChavesE2E().catch(e => console.warn('[E2E] Falha ao preparar chaves:', e));
+                    break;
+
+                case 'chave_publica':
+                    // O servidor distribuiu a chave pública de alguém (E2E)
+                    if (data.email && data.chavePublica) chavesPublicasE2E[data.email] = data.chavePublica;
+                    break;
+
+                case 'lista_chaves':
+                    // Conjunto completo de chaves públicas (enviado no login)
+                    (data.chaves || []).forEach(c => { if (c.email && c.chavePublica) chavesPublicasE2E[c.email] = c.chavePublica; });
+                    console.log('[E2E] Chaves públicas recebidas:', Object.keys(chavesPublicasE2E).length);
                     break;
 
                 case 'sala_criada':
@@ -575,7 +873,7 @@
                         salasLocais[data.salaId] = currentSala;
                         atualizarInfoSala();
                         atualizarListaUsuarios();
-                        document.getElementById('chatArea').classList.remove('hidden');
+                        mostrarChat();
                     }
                     break;
 
@@ -587,7 +885,7 @@
                         };
                         atualizarInfoSala();
                         atualizarListaUsuarios();
-                        document.getElementById('chatArea').classList.remove('hidden');
+                        mostrarChat();
                     }
                     break;
 
@@ -599,7 +897,7 @@
                         }
                         atualizarInfoSala();
                         atualizarListaUsuarios();
-                        document.getElementById('chatArea').classList.remove('hidden');
+                        mostrarChat();
                     } else if (currentSala && currentSala.id === data.salaId) {
                         if (!currentSala.usuarios.find(u => u.email === data.email)) {
                             currentSala.usuarios.push({ email: data.email, nome: data.nome });
@@ -609,17 +907,72 @@
                     }
                     break;
 
+                case 'usuario_entrou':
+                    // Servidor avisou que alguém entrou na sala atual
+                    if (currentSala && data.salaId === currentSala.id) {
+                        if (!currentSala.usuarios.find(u => u.email === data.email)) {
+                            currentSala.usuarios.push({ email: data.email, nome: data.nome });
+                        }
+                        atualizarInfoSala();
+                        console.log('[Sala] Usuário entrou:', data.nome);
+                    }
+                    break;
+
+                case 'usuario_saiu':
+                    // Servidor avisou que alguém saiu da sala atual
+                    if (currentSala && data.salaId === currentSala.id) {
+                        currentSala.usuarios = currentSala.usuarios.filter(u => u.email !== data.email);
+                        atualizarInfoSala();
+                        console.log('[Sala] Usuário saiu:', data.email);
+                    }
+                    break;
+
                 case 'mensagem':
                     if (currentSala && data.salaId === currentSala.id) exibirMensagem(data);
-                    atualizarVisaoServidor(data);
                     break;
 
                 case 'mensagem_direta':
                     if (data.para === currentUser.email || data.de === currentUser.email) exibirMensagem(data);
+                    break;
+
+                case 'e2e_falha_leitura': {
+                    // Alguém NÃO conseguiu decifrar minha mensagem E2E → aviso vermelho na mensagem
+                    const container = document.querySelector(`[data-msgid="${(data.msgId || '').replace(/"/g, '')}"]`);
+                    if (!container || container.dataset.de !== currentUser.email) break; // só o remetente vê
+                    const quem = data.quem || 'Um usuário';
+                    const elTxt = container.querySelector('.message-text');
+                    if (elTxt && !elTxt.querySelector(`.nao-recebida[data-quem="${CSS.escape(quem)}"]`)) {
+                        elTxt.insertAdjacentHTML('beforeend',
+                            `<div class="message-note nao-recebida" data-quem="${escaparHtml(quem)}">⚠️ ${escaparHtml(quem)} NÃO conseguiu ler esta mensagem (não tem a chave privada neste navegador)</div>`);
+                    }
+                    break;
+                }
+
+                case 'visao_adm':
+                    // Cópia exclusiva para quem está na Sala ADM (nunca deve ir para o chat)
                     atualizarVisaoServidor(data);
                     break;
 
+                case 'lista_salas':
+                    // Resposta do servidor com as salas públicas REAIS
+                    exibirListaSalas(data.salas || []);
+                    break;
+
+                case 'atualizar_salas':
+                    // Avisado pelo servidor: alguém criou/entrou/saiu de sala pública
+                    listarSalas();
+                    break;
+
+                case 'criar_sala':
+                    // Modo Pages (BroadcastChannel): outra aba criou a sala
+                    if (MODO === 'pages' && data.sala && data.email !== currentUser.email) {
+                        salasLocais[data.sala.id] = data.sala;
+                        listarSalas();
+                    }
+                    break;
+
                 case 'listar_salas': {
+                    // Eco local (modo BroadcastChannel / GitHub Pages)
                     const lista = Object.values(salasLocais).filter(s => s.publica).map(s => ({ salaId: s.id, nome: s.nome, usuarios: s.usuarios.length }));
                     exibirListaSalas(lista);
                     break;
@@ -627,12 +980,17 @@
 
                 case 'demo_status':
                     atualizarDemoStatus(data.ativo);
-                    if (data.mensagem) alert(data.mensagem);
+                    // Só alerta quando o usuário acabou de alternar o modo
+                    if (data.mensagem && aguardandoToggleDemo) {
+                        aguardandoToggleDemo = false;
+                        alert(data.mensagem);
+                    }
                     break;
 
                 case 'entrar_adm': break;
 
                 case 'erro':
+                    aguardandoToggleDemo = false;
                     alert(data.mensagem);
                     break;
             }
@@ -644,59 +1002,140 @@
         function mostrarPainelPrincipal() {
             document.getElementById('loginPanel').classList.add('hidden');
             document.getElementById('mainPanel').classList.remove('hidden');
-            document.getElementById('userNameDisplay').textContent = currentUser.nome;
             document.getElementById('userEmailDisplay').textContent = currentUser.email;
-            if (MODO !== 'pages') {
-                document.getElementById('modeBadge').textContent = 'Local (WebSocket)';
-                document.getElementById('modeBadge').className = 'mode-badge mode-local';
+            fecharEdicaoNome();
+            document.getElementById('topbarUserRow').classList.remove('hidden');
+            document.getElementById('topbarActions').classList.remove('hidden');
+            // Atualiza o ícone de conexão no rodapé
+            const online = MODO === 'pages' || (canal && canal.readyState === WebSocket.OPEN);
+            atualizarStatusConexao(!!online);
+        }
+
+        function editarNome() {
+            if (!currentUser) return;
+            if (currentSala || MODO_ADM) { fecharEdicaoNome(); return; } // bloqueado em salas de chat/ADM
+            const input = document.getElementById('userNameInput');
+            const display = document.getElementById('userNameDisplay');
+            input.value = currentUser.nome;
+            input.classList.remove('hidden');
+            display.classList.add('hidden');
+            input.focus();
+            input.select();
+        }
+
+        function salvarNomeUsuario() {
+            if (!currentUser) return;
+            if (currentSala || MODO_ADM) { fecharEdicaoNome(); return; } // bloqueado em salas de chat/ADM
+            const input = document.getElementById('userNameInput');
+            const novoNome = input.value.trim();
+            if (!novoNome) {
+                input.value = currentUser.nome;
+            } else if (novoNome !== currentUser.nome) {
+                currentUser.nome = novoNome;
+                // Persistir na sessão local
+                try {
+                    localStorage.setItem('cripto_chat_sessao', JSON.stringify({ email: currentUser.email, nome: novoNome }));
+                } catch (e) { console.warn('[Sessão] Falha ao salvar nome:', e); }
+                // Notificar servidor (passa a valer para mensagens futuras)
+                enviar({ tipo: 'alterar_nome', email: currentUser.email, nome: novoNome });
+                console.log('[Usuário] Nome alterado para:', novoNome);
             }
+            // Voltar ao estado de exibição (bloqueado)
+            fecharEdicaoNome();
+        }
+
+        function fecharEdicaoNome() {
+            const input = document.getElementById('userNameInput');
+            const display = document.getElementById('userNameDisplay');
+            if (input) { input.classList.add('hidden'); input.blur(); }
+            if (display) {
+                display.textContent = currentUser ? currentUser.nome : '';
+                display.classList.remove('hidden');
+            }
+        }
+
+        // Bloqueia a edição do nome enquanto o usuário estiver em sala de chat ou na ADM
+        function desabilitarEdicaoNome(sim) {
+            const btn = document.querySelector('.fb-edit');
+            if (!btn) return;
+            btn.disabled = !!sim;
+            btn.title = sim ? 'Disponível apenas no painel principal (fora de salas)' : 'Editar nome de usuário';
         }
 
         function desconectar() {
             if (canal) canal.close();
             currentUser = null;
             currentSala = null;
+            admIniciada = false; // ao logar de novo na aba ADM, entra na ADM novamente
             otpAtual = null;
             emailParaVerificar = null;
+            try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
             document.getElementById('loginPanel').classList.remove('hidden');
             document.getElementById('mainPanel').classList.add('hidden');
             document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('sairSalaBar').classList.add('hidden');
+            document.getElementById('dashboardArea').classList.remove('hidden');
+            document.getElementById('tabsBar').classList.remove('hidden');
+            document.getElementById('pageHeader').classList.remove('hidden');
             document.getElementById('loginStep2').classList.add('hidden');
             document.getElementById('loginStep1').classList.remove('hidden');
             document.getElementById('otpCode').value = '';
             document.getElementById('loginEmail').value = '';
+            document.getElementById('topbarUserRow').classList.add('hidden');
+            document.getElementById('topbarActions').classList.add('hidden');
         }
 
         // ============================================================
         // MODO DEMO: Botão ao lado de Enviar Código
         // ============================================================
         let demoAtivo = false;
+        let aguardandoToggleDemo = false;
 
         function mostrarSenhaDemo() {
-            document.getElementById('demoPasswordInput').style.display = 'block';
-            document.getElementById('demoPassword').focus();
+            console.log('[mostrarSenhaDemo] Exibindo input de senha');
+            const input = document.getElementById('demoPasswordInput');
+            if (input) input.classList.remove('hidden');
+            const pwd = document.getElementById('demoPassword');
+            if (pwd) { pwd.value = ''; pwd.focus(); }
+        }
+
+        function fecharSenhaDemo() {
+            const input = document.getElementById('demoPasswordInput');
+            if (input) input.classList.add('hidden');
         }
 
         function toggleDemo() {
-            const senha = document.getElementById('demoPassword').value.trim();
+            const senhaEl = document.getElementById('demoPassword');
+            if (!senhaEl) { console.error('[demoPassword] Elemento não encontrado!'); return; }
+            const senha = senhaEl.value.trim();
             if (!senha) { alert('Digite a senha mestre.'); return; }
+            console.log('[toggleDemo] Senha digitada:', senha);
+            console.log('[toggleDemo] MODO:', MODO, '| canal:', canal ? canal.readyState : 'null');
+            if (MODO !== 'pages') {
+                if (!canal || canal.readyState !== WebSocket.OPEN) {
+                    console.log('[toggleDemo] Conectando WebSocket...');
+                    conectarWebSocket();
+                }
+            }
             const tipo = demoAtivo ? 'desabilitar_demo' : 'habilitar_demo';
+            console.log('[toggleDemo] Enviando:', tipo);
+            aguardandoToggleDemo = true;
             enviar({ tipo, senha });
-            const input = document.getElementById('demoPasswordInput');
-            if (input) input.style.display = 'none';
+            fecharSenhaDemo();
         }
 
         function atualizarDemoStatus(ativo) {
             demoAtivo = ativo;
-            const btn = document.getElementById('demoButton');
+            const indicator = document.getElementById('modeIndicator');
+            if (!indicator) return;
             if (ativo) {
-                btn.textContent = 'Desabilitar Modo Demo';
-                btn.style.opacity = '1';
-                btn.style.background = 'linear-gradient(135deg, #f093fb, #f5576c)';
+                indicator.innerHTML = 'MODO DEMO <span class="demo-x">✗</span>';
+                indicator.className = 'mode-indicator mode-demo demo-on';
+                indicator.title = 'Modo demo ATIVO — clique para desativar';
             } else {
-                btn.textContent = 'Modo Demo';
-                btn.style.opacity = '0.7';
-                btn.style.background = 'linear-gradient(135deg, #43e97b, #38f9d7)';
+                indicator.innerHTML = 'MODO DEMO <span class="demo-open">＋</span>';
+                indicator.className = 'mode-indicator mode-login';
+                indicator.title = 'Modo demo desativado — clique para abrir/ativar';
             }
         }
 
@@ -741,10 +1180,38 @@
                 }
                 atualizarInfoSala();
                 atualizarListaUsuarios();
-                document.getElementById('chatArea').classList.remove('hidden');
+                mostrarChat();
             } else {
                 enviar({ tipo: 'entrar_sala', salaId });
             }
+        }
+
+        // Mostra APENAS a sala de chat (esconde dashboard/abas/título) + botão de sair
+        function mostrarChat() {
+            fecharEdicaoNome();           // não pode editar nome dentro da sala
+            desabilitarEdicaoNome(true);  // botão ✎ desabilitado enquanto estiver na sala
+            document.getElementById('pageHeader').classList.add('hidden');
+            document.getElementById('dashboardArea').classList.add('hidden');
+            document.getElementById('tabsBar').classList.add('hidden');
+            document.getElementById('sairSalaBar').classList.remove('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+        }
+
+        // Sai da sala e retorna para o dashboard
+        function sairDaSala() {
+            if (currentSala) {
+                enviar({ tipo: 'sair_sala', salaId: currentSala.id });
+                console.log('[Sala] Usuário saiu da sala:', currentSala.id);
+            }
+            currentSala = null;
+            desabilitarEdicaoNome(false); // voltou ao painel principal: ✎ reabilitado
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('sairSalaBar').classList.add('hidden');
+            document.getElementById('dashboardArea').classList.remove('hidden');
+            document.getElementById('tabsBar').classList.remove('hidden');
+            document.getElementById('pageHeader').classList.remove('hidden');
+            document.getElementById('chatMessages').innerHTML = '';
+            listarSalas();
         }
 
         function entrarSalaPrivada() {
@@ -777,53 +1244,175 @@
         // ============================================================
         // MENSAGENS
         // ============================================================
-        function enviarMensagem() {
+        // Resolve "@Nome..." contra os usuários da sala (suporta nomes com espaços)
+        function resolverDestinatarioDM(texto) {
+            if (!texto.startsWith('@')) return null;
+            const usuarios = currentSala ? currentSala.usuarios : [];
+            const resto = texto.substring(1).toLowerCase();
+            // Nome mais longo primeiro: "@Aluno Teste" antes de "@Aluno"
+            const candidatos = usuarios
+                .filter(u => u.nome && resto.startsWith(u.nome.toLowerCase()))
+                .sort((a, b) => b.nome.length - a.nome.length);
+            for (const u of candidatos) {
+                const fim = resto[u.nome.length];
+                // Nome deve terminar ali (fim do texto ou espaço/pontuação antes da mensagem)
+                if (fim === undefined || !/[0-9a-zà-ÿ]/.test(fim)) return u;
+            }
+            return null;
+        }
+
+        // Extrai menções "#Nome..." do texto (suporta nomes com espaços e pontuação após o nome)
+        function extrairMencoes(texto) {
+            if (!currentSala) return [];
+            const nomes = (currentSala.usuarios || [])
+                .filter(u => u.nome)
+                .map(u => u.nome)
+                .sort((a, b) => b.length - a.length);
+            const mencoes = [];
+            let pos = 0;
+            while (pos < texto.length) {
+                const i = texto.indexOf('#', pos);
+                if (i === -1) break;
+                const depois = texto.substring(i + 1).toLowerCase();
+                const nome = nomes.find(n => {
+                    if (!depois.startsWith(n.toLowerCase())) return false;
+                    const fim = depois[n.length];
+                    // Fim válido: fim do texto ou pontuação/espaço (não letra/dígito)
+                    return fim === undefined || !/[0-9a-zà-ÿ]/.test(fim);
+                });
+                if (nome) {
+                    mencoes.push(nome);
+                    pos = i + 1 + nome.length;
+                } else {
+                    pos = i + 1;
+                }
+            }
+            return mencoes;
+        }
+
+        async function enviarMensagem() {
             const texto = document.getElementById('messageInput').value.trim();
             const algoritmo = document.getElementById('cryptoSelect').value;
             const chave = document.getElementById('cryptoKeyInput').value;
             if (!texto) return;
 
-            const dmMatch = texto.match(/^@(\S+)/);
-            const mencoes = (texto.match(/#(\w+)/g) || []).map(m => m.slice(1));
+            const ehDM = texto.startsWith('@');
+            const destino = ehDM ? resolverDestinatarioDM(texto) : null;
+            if (ehDM && !destino) { alert('Usuário não encontrado na sala.'); return; }
+            const mencoes = ehDM ? [] : extrairMencoes(texto);
 
-            let textoParaEnviar = texto, criptografada = false, algoNome = null;
-            if (algoritmo !== 'none') {
+            if (algoritmo === 'e2e') {
+                // E2E: cifra com a CHAVE PÚBLICA de cada destinatário.
+                // Só quem tem a chave privada (o destinatário) pode ler — nem o servidor.
+                const destinatarios = ehDM
+                    ? [destino.email]
+                    : (currentSala?.usuarios || []).map(u => u.email);
+                destinatarios.push(currentUser.email);
+                const unicos = [...new Set(destinatarios)];
+                // Quem ainda não publicou chave pública NÃO poderá ler — segue apenas o aviso
+                const semChave = unicos.filter(e => e !== currentUser.email && !chavesPublicasE2E[e]);
+                const comChave = unicos.filter(e => e === currentUser.email || chavesPublicasE2E[e]);
+                const blocos = await criptografarE2E(texto, comChave);
+                if (!blocos) return; // falhou — alerta já emitido
+                // Usuários sem chave pública: aviso embutido na própria mensagem (sem alert)
+                const semChaveNomes = semChave.map(email =>
+                    (currentSala?.usuarios || []).find(u => u.email === email)?.nome || email);
+                if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto: '', criptografada: false, e2e: true, algoritmo: 'rsa', blocos, semChave: semChaveNomes, mencoes: [destino.nome] });
+                else enviar({ tipo: 'mensagem', texto: '', criptografada: false, e2e: true, algoritmo: 'rsa', blocos, semChave: semChaveNomes, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
+            } else if (algoritmo !== 'none') {
                 if (!chave) { alert('Informe a chave para criptografia.'); return; }
-                textoParaEnviar = criptografar(texto, algoritmo, chave);
-                criptografada = true;
-                algoNome = algoritmo;
-            }
-
-            if (dmMatch) {
-                const paraNome = dmMatch[1];
-                const usuarios = currentSala ? currentSala.usuarios : [];
-                const destino = usuarios.find(u => u.nome.toLowerCase() === paraNome.toLowerCase());
-                if (!destino) { alert(`Usuário @${paraNome} não encontrado na sala.`); return; }
-                enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto: textoParaEnviar, criptografada, algoritmo: algoNome });
+                const cifrado = await criptografar(texto, algoritmo, chave);
+                if (cifrado === null) { alert('Falha ao criptografar a mensagem.'); return; }
+                // SIMÉTRICA: a mesma chave cifra E decifra → ela VIAJA COM A MENSAGEM.
+                // Isso é proposital na demonstração: a Sala ADM captura e descriptografa.
+                const base = { texto: cifrado, criptografada: true, algoritmo, chave };
+                if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, ...base, mencoes: [destino.nome] });
+                else enviar({ tipo: 'mensagem', ...base, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
             } else {
-                enviar({ tipo: 'mensagem', texto: textoParaEnviar, criptografada, algoritmo: algoNome, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
+                if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto, criptografada: false, mencoes: [destino.nome] });
+                else enviar({ tipo: 'mensagem', texto, criptografada: false, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
             }
             document.getElementById('messageInput').value = '';
-            atualizarStatusCriptografia(algoritmo);
         }
 
-        function exibirMensagem(data) {
+        // Destaca nomes mencionados (#Nome ou @Nome) no texto da mensagem
+        function escaparHtml(texto) {
+            return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function destacarMencoes(texto, mencoes) {
+            let html = escaparHtml(texto);
+            if (mencoes && mencoes.length) {
+                // Mais longo primeiro: "#Maria Silva" antes de "#Maria"
+                const nomes = [...new Set(mencoes)].sort((a, b) => b.length - a.length);
+                for (const nome of nomes) {
+                    const seguro = nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    html = html.replace(new RegExp('[@#]' + seguro, 'gi'), m => `<span class="mention">${m}</span>`);
+                }
+            }
+            return html;
+        }
+
+        let msgCounter = 0;
+        async function exibirMensagem(data) {
             if (data.tipo === 'mensagem_direta' && data.para !== currentUser.email && data.de !== currentUser.email) return;
             const div = document.getElementById('chatMessages');
             const dataHora = new Date(data.dataHora || Date.now()).toLocaleString('pt-BR');
-            let msgHtml = '';
-            if (data.criptografada) {
-                msgHtml = `<div class="message encrypted">
-                    <div class="message-header"><span class="message-author">${data.nome}</span> <span>${dataHora}</span> <span class="encryption-badge">${(data.algoritmo || '').toUpperCase()}</span> ${data.tipo === 'mensagem_direta' ? '<span class="dm-badge">DIRETA</span>' : ''}</div>
-                    <div class="message-text">${data.texto}</div></div>`;
+            const id = 'msg' + (++msgCounter);
+            const dmBadge = data.tipo === 'mensagem_direta' ? '<span class="dm-badge">DIRETA</span>' : '';
+            const autor = escaparHtml(data.nome || '?');
+            let classe, header, corpo;
+
+            if (data.e2e) {
+                // PONTA A PONTA: só o destinatário (chave privada) consegue ler
+                classe = 'message encrypted';
+                header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge e2e-badge">E2E · RSA-2048</span> ${dmBadge}`;
+                corpo = '<em style="color:#aaa;">🔓 verificando chave privada…</em>';
+            } else if (data.criptografada) {
+                // SIMÉTRICA: viajou cifrada com a chave junto → aqui é exibida DESCRIPTOGRAFADA
+                classe = 'message encrypted';
+                header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge">${(data.algoritmo || '').toUpperCase()}</span> ${dmBadge}`;
+                corpo = '<em style="color:#aaa;">🔓 descriptografando…</em>';
             } else {
-                msgHtml = `<div class="message">
-                    <div class="message-header"><span class="message-author">${data.nome}</span> <span>${dataHora}</span> ${data.tipo === 'mensagem_direta' ? '<span class="dm-badge">DIRETA</span>' : ''}</div>
-                    <div class="message-text">${data.texto}</div></div>`;
+                classe = 'message';
+                header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> ${dmBadge}`;
+                corpo = destacarMencoes(data.texto, data.mencoes);
             }
-            div.insertAdjacentHTML('beforeend', msgHtml);
+            div.insertAdjacentHTML('beforeend',
+                `<div id="${id}" data-msgid="${escaparHtml(data.id || '')}" data-de="${escaparHtml(data.de || '')}" class="${classe}"><div class="message-header">${header}</div><div class="message-text">${corpo}</div></div>`);
             div.scrollTop = div.scrollHeight;
+
+            // Descriptografa e revela o texto (a ordem é preservada porque o container já existe)
+            if (data.e2e) {
+                const texto = await descriptografarE2E(data.blocos);
+                const souRemetente = data.de === currentUser.email;
+                let extra = '';
+                if (texto === null) {
+                    if (!souRemetente) {
+                        // Não tenho a chave privada → AVISO O REMETENTE que não pude ler
+                        enviar({ tipo: 'e2e_falha_leitura', paraEmail: data.de, msgId: data.id, nome: currentUser.nome });
+                        extra = '<div class="message-note">📨 O remetente já foi avisado de que você não pôde decifrar</div>';
+                    }
+                } else if (souRemetente && data.semChave && data.semChave.length) {
+                    // Quem está SEM chave pública não recebeu — só o REMETENTE vê este aviso
+                    extra = `<div class="message-note nao-recebida">⚠️ Não entregue para ${data.semChave.length === 1 ? 'o usuário' : 'os usuários'} sem chave pública: ${data.semChave.map(escaparHtml).join(', ')}</div>`;
+                }
+                preencherMensagem(id, texto === null
+                    ? '<em style="color:#ff8f8f;">🔒 Mensagem E2E — apenas os destinatários têm a chave para ler</em>'
+                    : destacarMencoes(texto, data.mencoes), texto !== null, 'Chave privada (seu navegador) decifrou. O servidor só viu ciphertext.', extra);
+            } else if (data.criptografada) {
+                // Clientes antigos não enviavam a chave; o AES legado ([AES-256] base64) ainda pode ser lido
+                const ehAesLegado = data.algoritmo === 'aes' && !data.chave && (data.texto || '').startsWith('[AES-256] ');
+                const texto = data.chave ? await descriptografar(data.texto, data.algoritmo, data.chave)
+                    : (ehAesLegado ? await descriptografar(data.texto, 'aes', '') : null);
+                preencherMensagem(id, texto === null ? escaparHtml(data.texto) : destacarMencoes(texto, data.mencoes),
+                    texto !== null, `Enviada cifrada (${(data.algoritmo || '').toUpperCase()}) · exibida descriptografada — chave simétrica`);
+            }
             salvarMensagemLocal(data);
+        }
+        function preencherMensagem(id, html, descriptografada, nota, extra = '') {
+            const el = document.querySelector('#' + id + ' .message-text');
+            if (!el) return;
+            el.innerHTML = html + (descriptografada && nota ? `<div class="message-note">🔒 ${escaparHtml(nota)}</div>` : '') + extra;
         }
 
         // ============================================================
@@ -834,15 +1423,32 @@
                 case 'caesar': return cifraCesar(texto, parseInt(chave) || 13);
                 case 'vigenere': return cifraVigenere(texto, chave);
                 case 'xor': return cifraXOR(texto, chave);
-                case 'aes': return '[AES-256] ' + btoa(texto);
+                case 'aes': return aesCriptografar(texto, chave);
                 default: return texto;
             }
         }
+        // Descriptografa mensagens SIMÉTRICAS (mesma chave cifra e decifra)
+        async function descriptografar(texto, algoritmo, chave) {
+            try {
+                // Compatibilidade: clientes antigos enviavam "AES" como base64 simples com prefixo
+                if (algoritmo === 'aes' && typeof texto === 'string' && texto.startsWith('[AES-256] ')) {
+                    return atob(texto.substring('[AES-256] '.length));
+                }
+                switch (algoritmo) {
+                    case 'caesar': return cifraCesar(texto, -(parseInt(chave) || 13));
+                    case 'vigenere': return decifraVigenere(texto, chave);
+                    case 'xor': return decifraXOR(texto, chave);
+                    case 'aes': return await aesDescriptografar(texto, chave);
+                    default: return null;
+                }
+            } catch (e) { console.warn('[Crypto] Falha ao descriptografar:', e); return null; }
+        }
         function cifraCesar(texto, n) {
+            // ((x % 26) + 26) % 26 normaliza o módulo: no JS, -12 % 26 === -12 (negativo!)
             return texto.split('').map(c => {
                 const code = c.charCodeAt(0);
-                if (code >= 65 && code <= 90) return String.fromCharCode(((code - 65 + n) % 26) + 65);
-                if (code >= 97 && code <= 122) return String.fromCharCode(((code - 97 + n) % 26) + 97);
+                if (code >= 65 && code <= 90) return String.fromCharCode(((((code - 65 + n) % 26) + 26) % 26) + 65);
+                if (code >= 97 && code <= 122) return String.fromCharCode(((((code - 97 + n) % 26) + 26) % 26) + 97);
                 return c;
             }).join('');
         }
@@ -852,8 +1458,9 @@
                 const c = texto[i], code = c.charCodeAt(0);
                 if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
                     const base = code >= 97 ? 97 : 65;
-                    const shift = chave.charCodeAt(keyIndex % chave.length) - 65;
-                    result += String.fromCharCode(((code - base + shift) % 26) + base);
+                    // Chaves com números/pontuação também funcionam (shift sempre em 0-25)
+                    const shift = ((((chave.charCodeAt(keyIndex % chave.length) - 65) % 26) + 26) % 26);
+                    result += String.fromCharCode(((((code - base + shift) % 26) + 26) % 26) + base);
                     keyIndex++;
                 } else { result += c; }
             }
@@ -864,53 +1471,224 @@
             for (let i = 0; i < texto.length; i++) result += String.fromCharCode(texto.charCodeAt(i) ^ chave.charCodeAt(i % chave.length));
             return btoa(result);
         }
+        function decifraVigenere(texto, chave) {
+            let result = '', keyIndex = 0; chave = chave.toUpperCase();
+            for (let i = 0; i < texto.length; i++) {
+                const c = texto[i], code = c.charCodeAt(0);
+                if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+                    const base = code >= 97 ? 97 : 65;
+                    const shift = ((((chave.charCodeAt(keyIndex % chave.length) - 65) % 26) + 26) % 26);
+                    result += String.fromCharCode(((((code - base - shift) % 26) + 26) % 26) + base);
+                    keyIndex++;
+                } else { result += c; }
+            }
+            return result;
+        }
+        function decifraXOR(texto, chave) {
+            const bin = atob(texto);
+            let result = '';
+            for (let i = 0; i < bin.length; i++) result += String.fromCharCode(bin.charCodeAt(i) ^ chave.charCodeAt(i % chave.length));
+            return result;
+        }
+
+        // ===== AES-256-GCM REAL (Web Crypto) — simétrica =====
+        function u8ParaB64(u8) {
+            let s = '';
+            for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+            return btoa(s);
+        }
+        function b64ParaU8(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+        async function aesDerivarChave(senha, salt) {
+            const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        }
+        async function aesCriptografar(texto, senha) {
+            try {
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await aesDerivarChave(senha, salt);
+                const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(texto));
+                return 'v1.' + u8ParaB64(salt) + '.' + u8ParaB64(iv) + '.' + u8ParaB64(new Uint8Array(ct));
+            } catch (e) { console.warn('[AES] Falha ao cifrar:', e); return null; }
+        }
+        async function aesDescriptografar(texto, senha) {
+            const partes = texto.split('.');
+            if (partes.length !== 4 || partes[0] !== 'v1') return null;
+            const salt = b64ParaU8(partes[1]), iv = b64ParaU8(partes[2]), ct = b64ParaU8(partes[3]);
+            const key = await aesDerivarChave(senha, salt);
+            const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+            return new TextDecoder().decode(pt);
+        }
+
+        // ===== E2E — RSA-2048 (ponta a ponta, Web Crypto) =====
+        // Chave privada: fica SEMPRE no computador do usuário (localStorage, nunca enviada).
+        // Chave pública: publicada no servidor para quem quiser enviar mensagens E2E.
+        let minhaChavePrivada = null;    // CryptoKey (RSA-OAEP)
+        let minhaChavePublicaB64 = null; // SPKI em base64
+        const chavesPublicasE2E = {};    // email -> chave pública (SPKI base64)
+        const TAM_BLOCO_RSA = 190;       // bytes por bloco (RSA-2048 + OAEP/SHA-256)
+
+        async function prepararChavesE2E() {
+            if (!currentUser || !window.crypto?.subtle) return;
+            const kPriv = 'cripto_chat_e2e_priv_' + currentUser.email;
+            const kPub = 'cripto_chat_e2e_pub_' + currentUser.email;
+            try {
+                const jwk = JSON.parse(localStorage.getItem(kPriv) || 'null');
+                const pubB64 = localStorage.getItem(kPub);
+                if (jwk && pubB64) {
+                    minhaChavePrivada = await crypto.subtle.importKey('jwk', jwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
+                    minhaChavePublicaB64 = pubB64;
+                }
+            } catch (e) { console.warn('[E2E] Chave local inválida, gerando nova:', e); minhaChavePrivada = null; }
+            if (!minhaChavePrivada) {
+                console.log('[E2E] Gerando par de chaves RSA-2048...');
+                const par = await crypto.subtle.generateKey({ name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']);
+                const jwk = await crypto.subtle.exportKey('jwk', par.privateKey);
+                const spki = await crypto.subtle.exportKey('spki', par.publicKey);
+                minhaChavePrivada = par.privateKey;
+                minhaChavePublicaB64 = u8ParaB64(new Uint8Array(spki));
+                try {
+                    localStorage.setItem(kPriv, JSON.stringify(jwk));
+                    localStorage.setItem(kPub, minhaChavePublicaB64);
+                } catch (e) { console.warn('[E2E] Não foi possível salvar as chaves no navegador:', e); }
+            }
+            enviar({ tipo: 'publicar_chave', chavePublica: minhaChavePublicaB64 });
+            console.log('[E2E] Chave pública RSA publicada (a privada ficou no navegador)');
+        }
+        async function importarChavePublica(b64) {
+            return crypto.subtle.importKey('spki', b64ParaU8(b64), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
+        }
+        async function criptografarE2E(texto, emails) {
+            const blocos = {};
+            const bytes = new TextEncoder().encode(texto);
+            for (const email of [...new Set(emails)]) {
+                const pubB64 = email === currentUser?.email ? minhaChavePublicaB64 : chavesPublicasE2E[email];
+                if (!pubB64) { alert(`"${email}" ainda não publicou chave pública E2E.\nPeça para a pessoa entrar (ou sair e entrar novamente) para gerar as chaves.`); return null; }
+                try {
+                    const pub = await importarChavePublica(pubB64);
+                    const partes = [];
+                    for (let i = 0; i < bytes.length; i += TAM_BLOCO_RSA) {
+                        const ct = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pub, bytes.subarray(i, i + TAM_BLOCO_RSA));
+                        partes.push(u8ParaB64(new Uint8Array(ct)));
+                    }
+                    blocos[email] = partes.join('.');
+                } catch (e) { console.warn('[E2E] Falha ao cifrar para', email, e); alert('Falha ao cifrar a mensagem (chave pública inválida de ' + email + ').'); return null; }
+            }
+            return blocos;
+        }
+        async function descriptografarE2E(blocos) {
+            if (!blocos || !minhaChavePrivada) return null;
+            const bloco = blocos[currentUser?.email];
+            if (!bloco) return null; // não fui destinatário
+            try {
+                const saida = [];
+                for (const parte of bloco.split('.')) {
+                    saida.push(...new Uint8Array(await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, minhaChavePrivada, b64ParaU8(parte))));
+                }
+                return new TextDecoder().decode(new Uint8Array(saida));
+            } catch (e) { console.warn('[E2E] Falha ao decifrar:', e); return null; }
+        }
 
         // ============================================================
-        // SALA ADM
+        // SALA ADM (abre em ABA SEPARADA: ?adm=1)
         // ============================================================
         function abrirSalaADM() {
+            // Visão exclusiva do servidor — nova aba com topo e rodapé próprios
+            window.open(window.location.pathname + '?adm=1', '_blank');
+        }
+        function fecharSalaADM() {
+            window.close();
+            // Se a aba não foi aberta pelo botão (ex.: digitada manualmente), volta ao modo normal
+            setTimeout(() => { window.location.href = window.location.pathname; }, 300);
+        }
+        // Entrada automática quando esta aba É a da ADM
+        let admIniciada = false;
+        function iniciarModoADM() {
+            if (!MODO_ADM || admIniciada || !currentUser) return;
+            admIniciada = true;
             enviar({ tipo: 'entrar_adm' });
             document.getElementById('admPanel').classList.remove('hidden');
+            document.getElementById('pageHeader').classList.add('hidden');
+            document.getElementById('dashboardArea').classList.add('hidden');
+            document.getElementById('tabsBar').classList.add('hidden');
+            const btn = document.getElementById('btnSalaADM');
+            if (btn) btn.classList.add('hidden'); // já estamos na ADM
+            desabilitarEdicaoNome(true);          // não edita nome na ADM
         }
-        function fecharSalaADM() { document.getElementById('admPanel').classList.add('hidden'); }
+
+        // Dados das mensagens capturadas pela ADM (o botão guarda só um índice —
+        // evita qualquer problema de escaping/tamanho de ciphertext em atributos HTML)
+        let admDadosMsgs = [];
 
         function atualizarVisaoServidor(data) {
             const div = document.getElementById('admMessages');
             const dataHora = new Date(data.dataHora || Date.now()).toLocaleString('pt-BR');
-            const classe = data.criptografada ? '' : 'plaintext';
-            const status = data.criptografada ? `CRIPTOGRAFADA [${(data.algoritmo || '').toUpperCase()}]` : 'TEXTO CLARO';
-            div.insertAdjacentHTML('beforeend', `<div class="adm-message ${classe}">[${dataHora}] ${data.nome} | ${status}<br>${data.texto}</div>`);
+            const nome = escaparHtml(data.nome || '?');
+            let html;
+            if (data.e2e) {
+                // E2E: o servidor vê APENAS ciphertext por destinatário — impossível decifrar
+                const blocos = data.blocos || {};
+                const chaves = Object.keys(blocos);
+                const exemplo = chaves.length ? blocos[chaves[0]] : '';
+                html = `<div class="adm-message">
+                    [${dataHora}] ${nome} | <strong>🔒 E2E — RSA-2048 (ponta a ponta)</strong><br>
+                    <code>${escaparHtml(exemplo.slice(0, 140))}${exemplo.length > 140 ? '…' : ''}</code><br>
+                    <em>⛔ O servidor NÃO pode descriptografar: a chave privada nunca sai do computador do destinatário.</em>
+                    ${chaves.length > 1 ? `<br><small>Copiado (cifrado) para: ${chaves.map(escaparHtml).join(', ')}</small>` : ''}
+                </div>`;
+            } else if (data.criptografada && data.chave) {
+                // SIMÉTRICA: a chave viajou com a mensagem → o servidor PODE descriptografar
+                const idx = admDadosMsgs.push({ texto: data.texto, algoritmo: data.algoritmo, chave: data.chave }) - 1;
+                html = `<div class="adm-message">
+                    [${dataHora}] ${nome} | CRIPTOGRAFADA [${escaparHtml((data.algoritmo || '').toUpperCase())}] — chave junto: "${escaparHtml(data.chave)}"<br>
+                    <code>${escaparHtml(data.texto)}</code><br>
+                    <button class="btn-adm-decrypt" data-idx="${idx}"
+                            onclick="descriptografarNoAdm(this)">🔓 Descriptografar (SIMÉTRICA: o servidor tem a chave)</button>
+                </div>`;
+            } else if (data.criptografada) {
+                html = `<div class="adm-message">[${dataHora}] ${nome} | CRIPTOGRAFADA [${escaparHtml((data.algoritmo || '').toUpperCase())}]<br><code>${escaparHtml(data.texto)}</code></div>`;
+            } else {
+                html = `<div class="adm-message plaintext">[${dataHora}] ${nome} | TEXTO CLARO<br>${escaparHtml(data.texto || '')}</div>`;
+            }
+            div.insertAdjacentHTML('beforeend', html);
             div.scrollTop = div.scrollHeight;
             document.getElementById('serverView').innerHTML = div.innerHTML;
+        }
+
+        // Botão da Sala ADM: servidor descriptografa mensagem SIMÉTRICA (tinha a chave)
+        async function descriptografarNoAdm(btn) {
+            const d = admDadosMsgs[parseInt(btn.dataset.idx)];
+            if (!d) return;
+            btn.disabled = true;
+            btn.textContent = '🔓 Descriptografando...';
+            const claro = await descriptografar(d.texto, d.algoritmo, d.chave);
+            const pai = btn.parentElement;
+            btn.remove();
+            pai.insertAdjacentHTML('beforeend', claro === null
+                ? '<em style="color:#ff6b6b;">⛔ Falha ao descriptografar (chave incorreta ou formato não reconhecido).</em>'
+                : `<code style="color:#43e97b;">✅ ${escaparHtml(claro)}</code><br><em>O servidor leu a mensagem porque a chave SIMÉTRICA viajou junto com ela. Em E2E (RSA) isso seria impossível.</em>`);
+            document.getElementById('serverView').innerHTML = document.getElementById('admMessages').innerHTML;
         }
 
         // ============================================================
         // DEMO
         // ============================================================
-        function demoCriptografar() {
+        async function demoCriptografar() {
             const algo = document.getElementById('demoAlgo').value;
             const chave = document.getElementById('demoKey').value;
             const texto = document.getElementById('demoTexto').value;
             if (!texto || !chave) { alert('Preencha chave e texto.'); return; }
-            let resultado = algo === 'aes' ? '[AES-256] ' + btoa(texto) : criptografar(texto, algo, chave);
-            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado:</strong><br><code style="word-break:break-all;">${resultado}</code></div>`;
+            const resultado = await criptografar(texto, algo, chave);
+            if (resultado === null) { alert('Falha ao criptografar.'); return; }
+            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado:</strong><br><code style="word-break:break-all;">${escaparHtml(String(resultado))}</code></div>`;
         }
-        function demoDescriptografar() {
+        async function demoDescriptografar() {
             const algo = document.getElementById('demoAlgo').value;
             const chave = document.getElementById('demoKey').value;
             const texto = document.getElementById('demoTexto').value;
             if (!texto || !chave) { alert('Preencha chave e texto.'); return; }
-            let resultado;
-            switch (algo) {
-                case 'caesar': resultado = cifraCesar(texto, -(parseInt(chave) || 13)); break;
-                case 'vigenere': resultado = cifraVigenere(texto, chave); break;
-                case 'xor':
-                    try { const decoded = atob(texto); let res = ''; for (let i = 0; i < decoded.length; i++) res += String.fromCharCode(decoded.charCodeAt(i) ^ chave.charCodeAt(i % chave.length)); resultado = res; } catch(e) { resultado = 'Erro: texto inválido.'; }
-                    break;
-                case 'aes': try { resultado = atob(texto.replace('[AES-256] ', '')); } catch(e) { resultado = 'Erro: texto inválido.'; } break;
-                default: resultado = texto;
-            }
-            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid #43e97b;"><strong style="color:#43e97b;">Texto Descriptografado:</strong><br><code>${resultado}</code></div>`;
+            const resultado = await descriptografar(texto, algo, chave);
+            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid #43e97b;"><strong style="color:#43e97b;">Texto Descriptografado:</strong><br><code>${resultado === null ? 'Erro: não foi possível descriptografar.' : escaparHtml(resultado)}</code></div>`;
         }
 
         // ============================================================
@@ -929,18 +1707,106 @@
         // ============================================================
         function toggleKeyInput() {
             const algo = document.getElementById('cryptoSelect').value;
-            document.getElementById('cryptoKeyInput').classList.toggle('hidden', algo === 'none');
-            atualizarStatusCriptografia(algo);
+            // E2E não usa chave digitada — as chaves RSA são automáticas
+            document.getElementById('cryptoKeyInput').classList.toggle('hidden', algo === 'none' || algo === 'e2e');
+            atualizarDicaCripto(algo);
         }
-        function atualizarStatusCriptografia(algo) {
-            const div = document.getElementById('cryptoStatus');
-            if (algo === 'none') { div.innerHTML = '<p style="color:#43e97b;">Atual: Texto claro</p><p style="font-size:12px;color:#888;margin-top:5px;">O servidor e a Sala ADM podem ler suas mensagens.</p>'; }
-            else { const nomes = { caesar:'Cifra de César', vigenere:'Cifra de Vigenère', xor:'XOR', aes:'AES-256' }; div.innerHTML = `<p style="color:#f5576c;">Atual: ${nomes[algo] || algo}</p><p style="font-size:12px;color:#888;margin-top:5px;">O servidor vê apenas o texto cifrado. Apenas quem tem a chave pode ler.</p>`; }
+        function atualizarDicaCripto(algo) {
+            const dica = document.getElementById('cryptoHint');
+            if (!dica) return;
+            const simetricas = 'SIMÉTRICA: a mesma chave cifra e decifra → ela viaja JUNTO com a mensagem. A Sala ADM captura e descriptografa. ';
+            const dicas = {
+                none: 'TEXTO CLARO: o servidor e a Sala ADM leem a mensagem como foi enviada.',
+                caesar: simetricas + 'César desloca cada letra N posições (rotação). Fraca: 25 tentativas quebram.',
+                vigenere: simetricas + 'Vigenère repete uma palavra-chave para deslocar as letras. Fraca por ataques de frequência.',
+                xor: simetricas + 'XOR aplica operação binária com a chave. Fraca: reutilização da chave revela padrões.',
+                aes: simetricas + 'AES-256-GCM é forte (padrão mundial), mas como a chave viaja com a mensagem, quem a obtém lê tudo.',
+                e2e: 'PONTA A PONTA (RSA-2048): a mensagem é cifrada com a chave PÚBLICA de cada destinatário. A chave privada NUNCA sai do computador de quem recebe — nem o servidor consegue descriptografar. A Sala ADM vê apenas ciphertext.'
+            };
+            dica.textContent = dicas[algo] || '';
         }
-        function handleKeyDown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } }
+        function handleKeyDown(e) {
+            const popup = document.getElementById('mentionPopup');
+            const popupAberto = popup && !popup.classList.contains('hidden');
+            if (popupAberto) {
+                if (e.key === 'ArrowDown') { e.preventDefault(); moverSelecaoMention(1); return; }
+                if (e.key === 'ArrowUp') { e.preventDefault(); moverSelecaoMention(-1); return; }
+                if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); confirmarMentionSelecionada(); return; }
+                if (e.key === 'Escape') { e.preventDefault(); fecharMention(); return; }
+            }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); }
+        }
+
+        // ===== POPUP DE MENÇÃO (@ DM / # menção pública) =====
+        let mentionUsuarios = [];
+        let mentionSelecionado = 0;
+        let mentionTrigger = '@';
+
+        function verificarMention() {
+            const input = document.getElementById('messageInput');
+            const popup = document.getElementById('mentionPopup');
+            if (!input || !popup || !currentSala) return;
+            const pos = input.selectionStart;
+            const antes = input.value.substring(0, pos);
+            // Detecta @ ou # no fim do texto (início de linha ou após espaço) — captura até o cursor, incluindo espaços
+            const m = antes.match(/(?:^|\s)([@#])([^@#]*)$/);
+            if (!m) { fecharMention(); return; }
+            mentionTrigger = m[1]; // '@' = DM, '#' = menção pública
+            const termo = m[2].toLowerCase();
+            // Filtra por nomes que COMEÇAM com o termo digitado (suporta nomes com espaços)
+            mentionUsuarios = (currentSala.usuarios || [])
+                .filter(u => u.nome && u.nome.toLowerCase().startsWith(termo))
+                .slice(0, 8);
+            if (mentionUsuarios.length === 0) { fecharMention(); return; }
+            mentionSelecionado = 0;
+            popup.innerHTML = mentionUsuarios.map((u, i) =>
+                `<div class="user-list-item ${i === 0 ? 'selected' : ''}" onmousedown="event.preventDefault()" onclick="selecionarMention(${i})">
+                    <span class="status-indicator status-online"></span>${u.nome}<span class="mention-email">${u.email}</span>
+                </div>`).join('');
+            popup.classList.remove('hidden');
+        }
+
+        function moverSelecaoMention(delta) {
+            mentionSelecionado = (mentionSelecionado + delta + mentionUsuarios.length) % mentionUsuarios.length;
+            const itens = document.querySelectorAll('#mentionPopup .user-list-item');
+            itens.forEach((el, i) => el.classList.toggle('selected', i === mentionSelecionado));
+        }
+
+        function confirmarMentionSelecionada() {
+            if (mentionUsuarios.length > 0) selecionarMention(mentionSelecionado);
+        }
+
+        function selecionarMention(i) {
+            const u = mentionUsuarios[i];
+            if (!u) return;
+            const input = document.getElementById('messageInput');
+            const pos = input.selectionStart;
+            const depois = input.value.substring(pos);
+            // Substitui desde o "@" ou "#" até o cursor (captura nomes com espaços)
+            const antes = input.value.substring(0, pos).replace(/[@#][^@#]*$/, mentionTrigger + u.nome + ' ');
+            input.value = antes + depois;
+            input.focus();
+            input.selectionStart = input.selectionEnd = antes.length;
+            fecharMention();
+        }
+
+        function fecharMention() {
+            const popup = document.getElementById('mentionPopup');
+            if (popup) popup.classList.add('hidden');
+            mentionUsuarios = [];
+            mentionTrigger = '@';
+        }
+
+        function fecharMentionSoon() {
+            // Pequeno atraso para permitir o clique na lista (onmousedown já previne o blur)
+            setTimeout(fecharMention, 150);
+        }
         function atualizarStatusConexao(online) {
-            document.getElementById('connectionStatus').className = 'status-indicator ' + (online ? 'status-online' : 'status-offline');
-            document.getElementById('connectionText').textContent = online ? 'Conectado' : 'Desconectado';
+            const icon = document.getElementById('connIcon');
+            if (!icon) return;
+            const tipo = MODO === 'pages' ? 'GitHub Pages' : 'Local (WebSocket)';
+            icon.className = 'conn-icon ' + (online ? 'conn-online' : 'conn-offline');
+            icon.title = online ? `Conectado — ${tipo}` : 'Sem conexão com o servidor';
         }
         function atualizarInfoSala() {
             if (currentSala) {
@@ -949,8 +1815,7 @@
             }
         }
         function atualizarListaUsuarios() {
-            if (!currentSala) return;
-            document.getElementById('listaUsuarios').innerHTML = currentSala.usuarios.map(u => `<div class="user-list-item"><span class="status-indicator status-online"></span>${u.nome}</div>`).join('');
+            // Container de usuários removido do layout; lista agora aparece via popup ao digitar "@"
         }
         function gerarIdSala() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
     </script>

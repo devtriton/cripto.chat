@@ -114,6 +114,7 @@ const salas = new Map();       // salaId -> { nome, publica, usuarios: Set, senh
 const usuarios = new Map();    // email -> { ws, nome, salaAtual }
 const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
+const chavesPublicas = new Map(); // email -> { chavePublica, nome } — chaves RSA públicas (E2E). O servidor NUNCA recebe chaves privadas.
 
 // ============================================================
 // SERVIDOR HTTP (arquivos estáticos)
@@ -129,7 +130,9 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  const filePath = path.join(__dirname, '..', req.url === '/' ? 'index.html' : req.url.split('?')[0]);
+  // Remove querystring antes de comparar ("/" e "/?adm=1" servem o index.html)
+  const urlPath = req.url.split('?')[0];
+  const filePath = path.join(__dirname, '..', urlPath === '/' ? 'index.html' : urlPath);
   
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -160,10 +163,58 @@ function broadcast(salaId, msg, exceto = null) {
   }
 }
 
+// Enviar mensagem a TODOS os usuários conectados
+function broadcastTodos(msg, exceto = null) {
+  for (const user of usuarios.values()) {
+    if (user.ws !== exceto && user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(JSON.stringify(msg));
+    }
+  }
+}
+
+// Lista das salas públicas (formato do client)
+function listaSalasPublicas() {
+  const lista = [];
+  for (const [id, sala] of salas) {
+    if (sala.publica) {
+      lista.push({ salaId: id, nome: sala.nome, usuarios: sala.usuarios.size });
+    }
+  }
+  return lista;
+}
+
+// Avisar todos os clientes para atualizarem a lista de salas públicas
+function avisarAtualizacaoSalas() {
+  broadcastTodos({ tipo: 'atualizar_salas' });
+}
+
+// Enviar a um cliente todas as chaves públicas E2E conhecidas
+function enviarChavesPublicas(ws) {
+  const chaves = [...chavesPublicas.entries()].map(([email, v]) => ({ email, chavePublica: v.chavePublica, nome: v.nome }));
+  ws.send(JSON.stringify({ tipo: 'lista_chaves', chaves }));
+}
+
+// Remove um usuário de uma sala; se a sala ficar vazia, é apagada permanentemente
+function removerUsuarioDaSala(salaId, email) {
+  const sala = salas.get(salaId);
+  if (!sala) return;
+  sala.usuarios.delete(email);
+  broadcast(salaId, { tipo: 'usuario_saiu', salaId, email });
+  
+  if (sala.usuarios.size === 0) {
+    // Sala sem usuários online → apagada permanentemente
+    salas.delete(salaId);
+    console.log(`[SALA] "${sala.nome}" (${salaId}) apagada — sem usuários online`);
+  }
+  
+  if (sala.publica) avisarAtualizacaoSalas();
+}
+
 function enviarParaAdm(msg) {
+  // Tipo exclusivo 'visao_adm': o cliente que está na sala E na ADM não duplica a mensagem no chat
   for (const ws of salaAdmWs) {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(msg));
+      ws.send(JSON.stringify({ ...msg, tipo: 'visao_adm' }));
     }
   }
 }
@@ -273,7 +324,22 @@ wss.on('connection', (ws) => {
         // Verificar se modo demo está ativo
         const demoAtivo = isModoDemo();
         
-        // PRODUÇÃO: Enviar por email ou exibir no demo
+        // MODO DEMO: exibir código na tela (prioridade sobre SMTP)
+        if (demoAtivo) {
+          ws.send(JSON.stringify({
+            tipo: 'otp_enviado',
+            email,
+            nome,
+            demo: true,
+            codigo: codigo,
+            mensagem: 'Modo demo: código exibido na tela'
+          }));
+          // Tenta enviar por email também, mas ignora falha (não bloqueia o demo)
+          enviarEmailOTP(email, codigo, nome).catch(() => {});
+          break;
+        }
+        
+        // PRODUÇÃO: enviar por email
         enviarEmailOTP(email, codigo, nome)
           .then(() => {
             ws.send(JSON.stringify({
@@ -285,23 +351,11 @@ wss.on('connection', (ws) => {
             }));
           })
           .catch(err => {
-            if (demoAtivo) {
-              // MODO DEMO: exibir código na tela
-              ws.send(JSON.stringify({
-                tipo: 'otp_enviado',
-                email,
-                nome,
-                demo: true,
-                codigo: codigo,
-                mensagem: 'Modo demo: código exibido na tela'
-              }));
-            } else {
-              // PRODUÇÃO: rejeitar se SMTP não configurado
-              ws.send(JSON.stringify({
-                tipo: 'erro',
-                mensagem: 'Serviço de email não configurado. Contate o administrador.'
-              }));
-            }
+            // PRODUÇÃO: rejeitar se SMTP não configurado
+            ws.send(JSON.stringify({
+              tipo: 'erro',
+              mensagem: 'Serviço de email não configurado. Contate o administrador.'
+            }));
           });
         break;
       }
@@ -329,7 +383,60 @@ wss.on('connection', (ws) => {
           mensagem: `Bem-vindo, ${result.nome}!`
         }));
         
+        // Enviar chaves públicas E2E já conhecidas (para poder cifrar mensagens ponta a ponta)
+        enviarChavesPublicas(ws);
+        
         console.log(`[LOGIN] ${result.nome} (${email}) autenticou via OTP`);
+        break;
+      }
+      
+      // --------------------------------------------------------
+      // RESTAURAR SESSÃO (após atualizar a página)
+      // --------------------------------------------------------
+      case 'restaurar_sessao': {
+        const { email, nome } = data;
+        if (!email) break;
+        // Re-registrar usuário com a nova conexão ws
+        usuarios.set(email, { ws, nome: nome || email.split('@')[0], salaAtual: null });
+        ws.email = email;
+        ws.send(JSON.stringify({
+          tipo: 'registrado',
+          email,
+          nome: nome || email.split('@')[0],
+          mensagem: `Bem-vindo de volta, ${nome || email}!`
+        }));
+        // Enviar chaves públicas E2E já conhecidas
+        enviarChavesPublicas(ws);
+        console.log(`[SESSÃO] ${nome || email} (${email}) restaurou sessão`);
+        break;
+      }
+      
+      // --------------------------------------------------------
+      // PUBLICAR CHAVE PÚBLICA RSA (E2E)
+      // O servidor guarda e distribui apenas a chave PÚBLICA.
+      // A chave privada nunca sai do computador do usuário.
+      // --------------------------------------------------------
+      case 'publicar_chave': {
+        if (!data.chavePublica || !ws.email) break;
+        const nomeUser = usuarios.get(ws.email)?.nome || ws.email;
+        chavesPublicas.set(ws.email, { chavePublica: data.chavePublica, nome: nomeUser });
+        broadcastTodos({ tipo: 'chave_publica', email: ws.email, nome: nomeUser, chavePublica: data.chavePublica });
+        console.log(`[E2E] Chave pública de ${ws.email} publicada`);
+        break;
+      }
+      
+      // --------------------------------------------------------
+      // ALTERAR NOME DE USUÁRIO (email permanece o mesmo)
+      // --------------------------------------------------------
+      case 'alterar_nome': {
+        const { email, nome } = data;
+        if (!email || !nome) break;
+        const user = usuarios.get(email);
+        if (user) {
+          user.nome = nome;
+          ws.send(JSON.stringify({ tipo: 'nome_alterado', email, nome }));
+          console.log(`[USUÁRIO] ${email} agora se chama "${nome}"`);
+        }
         break;
       }
       
@@ -358,6 +465,9 @@ wss.on('connection', (ws) => {
           publica: publica !== false
         }));
         
+        // Avisar todos os clientes para atualizarem a lista de salas públicas
+        if (publica !== false) avisarAtualizacaoSalas();
+        
         console.log(`[SALA] ${nome} (${salaId}) criada por ${ws.email}`);
         break;
       }
@@ -380,11 +490,10 @@ wss.on('connection', (ws) => {
           return;
         }
         
-        // Remover do usuário de sala anterior
+        // Remover do usuário de sala anterior (apaga a sala se ficar vazia)
         const user = usuarios.get(ws.email);
         if (user && user.salaAtual) {
-          const salaAntiga = salas.get(user.salaAtual);
-          if (salaAntiga) salaAntiga.usuarios.delete(ws.email);
+          removerUsuarioDaSala(user.salaAtual, ws.email);
         }
         
         sala.usuarios.add(ws.email);
@@ -393,6 +502,7 @@ wss.on('connection', (ws) => {
         // Notificar todos da sala
         broadcast(salaId, {
           tipo: 'usuario_entrou',
+          salaId,
           email: ws.email,
           nome: user?.nome
         });
@@ -408,6 +518,9 @@ wss.on('connection', (ws) => {
             nome: usuarios.get(email)?.nome
           }))
         }));
+        
+        // Atualizar contagem de usuários na lista de salas públicas de todos
+        if (sala.publica) avisarAtualizacaoSalas();
         
         console.log(`[SALA] ${ws.email} entrou em ${sala.nome}`);
         break;
@@ -426,6 +539,7 @@ wss.on('connection', (ws) => {
         
         const msg = {
           tipo: 'mensagem',
+          id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
           de: ws.email,
           nome: user.nome,
           salaId,
@@ -433,6 +547,10 @@ wss.on('connection', (ws) => {
           dataHora: new Date().toISOString(),
           criptografada: data.criptografada || false,
           algoritmo: data.algoritmo || null,
+          chave: data.chave || null,          // simétrica: a chave viaja com a mensagem (servidor PODE descriptografar)
+          e2e: data.e2e || false,             // ponta a ponta: servidor NÃO consegue descriptografar
+          blocos: data.blocos || null,        // E2E: { email: ciphertext } por destinatário
+          semChave: data.semChave || [],      // E2E: quem NÃO tem chave pública (não recebeu)
           texto: data.texto,
           mencoes: data.mencoes || []
         };
@@ -441,7 +559,10 @@ wss.on('connection', (ws) => {
         broadcast(salaId, msg);
         enviarParaAdm(msg);
         
-        console.log(`[MSG] ${user.nome} em ${sala.nome}${data.criptografada ? ' [CRIPTOGRAFADA: ' + data.algoritmo + ']' : ' [CLARA]'}`);
+        const e2eInfo = data.e2e ? (Array.isArray(data.semChave)
+          ? (data.semChave.length ? ` [sem chave: ${data.semChave.join(', ')}]` : '')
+          : ' [CLIENTE ANTIGO: sem campo semChave]') : '';
+        console.log(`[MSG] ${user.nome} em ${sala.nome}${data.e2e ? ' [E2E:RSA]' : data.criptografada ? ' [CRIPTOGRAFADA: ' + data.algoritmo + ']' : ' [CLARA]'}${e2eInfo}`);
         break;
       }
       
@@ -453,12 +574,18 @@ wss.on('connection', (ws) => {
         
         const msg = {
           tipo: 'mensagem_direta',
+          id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
           de: ws.email,
           nome: usuarios.get(ws.email)?.nome,
           para: paraEmail,
           dataHora: new Date().toISOString(),
           criptografada: criptografada || false,
           algoritmo: algoritmo || null,
+          chave: data.chave || null,     // simétrica: chave junto (servidor pode ler)
+          e2e: data.e2e || false,        // ponta a ponta
+          blocos: data.blocos || null,   // E2E: { email: ciphertext }
+          semChave: data.semChave || [], // E2E: quem NÃO tem chave pública (não recebeu)
+          mencoes: data.mencoes || [],
           texto
         };
         
@@ -474,7 +601,28 @@ wss.on('connection', (ws) => {
         // ADM vê apenas o que passa pelo servidor
         enviarParaAdm({ ...msg, privada: true });
         
-        console.log(`[DM] ${ws.email} -> ${paraEmail}${criptografada ? ' [CRIPTOGRAFADA]' : ' [CLARA]'}`);
+        const e2eInfoDm = data.e2e ? (Array.isArray(data.semChave)
+          ? (data.semChave.length ? ` [sem chave: ${data.semChave.join(', ')}]` : '')
+          : ' [CLIENTE ANTIGO: sem campo semChave]') : '';
+        console.log(`[DM] ${ws.email} -> ${paraEmail}${data.e2e ? ' [E2E:RSA]' : criptografada ? ' [CRIPTOGRAFADA]' : ' [CLARA]'}${e2eInfoDm}`);
+        break;
+      }
+      
+      // --------------------------------------------------------
+      // E2E: destinatário reportou que NÃO conseguiu decifrar
+      // (ex.: chave privada ausente neste navegador) → avisa o remetente
+      // --------------------------------------------------------
+      case 'e2e_falha_leitura': {
+        const relator = usuarios.get(ws.email);
+        const alvo = usuarios.get(data.paraEmail); // REMETENTE original
+        if (alvo && alvo.ws.readyState === WebSocket.OPEN) {
+          alvo.ws.send(JSON.stringify({
+            tipo: 'e2e_falha_leitura',
+            msgId: data.msgId,
+            quem: relator?.nome || ws.email
+          }));
+        }
+        console.log(`[E2E] ${relator?.nome || ws.email} NÃO conseguiu decifrar mensagem de ${data.paraEmail} (sem chave privada neste navegador)`);
         break;
       }
       
@@ -496,13 +644,7 @@ wss.on('connection', (ws) => {
       // LISTAR SALAS (apenas públicas)
       // --------------------------------------------------------
       case 'listar_salas': {
-        const lista = [];
-        for (const [id, sala] of salas) {
-          if (sala.publica) {
-            lista.push({ salaId: id, nome: sala.nome, usuarios: sala.usuarios.size });
-          }
-        }
-        ws.send(JSON.stringify({ tipo: 'lista_salas', salas: lista }));
+        ws.send(JSON.stringify({ tipo: 'lista_salas', salas: listaSalasPublicas() }));
         break;
       }
       
@@ -512,11 +654,7 @@ wss.on('connection', (ws) => {
       case 'sair_sala': {
         const user = usuarios.get(ws.email);
         if (user && user.salaAtual) {
-          const sala = salas.get(user.salaAtual);
-          if (sala) {
-            sala.usuarios.delete(ws.email);
-            broadcast(sala, { tipo: 'usuario_saiu', email: ws.email });
-          }
+          removerUsuarioDaSala(user.salaAtual, ws.email);
           user.salaAtual = null;
         }
         break;
@@ -527,11 +665,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     const user = usuarios.get(ws.email);
     if (user && user.salaAtual) {
-      const sala = salas.get(user.salaAtual);
-      if (sala) {
-        sala.usuarios.delete(ws.email);
-        broadcast(sala, { tipo: 'usuario_saiu', email: ws.email });
-      }
+      removerUsuarioDaSala(user.salaAtual, ws.email);
     }
     salaAdmWs.delete(ws);
     if (ws.email) {

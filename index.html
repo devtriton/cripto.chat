@@ -380,6 +380,21 @@
             </div>
         </div>
 
+        <!-- CONTROLE DO MODO DEMO -->
+        <div id="demoPanel" class="panel" style="max-width: 450px; margin: 20px auto; border-color: #ffc800;">
+            <h2 style="color: #ffc800;">Controle do Modo Demo</h2>
+            <div id="demoStatus" class="alert alert-warning">Verificando status...</div>
+            <div class="form-group">
+                <label for="demoPassword">Senha Mestre:</label>
+                <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-success" onclick="habilitarDemo()">Habilitar Demo</button>
+                <button class="btn-secondary" onclick="desabilitarDemo()">Desabilitar Demo</button>
+            </div>
+            <button class="btn-primary" onclick="verificarDemo()" style="margin-top: 10px;">Verificar Status</button>
+        </div>
+
         <!-- ADM MODAL -->
         <div id="admPanel" class="adm-container hidden">
             <div class="adm-title">SALA ADM - Visão do Servidor</div>
@@ -640,6 +655,34 @@
             document.getElementById('loginStep1').classList.remove('hidden');
             document.getElementById('otpCode').value = '';
             document.getElementById('loginEmail').value = '';
+        }
+
+        // ============================================================
+        // MODO DEMO: Habilitar/Desabilitar
+        // ============================================================
+        function verificarDemo() {
+            enviar({ tipo: 'verificar_demo' });
+        }
+
+        function habilitarDemo() {
+            const senha = document.getElementById('demoPassword').value.trim();
+            if (!senha) { alert('Digite a senha mestre.'); return; }
+            enviar({ tipo: 'habilitar_demo', senha });
+            document.getElementById('demoPassword').value = '';
+        }
+
+        function desabilitarDemo() {
+            const senha = document.getElementById('demoPassword').value.trim();
+            if (!senha) { alert('Digite a senha mestre.'); return; }
+            enviar({ tipo: 'desabilitar_demo', senha });
+            document.getElementById('demoPassword').value = '';
+        }
+
+        function toggleDemo() {
+            const senha = document.getElementById('demoPassword').value.trim();
+            if (!senha) { alert('Digite a senha mestre.'); return; }
+            enviar({ tipo: 'habilitar_demo', senha });
+            document.getElementById('demoPassword').value = '';
         }
 
         function switchTab(tabName) {

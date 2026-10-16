@@ -17,6 +17,36 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
+
+// ============================================================
+// MODO DEMO - Configuração com senha
+// ============================================================
+
+const DEMO_CONFIG_FILE = path.join(__dirname, 'demo-config.json');
+
+function lerDemoConfig() {
+  try {
+    const data = JSON.parse(fs.readFileSync(DEMO_CONFIG_FILE, 'utf8'));
+    return data;
+  } catch (e) {
+    return { senhaHash: '', modoDemo: false };
+  }
+}
+
+function salvarDemoConfig(config) {
+  fs.writeFileSync(DEMO_CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+function validarSenhaDemo(senha) {
+  const config = lerDemoConfig();
+  const hash = crypto.createHash('sha256').update(senha).digest('hex');
+  return hash === config.senhaHash;
+}
+
+function isModoDemo() {
+  return lerDemoConfig().modoDemo === true;
+}
 
 // ============================================================
 // CONFIGURAÇÃO DE EMAIL (SMTP)
@@ -182,6 +212,42 @@ wss.on('connection', (ws) => {
     switch (data.tipo) {
       
       // --------------------------------------------------------
+      // MODO DEMO: Habilitar/Desabilitar com senha mestre
+      // --------------------------------------------------------
+      case 'habilitar_demo': {
+        const { senha } = data;
+        if (validarSenhaDemo(senha)) {
+          const config = lerDemoConfig();
+          config.modoDemo = true;
+          salvarDemoConfig(config);
+          ws.send(JSON.stringify({ tipo: 'demo_status', ativo: true, mensagem: 'Modo demo HABILITADO para todos.' }));
+          console.log('[MODO DEMO] Habilitado por ' + ws.email);
+        } else {
+          ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Senha mestre incorreta.' }));
+        }
+        break;
+      }
+      
+      case 'desabilitar_demo': {
+        const { senha } = data;
+        if (validarSenhaDemo(senha)) {
+          const config = lerDemoConfig();
+          config.modoDemo = false;
+          salvarDemoConfig(config);
+          ws.send(JSON.stringify({ tipo: 'demo_status', ativo: false, mensagem: 'Modo demo DESABILITADO.' }));
+          console.log('[MODO DEMO] Desabilitado por ' + ws.email);
+        } else {
+          ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Senha mestre incorreta.' }));
+        }
+        break;
+      }
+      
+      case 'verificar_demo': {
+        ws.send(JSON.stringify({ tipo: 'demo_status', ativo: isModoDemo(), mensagem: isModoDemo() ? 'Modo demo está ATIVO' : 'Modo demo está INATIVO' }));
+        break;
+      }
+      
+      // --------------------------------------------------------
       // LOGIN PASSO 1: Solicitar OTP
       // --------------------------------------------------------
       case 'solicitar_otp': {
@@ -197,7 +263,10 @@ wss.on('connection', (ws) => {
         
         console.log(`[cripto.chat] OTP para ${email}: ${codigo}`);
         
-        // PRODUÇÃO: Enviar por email ou rejeitar se SMTP não configurado
+        // Verificar se modo demo está ativo
+        const demoAtivo = isModoDemo();
+        
+        // PRODUÇÃO: Enviar por email ou exibir no demo
         enviarEmailOTP(email, codigo, nome)
           .then(() => {
             ws.send(JSON.stringify({
@@ -209,10 +278,23 @@ wss.on('connection', (ws) => {
             }));
           })
           .catch(err => {
-            ws.send(JSON.stringify({
-              tipo: 'erro',
-              mensagem: 'Serviço de email não configureido. Contate o administrador.'
-            }));
+            if (demoAtivo) {
+              // MODO DEMO: exibir código na tela
+              ws.send(JSON.stringify({
+                tipo: 'otp_enviado',
+                email,
+                nome,
+                demo: true,
+                codigo: codigo,
+                mensagem: 'Modo demo: código exibido na tela'
+              }));
+            } else {
+              // PRODUÇÃO: rejeitar se SMTP não configurado
+              ws.send(JSON.stringify({
+                tipo: 'erro',
+                mensagem: 'Serviço de email não configurado. Contate o administrador.'
+              }));
+            }
           });
         break;
       }

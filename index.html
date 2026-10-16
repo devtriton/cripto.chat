@@ -627,7 +627,12 @@
                 console.log('[detectarModo] Modo: pages (BroadcastChannel)');
                 return 'pages';
             }
-            console.log('[detectarModo] Modo: servidor (WebSocket)');
+            if (host === 'localhost' || host === '127.0.0.1') {
+                console.log('[detectarModo] Modo: servidor local (WebSocket localhost:3000)');
+                return 'servidor';
+            }
+            // Produção (Render, etc.): servidor na mesma origem da página
+            console.log('[detectarModo] Modo: servidor producao (WebSocket mesma origem)');
             return 'servidor';
         }
 
@@ -752,8 +757,8 @@
         function conectarWebSocket() {
             if (canal && (canal.readyState === WebSocket.OPEN || canal.readyState === WebSocket.CONNECTING)) return;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Servidor Node roda em localhost:3000 (Laragon não roteia porta 3000)
-            const wsUrl = `${protocol}//localhost:3000`;
+            // Mesmo ambiente (localhost ou producao): WebSocket na mesma origem da pagina
+            const wsUrl = `${protocol}//${window.location.host}`;
             const ws = new WebSocket(wsUrl);
             canal = {
                 send: (data) => enviarViaWebSocket(data),

@@ -151,10 +151,9 @@ function solicitarOTP(email) {
   });
   
   // Enviar por email (ou exibir no console em modo demo)
-  enviarEmailOTP(email, codigo, nome);
   console.log(`[cripto.chat] OTP para ${email}: ${codigo}`);
   
-  return { nome };
+  return { nome, emailResult: enviarEmailOTP(email, codigo, nome) };
 }
 
 function verificarOTP(email, codigo) {

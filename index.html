@@ -673,24 +673,8 @@
         let demoAtivo = false;
 
         function mostrarSenhaDemo() {
-            let input = document.getElementById('demoPasswordInput');
-            if (!input) {
-                input = document.createElement('div');
-                input.id = 'demoPasswordInput';
-                input.style.marginTop = '10px';
-                input.innerHTML = `
-                    <div class="form-group" style="margin-bottom: 5px;">
-                        <label for="demoPassword">Senha Mestre:</label>
-                        <input type="password" id="demoPassword" placeholder="Digite a senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-success" onclick="toggleDemo()" style="font-size: 12px; padding: 8px 16px;">Confirmar</button>
-                        <button class="btn-secondary" onclick="document.getElementById('demoPasswordInput').remove()" style="font-size: 12px; padding: 8px 16px;">Cancelar</button>
-                    </div>
-                `;
-                document.getElementById('loginStep1').appendChild(input);
-            }
-            input.style.display = 'block';
+            document.getElementById('demoPasswordInput').style.display = 'block';
+            document.getElementById('demoPassword').focus();
         }
 
         function toggleDemo() {

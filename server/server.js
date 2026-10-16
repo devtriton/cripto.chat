@@ -471,6 +471,15 @@ server.listen(PORTA, HOST, () => {
   console.log(`  Host: ${HOST}`);
   console.log('========================================');
   
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        console.log(`  Acesso na rede local: http://${iface.address}:${PORTA}`);
+      }
+    }
+  }
+  
 <<<<<<< HEAD
 =======
   // Descobrir IP local para facilitar o acesso na rede

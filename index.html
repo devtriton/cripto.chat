@@ -74,8 +74,26 @@
         .chat-header {
             padding: 15px 20px; background: rgba(0, 212, 255, 0.1);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; flex-direction: column; align-items: stretch; gap: 8px;
         }
+        .chat-header-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        /* Lista de usuários ON-LINE na sala (atualiza em tempo real) */
+        .chat-presenca { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .presenca-label { font-size: 11px; color: #9ab; }
+        .presenca-pill {
+            display: inline-flex; align-items: center; gap: 5px; max-width: 240px;
+            font-size: 11px; padding: 3px 9px; border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cfe; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .presenca-pill .status-indicator { margin-right: 0; width: 7px; height: 7px; flex: none; }
+        .presenca-pill.presenca-eu { border-color: rgba(67, 233, 123, 0.5); background: rgba(67, 233, 123, 0.12); color: #43e97b; }
+        /* Linha central de eventos da sala: "entrou" / "saiu" */
+        .message-system {
+            text-align: center; font-size: 12px; color: #9ab; margin: 10px 0;
+            animation: fadeIn 0.3s ease; overflow-wrap: anywhere;
+        }
+        .message-system strong { color: #00d4ff; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
         .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
         .mention-wrap { position: relative; }
@@ -462,8 +480,12 @@
                     <div class="chat-layout">
                         <div class="chat-main">
                             <div class="chat-header">
-                                <strong id="chatSalaNome"></strong>
-                                <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                                <div class="chat-header-top">
+                                    <strong id="chatSalaNome"></strong>
+                                    <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                                </div>
+                                <!-- Usuários atualmente na sala (atualiza quando alguém entra/sai) -->
+                                <div class="chat-presenca" id="chatPresenca"></div>
                             </div>
                             <div class="chat-messages" id="chatMessages"></div>
                             <div class="chat-input-area">
@@ -603,6 +625,7 @@
         let currentUser = null;
         let currentSala = null;
         let salasLocais = {};
+        let senhaSalaAtual = null; // senha da sala privada (para re-entrar após reconexão)
         let otpAtual = null;
         let emailParaVerificar = null;
 
@@ -657,21 +680,24 @@
         }
 
         // Controle de reconexão: backoff exponencial + limite de tentativas
-        // Evita loop infinito que trava o navegador quando o WebSocket não conecta
+        // Evita loop infinito que trava o navegador quando o WebSocket não conecta.
+        // Depois do limite, continua tentando a cada 30s (o Render pode estar dormindo).
         let tentativasWs = 0;
         const MAX_TENTATIVAS_WS = 5;
+        const INTERVALO_LONGO_WS = 30000;
         let desistiuWs = false;
+        let reconectandoAgendado = false;
 
         function agendarReconexao() {
-            if (desistiuWs) return;
-            if (tentativasWs >= MAX_TENTATIVAS_WS) {
-                console.warn('[WebSocket] Máximo de tentativas atingido. Parando reconexão automática.');
-                return;
-            }
-            const espera = Math.min(1000 * Math.pow(2, tentativasWs), 16000); // 1s, 2s, 4s, 8s, 16s max
+            if (desistiuWs || reconectandoAgendado) return;
+            reconectandoAgendado = true;
+            const espera = tentativasWs < MAX_TENTATIVAS_WS
+                ? Math.min(1000 * Math.pow(2, tentativasWs), 16000) // 1s, 2s, 4s, 8s, 16s
+                : INTERVALO_LONGO_WS; // nunca desiste: tenta de novo em 30s
             tentativasWs++;
-            console.log(`[WebSocket] Tentativa ${tentativasWs}/${MAX_TENTATIVAS_WS} em ${espera}ms`);
+            console.log(`[WebSocket] Nova tentativa de conexão em ${espera}ms (tentativa ${tentativasWs})`);
             setTimeout(() => {
+                reconectandoAgendado = false;
                 if (!desistiuWs && (!canal || canal.readyState !== WebSocket.OPEN)) {
                     conectarWebSocket();
                 }
@@ -800,10 +826,23 @@
                     console.log('[WebSocket] Enviando pendente:', pendente.tipo);
                     ws.send(JSON.stringify(pendente));
                 }
+                // RE-SINCRONIZAR após (re)conexão: o servidor guarda salas/usuários em MEMÓRIA.
+                // Se a conexão cair/reiniciar (ex.: Render em sono), o servidor esquece quem
+                // estava em qual sala — sem reenviar, "usuário entrou" nunca chega aos outros.
+                if (currentUser) {
+                    ws.send(JSON.stringify({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome }));
+                    if (currentSala) {
+                        const payload = { tipo: 'entrar_sala', salaId: currentSala.id };
+                        if (senhaSalaAtual) payload.senha = senhaSalaAtual; // sala privada
+                        ws.send(JSON.stringify(payload));
+                        console.log('[WebSocket] Re-sincronizando sala:', currentSala.id);
+                    }
+                }
                 // Consultar status do demo ao conectar
                 ws.send(JSON.stringify({ tipo: 'verificar_demo' }));
             };
-            ws.onclose = () => { if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; };
+            // Ao FECHAR (queda, reinício do servidor etc.): agenda reconexão automática
+            ws.onclose = () => { if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; agendarReconexao(); };
             ws.onerror = () => { if (canal) canal.readyState = WebSocket.CLOSED; canal = null; };
             ws.onmessage = (e) => processarMensagem(JSON.parse(e.data));
         }
@@ -903,20 +942,28 @@
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         mostrarChat();
+                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong>`);
                     }
                     break;
 
-                case 'sala_info':
+                case 'sala_info': {
                     if (MODO !== 'pages') {
+                        // Só avisa "você entrou" na primeira abertura da sala
+                        // (após uma reconexão o servidor reenvia sala_info — evita duplicar)
+                        const primeiraVez = !currentSala || currentSala.id !== data.salaId;
                         currentSala = {
                             id: data.salaId, nome: data.nome, publica: data.publica,
-                            usuarios: data.usuarios
+                            usuarios: data.usuarios || []
                         };
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         mostrarChat();
+                        if (primeiraVez) {
+                            exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong>`);
+                        }
                     }
                     break;
+                }
 
                 case 'entrar_sala':
                     if (data.email === currentUser.email) {
@@ -927,22 +974,34 @@
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         mostrarChat();
+                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(currentSala.nome || data.salaId)}</strong>`);
                     } else if (currentSala && currentSala.id === data.salaId) {
-                        if (!currentSala.usuarios.find(u => u.email === data.email)) {
+                        const jaEstava = currentSala.usuarios.find(u => u.email === data.email);
+                        if (!jaEstava) {
                             currentSala.usuarios.push({ email: data.email, nome: data.nome });
                         }
-                        atualizarListaUsuarios();
                         atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        if (!jaEstava) {
+                            exibirMensagemSistema(`📥 <strong>${escaparHtml(data.nome || data.email)}</strong> entrou na sala`);
+                        }
                     }
                     break;
 
                 case 'usuario_entrou':
                     // Servidor avisou que alguém entrou na sala atual
                     if (currentSala && data.salaId === currentSala.id) {
-                        if (!currentSala.usuarios.find(u => u.email === data.email)) {
+                        const jaEstava = currentSala.usuarios.find(u => u.email === data.email);
+                        if (!jaEstava) {
                             currentSala.usuarios.push({ email: data.email, nome: data.nome });
                         }
                         atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        // Mensagem de sistema visível (eu não recebo a minha própria entrada aqui:
+                        // o servidor envia "usuario_entrou" antes do "sala_info" da minha entrada)
+                        if (!jaEstava && (!currentUser || data.email !== currentUser.email)) {
+                            exibirMensagemSistema(`📥 <strong>${escaparHtml(data.nome || data.email)}</strong> entrou na sala`);
+                        }
                         console.log('[Sala] Usuário entrou:', data.nome);
                     }
                     break;
@@ -950,8 +1009,13 @@
                 case 'usuario_saiu':
                     // Servidor avisou que alguém saiu da sala atual
                     if (currentSala && data.salaId === currentSala.id) {
-                        currentSala.usuarios = currentSala.usuarios.filter(u => u.email !== data.email);
+                        const quem = (currentSala.usuarios || []).find(u => u.email === data.email);
+                        currentSala.usuarios = (currentSala.usuarios || []).filter(u => u.email !== data.email);
                         atualizarInfoSala();
+                        atualizarListaUsuarios();
+                        if (quem && (!currentUser || data.email !== currentUser.email)) {
+                            exibirMensagemSistema(`📤 <strong>${escaparHtml(quem.nome || quem.email)}</strong> saiu da sala`);
+                        }
                         console.log('[Sala] Usuário saiu:', data.email);
                     }
                     break;
@@ -1020,6 +1084,14 @@
 
                 case 'erro':
                     aguardandoToggleDemo = false;
+                    // Re-sincronização: se a sala foi apagada (servidor reiniciou / sem usuários),
+                    // sai da sala "fantasma" e volta ao painel em vez de travar com alert repetido
+                    if (data.mensagem === 'Sala não encontrada' && currentSala) {
+                        const nomeSalaPerdida = currentSala.nome;
+                        sairDaSala();
+                        alert(`A sala "${nomeSalaPerdida}" foi encerrada (sem usuários online).`);
+                        break;
+                    }
                     alert(data.mensagem);
                     break;
             }
@@ -1095,6 +1167,7 @@
             if (canal) canal.close();
             currentUser = null;
             currentSala = null;
+            senhaSalaAtual = null;
             admIniciada = false; // ao logar de novo na aba ADM, entra na ADM novamente
             otpAtual = null;
             emailParaVerificar = null;
@@ -1188,6 +1261,7 @@
             const salaId = gerarIdSala();
             const sala = { id: salaId, nome, publica: tipo === 'publica', senha: tipo === 'privada' ? senha : null, usuarios: [currentUser] };
             salasLocais[salaId] = sala;
+            senhaSalaAtual = tipo === 'privada' ? senha : null; // guardado para re-entrar após reconexão
 
             if (MODO === 'pages') {
                 entrarNaSala(salaId, nome, tipo === 'publica');
@@ -1210,7 +1284,9 @@
                 atualizarInfoSala();
                 atualizarListaUsuarios();
                 mostrarChat();
+                exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(nome || salaId)}</strong>`);
             } else {
+                if (publica) senhaSalaAtual = null; // sala pública não exige senha
                 enviar({ tipo: 'entrar_sala', salaId });
             }
         }
@@ -1233,6 +1309,8 @@
                 console.log('[Sala] Usuário saiu da sala:', currentSala.id);
             }
             currentSala = null;
+            senhaSalaAtual = null;
+            atualizarListaUsuarios(); // limpa a faixa de presença do cabeçalho
             desabilitarEdicaoNome(false); // voltou ao painel principal: ✎ reabilitado
             document.getElementById('chatArea').classList.add('hidden');
             document.getElementById('sairSalaBar').classList.add('hidden');
@@ -1253,6 +1331,7 @@
                 if (sala.senha !== senha) { alert('Senha incorreta.'); return; }
                 entrarNaSala(salaId, sala.nome, sala.publica);
             } else {
+                senhaSalaAtual = senha; // guardada para reconectar já dentro da sala privada
                 enviar({ tipo: 'entrar_sala', salaId, senha });
             }
         }
@@ -1841,10 +1920,31 @@
             if (currentSala) {
                 document.getElementById('chatSalaNome').textContent = currentSala.nome;
                 document.getElementById('chatSalaInfo').textContent = `${currentSala.publica ? 'Pública' : 'Privada'} | ${currentSala.usuarios.length} usuário(s)`;
+                atualizarListaUsuarios();
             }
         }
         function atualizarListaUsuarios() {
-            // Container de usuários removido do layout; lista agora aparece via popup ao digitar "@"
+            // Faixa de presença no cabeçalho da sala (o container lateral foi removido;
+            // esta faixa mostra quem está ONLINE agora e atualiza a cada entrada/saída)
+            const cont = document.getElementById('chatPresenca');
+            if (!cont) return;
+            if (!currentSala) { cont.innerHTML = ''; return; }
+            const usuarios = (currentSala.usuarios || []).filter(u => u && (u.email || u.nome));
+            const pills = usuarios.map(u => {
+                const eu = currentUser && u.email === currentUser.email;
+                const nome = escaparHtml(u.nome || u.email || '?');
+                return `<span class="presenca-pill ${eu ? 'presenca-eu' : ''}" title="${escaparHtml(u.email || '')}">
+                    <span class="status-indicator status-online"></span>${nome}${eu ? ' (você)' : ''}
+                </span>`;
+            }).join('');
+            cont.innerHTML = `<span class="presenca-label">👥 Na sala:</span>${pills || '<span class="presenca-pill">ninguém</span>'}`;
+        }
+        // Linha central de evento ("fulano entrou na sala") — visível para todos os participantes
+        function exibirMensagemSistema(html) {
+            const div = document.getElementById('chatMessages');
+            if (!div) return;
+            div.insertAdjacentHTML('beforeend', `<div class="message-system">${html}</div>`);
+            div.scrollTop = div.scrollHeight;
         }
         function gerarIdSala() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
     </script>

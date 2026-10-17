@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>cripto.chat</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -55,16 +55,12 @@
         .step-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
         .step-dot.active { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
         .step-dot.completed { background: #43e97b; }
+        /* Altura do chat: usa a ALTURA REAL da viewport (--app-height é atualizada pelo JS
+           via visualViewport, então o teclado do celular não esconde o chat) */
         .chat-layout {
             display: grid; grid-template-columns: 1fr;
-            gap: 20px; height: calc(100vh - 120px);
+            gap: 20px; height: calc(var(--app-height, 100vh) - 120px);
         }
-        .sair-sala-bar {
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 12px;
-        }
-        /* Ajusta a altura do chat quando a barra de saída está visível */
-        #sairSalaBar:not(.hidden) + #chatArea .chat-layout { height: calc(100vh - 180px); }
         .chat-main {
             display: flex; flex-direction: column;
             background: rgba(255, 255, 255, 0.05);
@@ -77,24 +73,49 @@
             display: flex; flex-direction: column; align-items: stretch; gap: 8px;
         }
         .chat-header-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-        /* Lista de usuários ON-LINE na sala (atualiza em tempo real) */
-        .chat-presenca { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-        .presenca-label { font-size: 11px; color: #9ab; }
-        .presenca-pill {
-            display: inline-flex; align-items: center; gap: 5px; max-width: 240px;
-            font-size: 11px; padding: 3px 9px; border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #cfe; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        .chat-header-esq { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .chat-header-esq strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-header-dir { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        /* Sair da sala: ícone sutil ao lado do nome */
+        .btn-sair-sala {
+            flex: none; padding: 3px 9px; margin: 0; font-size: 15px; line-height: 1.3;
+            background: transparent; color: #9ab; border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
         }
-        .presenca-pill .status-indicator { margin-right: 0; width: 7px; height: 7px; flex: none; }
-        .presenca-pill.presenca-eu { border-color: rgba(67, 233, 123, 0.5); background: rgba(67, 233, 123, 0.12); color: #43e97b; }
+        .btn-sair-sala:hover { color: #ff8f8f; border-color: rgba(255, 143, 143, 0.5); background: rgba(255, 143, 143, 0.1); }
+        /* Combo de usuários da sala (abre a lista ao clicar) */
+        .presenca-wrap { position: relative; }
+        .presenca-combo {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; margin: 0; font-size: 12px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.07); color: #cfe;
+            border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+        .presenca-combo:hover, .presenca-combo.aberto {
+            background: rgba(0, 212, 255, 0.15); border-color: rgba(0, 212, 255, 0.45); color: #fff;
+        }
+        .presenca-popup {
+            position: absolute; right: 0; top: calc(100% + 6px); z-index: 120;
+            min-width: 220px; max-width: 80vw; max-height: 240px; overflow-y: auto;
+            background: #1c1740; border: 1px solid rgba(0, 212, 255, 0.35);
+            border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); padding: 4px;
+        }
+        .presenca-popup .presenca-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; border-radius: 8px; font-size: 13px; color: #cfe;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .presenca-popup .presenca-item .mention-email { font-size: 11px; color: #888; }
+        .presenca-popup .presenca-item.eu { background: rgba(67, 233, 123, 0.12); color: #43e97b; }
+        .presenca-popup .presenca-vazio { padding: 10px; font-size: 12px; color: #888; }
         /* Linha central de eventos da sala: "entrou" / "saiu" */
         .message-system {
             text-align: center; font-size: 12px; color: #9ab; margin: 10px 0;
             animation: fadeIn 0.3s ease; overflow-wrap: anywhere;
         }
         .message-system strong { color: #00d4ff; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .chat-messages { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
         .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
         .mention-wrap { position: relative; }
         .mention-popup {
@@ -312,6 +333,7 @@
         /* ===== RESPONSIVO (dispositivos móveis) ===== */
         @media (max-width: 768px) {
             .container { padding: 12px; }
+            body { padding-bottom: 50px; } /* espaço exato para o rodapé de uma linha */
             /* TOPO: tudo em uma única linha */
             .topbar { padding: 6px 10px; }
             .topbar-main { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
@@ -333,7 +355,21 @@
             .flex-row > * { flex: auto; }
             .tabs { flex-wrap: wrap; }
             .tab { flex: 1 1 45%; text-align: center; font-size: 13px; padding: 12px 8px; }
-            .chat-layout { grid-template-columns: 1fr; height: auto; }
+            /* CHAT no celular: altura EXATA da viewport (--app-height acompanha o teclado),
+               cabeçalho da sala fixo e as últimas mensagens sempre visíveis */
+            .chat-layout {
+                grid-template-columns: 1fr; gap: 0;
+                height: calc(var(--app-height, 100vh) - 116px);
+                min-height: 0;
+            }
+            .chat-header { position: sticky; top: 0; z-index: 30; padding: 10px 12px; }
+            .chat-messages { padding: 12px; }
+            .chat-input-area { padding: 10px; }
+            .chat-input-area textarea { font-size: 16px; } /* 16px: evita o zoom automático do iOS */
+            .crypto-select { flex-wrap: wrap; }
+            .crypto-select select { flex: 1 1 100%; }
+            .crypto-select button { margin: 0; flex: 1 1 100%; }
+            .crypto-hint { display: none; } /* economiza altura da tela no celular */
             .otp-input { font-size: 22px; letter-spacing: 8px; }
             button { width: auto; }
         }
@@ -470,22 +506,28 @@
                 </div>
                 </div><!-- /dashboardArea -->
 
-                <!-- BARRA DE SAIR DA SALA -->
-                <div id="sairSalaBar" class="sair-sala-bar hidden">
-                    <button class="btn-secondary" onclick="sairDaSala()">← Sair da Sala</button>
-                </div>
-
                 <!-- CHAT -->
                 <div id="chatArea" class="hidden">
                     <div class="chat-layout">
                         <div class="chat-main">
                             <div class="chat-header">
                                 <div class="chat-header-top">
-                                    <strong id="chatSalaNome"></strong>
-                                    <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                                    <div class="chat-header-esq">
+                                        <!-- Sair da sala: ícone sutil ao lado do nome -->
+                                        <button class="btn-sair-sala" onclick="sairDaSala()" title="Sair da sala"
+                                                aria-label="Sair da sala">←</button>
+                                        <strong id="chatSalaNome"></strong>
+                                    </div>
+                                    <div class="chat-header-dir">
+                                        <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                                        <!-- Combo de usuários da sala: você primeiro, depois ordem alfabética -->
+                                        <div class="presenca-wrap">
+                                            <button id="presencaBtn" class="presenca-combo" onclick="alternarPresenca(event)"
+                                                    title="Ver usuários na sala">👥 <span id="presencaCount">0</span></button>
+                                            <div id="presencaPopup" class="presenca-popup hidden"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <!-- Usuários atualmente na sala (atualiza quando alguém entra/sai) -->
-                                <div class="chat-presenca" id="chatPresenca"></div>
                             </div>
                             <div class="chat-messages" id="chatMessages"></div>
                             <div class="chat-input-area">
@@ -843,7 +885,10 @@
             };
             // Ao FECHAR (queda, reinício do servidor etc.): agenda reconexão automática
             ws.onclose = () => { if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; agendarReconexao(); };
-            ws.onerror = () => { if (canal) canal.readyState = WebSocket.CLOSED; canal = null; };
+            // ERRO: NÃO zera "canal" — o mesmo socket ainda pode estar vivo.
+            // Zerar aqui fazia o cliente abrir um SEGUNDO socket (duplicado) que
+            // roubava a sessão do primeiro e gerava um loop de reconexão.
+            ws.onerror = () => { console.warn('[WebSocket] Erro na conexão (aguardando onclose)'); };
             ws.onmessage = (e) => processarMensagem(JSON.parse(e.data));
         }
 
@@ -1175,7 +1220,6 @@
             document.getElementById('loginPanel').classList.remove('hidden');
             document.getElementById('mainPanel').classList.add('hidden');
             document.getElementById('chatArea').classList.add('hidden');
-            document.getElementById('sairSalaBar').classList.add('hidden');
             document.getElementById('dashboardArea').classList.remove('hidden');
             document.getElementById('tabsBar').classList.remove('hidden');
             document.getElementById('pageHeader').classList.remove('hidden');
@@ -1298,8 +1342,8 @@
             document.getElementById('pageHeader').classList.add('hidden');
             document.getElementById('dashboardArea').classList.add('hidden');
             document.getElementById('tabsBar').classList.add('hidden');
-            document.getElementById('sairSalaBar').classList.remove('hidden');
             document.getElementById('chatArea').classList.remove('hidden');
+            ajustarAlturaApp(); // garante a altura certa (importante no celular)
         }
 
         // Sai da sala e retorna para o dashboard
@@ -1310,10 +1354,9 @@
             }
             currentSala = null;
             senhaSalaAtual = null;
-            atualizarListaUsuarios(); // limpa a faixa de presença do cabeçalho
+            atualizarListaUsuarios(); // zera o combo de usuários do cabeçalho
             desabilitarEdicaoNome(false); // voltou ao painel principal: ✎ reabilitado
             document.getElementById('chatArea').classList.add('hidden');
-            document.getElementById('sairSalaBar').classList.add('hidden');
             document.getElementById('dashboardArea').classList.remove('hidden');
             document.getElementById('tabsBar').classList.remove('hidden');
             document.getElementById('pageHeader').classList.remove('hidden');
@@ -1924,21 +1967,75 @@
             }
         }
         function atualizarListaUsuarios() {
-            // Faixa de presença no cabeçalho da sala (o container lateral foi removido;
-            // esta faixa mostra quem está ONLINE agora e atualiza a cada entrada/saída)
-            const cont = document.getElementById('chatPresenca');
-            if (!cont) return;
-            if (!currentSala) { cont.innerHTML = ''; return; }
+            // Combo no cabeçalho da sala: mostra QUANTOS estão na lista e, ao clicar, quem são.
+            // Ordem: o usuário LOGADO primeiro, depois os demais em ordem alfabética.
+            const btn = document.getElementById('presencaBtn');
+            const count = document.getElementById('presencaCount');
+            const popup = document.getElementById('presencaPopup');
+            if (!btn || !popup) return;
+            if (!currentSala) {
+                if (count) count.textContent = '0';
+                popup.innerHTML = '';
+                fecharPresenca();
+                return;
+            }
             const usuarios = (currentSala.usuarios || []).filter(u => u && (u.email || u.nome));
-            const pills = usuarios.map(u => {
+            const ordenados = usuarios.slice().sort((a, b) => {
+                const euA = currentUser && a.email === currentUser.email ? 0 : 1;
+                const euB = currentUser && b.email === currentUser.email ? 0 : 1;
+                if (euA !== euB) return euA - euB; // quem está logado sempre primeiro
+                return String(a.nome || a.email || '').localeCompare(String(b.nome || b.email || ''), 'pt-BR', { sensitivity: 'base' });
+            });
+            if (count) count.textContent = usuarios.length;
+            popup.innerHTML = ordenados.map(u => {
                 const eu = currentUser && u.email === currentUser.email;
-                const nome = escaparHtml(u.nome || u.email || '?');
-                return `<span class="presenca-pill ${eu ? 'presenca-eu' : ''}" title="${escaparHtml(u.email || '')}">
-                    <span class="status-indicator status-online"></span>${nome}${eu ? ' (você)' : ''}
-                </span>`;
-            }).join('');
-            cont.innerHTML = `<span class="presenca-label">👥 Na sala:</span>${pills || '<span class="presenca-pill">ninguém</span>'}`;
+                return `<div class="presenca-item ${eu ? 'eu' : ''}" title="${escaparHtml(u.email || '')}">
+                    <span class="status-indicator status-online"></span>${escaparHtml(u.nome || u.email || '?')}${eu ? ' (você)' : ''}
+                </div>`;
+            }).join('') || '<div class="presenca-vazio">Ninguém na sala no momento.</div>';
         }
+
+        // Abre/fecha o combo de usuários da sala
+        function alternarPresenca(ev) {
+            if (ev) ev.stopPropagation();
+            const popup = document.getElementById('presencaPopup');
+            const btn = document.getElementById('presencaBtn');
+            if (!popup) return;
+            const abrir = popup.classList.contains('hidden');
+            popup.classList.toggle('hidden', !abrir);
+            if (btn) btn.classList.toggle('aberto', abrir);
+        }
+        function fecharPresenca() {
+            const popup = document.getElementById('presencaPopup');
+            const btn = document.getElementById('presencaBtn');
+            if (popup) popup.classList.add('hidden');
+            if (btn) btn.classList.remove('aberto');
+        }
+        // Fecha o combo ao clicar fora dele
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.presenca-wrap');
+            if (wrap && !wrap.contains(e.target)) fecharPresenca();
+        });
+
+        // ===== ALTURA REAL DA VIEWPORT (teclado do celular) =====
+        // Ao focar o campo de mensagem no celular, o teclado cobriria o chat.
+        // Usamos a altura VISUAL para encolher a área do chat: o cabeçalho da sala
+        // fica fixo no topo e as últimas mensagens continuam visíveis.
+        function ajustarAlturaApp() {
+            const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
+            const div = document.getElementById('chatMessages');
+            const area = document.getElementById('chatArea');
+            if (div && area && !area.classList.contains('hidden')) {
+                div.scrollTop = div.scrollHeight; // última mensagem sempre à vista
+            }
+        }
+        window.addEventListener('resize', ajustarAlturaApp);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', ajustarAlturaApp);
+            window.visualViewport.addEventListener('scroll', ajustarAlturaApp);
+        }
+        ajustarAlturaApp();
         // Linha central de evento ("fulano entrou na sala") — visível para todos os participantes
         function exibirMensagemSistema(html) {
             const div = document.getElementById('chatMessages');

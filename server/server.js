@@ -116,6 +116,41 @@ const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
 const chavesPublicas = new Map(); // email -> { chavePublica, nome } — chaves RSA públicas (E2E). O servidor NUNCA recebe chaves privadas.
 
+// UM usuário pode ter VÁRIAS conexões abertas ao mesmo tempo (ex.: aba normal +
+// aba da SALA ADM, ou duas abas do navegador). Guardamos todas elas: antes, a
+// conexão nova "roubava" a antiga e a aba que ficava órfã deixava de receber
+// eventos da sala (parecia que "ninguém atualizava nada").
+const conexoes = new Map();       // email -> Set<ws>
+
+function registrarConexao(email, ws) {
+  if (!conexoes.has(email)) conexoes.set(email, new Set());
+  conexoes.get(email).add(ws);
+}
+
+// Envia uma mensagem para TODAS as conexões de um usuário (exceto a indicada)
+function enviarParaUsuario(email, msg, exceto = null) {
+  const conjunto = conexoes.get(email);
+  if (!conjunto) return false;
+  const texto = JSON.stringify(msg);
+  let enviou = false;
+  for (const c of conjunto) {
+    if (c !== exceto && c.readyState === WebSocket.OPEN) {
+      c.send(texto);
+      enviou = true;
+    }
+  }
+  return enviou;
+}
+
+// Remove uma conexão; retorna true quando o usuário ficou SEM NENHUMA conexão
+function removerConexao(email, ws) {
+  const conjunto = conexoes.get(email);
+  if (!conjunto) return true;
+  conjunto.delete(ws);
+  if (conjunto.size === 0) { conexoes.delete(email); return true; }
+  return false;
+}
+
 // ============================================================
 // SERVIDOR HTTP (arquivos estáticos)
 // ============================================================
@@ -156,19 +191,15 @@ function broadcast(salaId, msg, exceto = null) {
   const sala = salas.get(salaId);
   if (!sala) return;
   for (const userEmail of sala.usuarios) {
-    const user = usuarios.get(userEmail);
-    if (user && user.ws !== exceto && user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(JSON.stringify(msg));
-    }
+    // Envia para TODAS as abas/conexões daquele usuário
+    enviarParaUsuario(userEmail, msg, exceto);
   }
 }
 
 // Enviar mensagem a TODOS os usuários conectados
 function broadcastTodos(msg, exceto = null) {
-  for (const user of usuarios.values()) {
-    if (user.ws !== exceto && user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(JSON.stringify(msg));
-    }
+  for (const email of conexoes.keys()) {
+    enviarParaUsuario(email, msg, exceto);
   }
 }
 
@@ -266,6 +297,15 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (raw) => {
     const data = JSON.parse(raw);
+    
+    // Ações permitidas ANTES do login (públicas). Todo o resto exige sessão
+    // autenticada — evita "fantasmas" entrando em salas sem email.
+    const TIPOS_PUBLICOS = ['solicitar_otp', 'verificar_otp', 'restaurar_sessao',
+                            'verificar_demo', 'habilitar_demo', 'desabilitar_demo'];
+    if (!ws.email && !TIPOS_PUBLICOS.includes(data.tipo)) {
+      ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Sessão não autenticada. Faça login novamente.' }));
+      return;
+    }
     
     switch (data.tipo) {
       
@@ -372,8 +412,11 @@ wss.on('connection', (ws) => {
           return;
         }
         
-        // Registrar usuário
-        usuarios.set(email, { ws, nome: result.nome, salaAtual: null });
+        // Registrar usuário (mantém as outras abas já conectadas com este email)
+        const usuarioLogin = usuarios.get(email);
+        if (usuarioLogin) { usuarioLogin.ws = ws; usuarioLogin.nome = result.nome; }
+        else usuarios.set(email, { ws, nome: result.nome, salaAtual: null });
+        registrarConexao(email, ws);
         ws.email = email;
         
         ws.send(JSON.stringify({
@@ -396,13 +439,22 @@ wss.on('connection', (ws) => {
       case 'restaurar_sessao': {
         const { email, nome } = data;
         if (!email) break;
-        // Re-registrar usuário com a nova conexão ws
-        usuarios.set(email, { ws, nome: nome || email.split('@')[0], salaAtual: null });
+        const nomeUser = nome || email.split('@')[0];
+        // Re-registrar usuário com a nova conexão ws.
+        // IMPORTANTE: não zera a sala atual nem apaga as outras abas conectadas.
+        const usuarioExistente = usuarios.get(email);
+        if (usuarioExistente) {
+          usuarioExistente.ws = ws;
+          if (nome) usuarioExistente.nome = nome;
+        } else {
+          usuarios.set(email, { ws, nome: nomeUser, salaAtual: null });
+        }
+        registrarConexao(email, ws);
         ws.email = email;
         ws.send(JSON.stringify({
           tipo: 'registrado',
           email,
-          nome: nome || email.split('@')[0],
+          nome: nomeUser,
           mensagem: `Bem-vindo de volta, ${nome || email}!`
         }));
         // Enviar chaves públicas E2E já conhecidas
@@ -457,6 +509,7 @@ wss.on('connection', (ws) => {
         
         const user = usuarios.get(ws.email);
         if (user) user.salaAtual = salaId;
+        ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
         ws.send(JSON.stringify({
           tipo: 'sala_criada',
@@ -498,6 +551,7 @@ wss.on('connection', (ws) => {
         
         sala.usuarios.add(ws.email);
         if (user) user.salaAtual = salaId;
+        ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
         // Notificar todos da sala
         broadcast(salaId, {
@@ -589,14 +643,11 @@ wss.on('connection', (ws) => {
           texto
         };
         
-        // Enviar ao destinatário
-        const destino = usuarios.get(paraEmail);
-        if (destino && destino.ws.readyState === WebSocket.OPEN) {
-          destino.ws.send(JSON.stringify(msg));
-        }
+        // Enviar ao destinatário (todas as abas dele)
+        enviarParaUsuario(paraEmail, msg);
         
         // Enviar ao remetente (para exibição no próprio chat)
-        ws.send(JSON.stringify(msg));
+        enviarParaUsuario(ws.email, msg);
         
         // ADM vê apenas o que passa pelo servidor
         enviarParaAdm({ ...msg, privada: true });
@@ -614,14 +665,12 @@ wss.on('connection', (ws) => {
       // --------------------------------------------------------
       case 'e2e_falha_leitura': {
         const relator = usuarios.get(ws.email);
-        const alvo = usuarios.get(data.paraEmail); // REMETENTE original
-        if (alvo && alvo.ws.readyState === WebSocket.OPEN) {
-          alvo.ws.send(JSON.stringify({
-            tipo: 'e2e_falha_leitura',
-            msgId: data.msgId,
-            quem: relator?.nome || ws.email
-          }));
-        }
+        // Avisa o REMETENTE original (em todas as abas dele)
+        enviarParaUsuario(data.paraEmail, {
+          tipo: 'e2e_falha_leitura',
+          msgId: data.msgId,
+          quem: relator?.nome || ws.email
+        });
         console.log(`[E2E] ${relator?.nome || ws.email} NÃO conseguiu decifrar mensagem de ${data.paraEmail} (sem chave privada neste navegador)`);
         break;
       }
@@ -657,21 +706,41 @@ wss.on('connection', (ws) => {
           removerUsuarioDaSala(user.salaAtual, ws.email);
           user.salaAtual = null;
         }
+        ws.entrouEmSala = false;
         break;
       }
     }
   });
   
   ws.on('close', () => {
-    const user = usuarios.get(ws.email);
-    if (user && user.salaAtual) {
-      removerUsuarioDaSala(user.salaAtual, ws.email);
-    }
     salaAdmWs.delete(ws);
-    if (ws.email) {
-      usuarios.delete(ws.email);
-      console.log(`[LOGOUT] ${ws.email} desconectou`);
+    if (!ws.email) return;
+
+    const user = usuarios.get(ws.email);
+    const ficouSemConexoes = removerConexao(ws.email, ws);
+
+    // O usuário ainda tem OUTRAS abas/conexões abertas → continua online
+    if (!ficouSemConexoes) {
+      if (user && user.ws === ws) {
+        const restantes = conexoes.get(ws.email);
+        user.ws = restantes ? restantes.values().next().value : null; // outra aba assume
+      }
+      // Se ESTA aba era a que estava numa sala (ex.: a página foi recarregada),
+      // tira o usuário da sala: a nova aba começa no painel, não dentro da sala.
+      if (user && user.salaAtual && ws.entrouEmSala) {
+        removerUsuarioDaSala(user.salaAtual, ws.email);
+        user.salaAtual = null;
+      }
+      console.log(`[SESSÃO] ${ws.email}: uma aba desconectou — outras conexões continuam online`);
+      return;
     }
+
+    // Última conexão do usuário → sai da sala e é apagado
+    if (user) {
+      if (user.salaAtual) removerUsuarioDaSala(user.salaAtual, ws.email);
+      usuarios.delete(ws.email);
+    }
+    console.log(`[LOGOUT] ${ws.email} desconectou`);
   });
 });
 

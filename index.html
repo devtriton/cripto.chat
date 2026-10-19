@@ -256,6 +256,17 @@
         }
         .tema-select:focus { border-color: var(--acento); }
 
+        /* Ajuste do tamanho da fonte (botões A− / A+ no topo) */
+        .fonte-wrap { display: inline-flex; align-items: center; gap: 2px; }
+        .fonte-btn {
+            padding: 2px 6px; margin: 0; font-size: 11px; font-weight: 700;
+            background: var(--painel-bg); color: var(--texto-claro);
+            border: 1px solid var(--painel-borda); border-radius: 8px; cursor: pointer;
+        }
+        .fonte-btn:hover:not(:disabled) { border-color: var(--acento); }
+        .fonte-btn:disabled { opacity: 0.35; cursor: default; }
+        .fonte-info { font-size: 10px; color: var(--texto-suave); min-width: 32px; text-align: center; }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -595,6 +606,8 @@
             .mode-indicator { font-size: 9px; padding: 2px 7px; }
             .tema-select { font-size: 10px; padding: 2px 3px; max-width: 88px; }
             .tema-ico { font-size: 12px; }
+            .fonte-btn { font-size: 10px; padding: 2px 4px; }
+            .fonte-info { display: none; } /* economiza espaço no celular */
             .tu-btn { padding: 4px 8px; font-size: 11px; }
             .topbar-pass { flex-direction: column; align-items: stretch; }
             .topbar-pass input { width: 100%; }
@@ -631,6 +644,9 @@
             .topbar-logo { font-size: 13px; }
             .topbar-left { gap: 6px; }
             .mode-indicator { font-size: 8px; padding: 2px 5px; }
+            .modo-longo { display: none; } /* "MODO DEMO" vira só "DEMO" para caber em uma linha */
+            .fonte-letra { display: none; } /* "A−"/"A+" viram "−"/"+" */
+            .topbar-main { gap: 6px; }
             .tu-btn { padding: 4px 7px; font-size: 10px; }
             .tema-select { max-width: 76px; font-size: 9px; padding: 2px 2px; }
             .tema-ico { display: none; } /* esconde o emoji para caber em uma linha */
@@ -646,6 +662,8 @@
         var _temaInicial = 'areia';
         try { _temaInicial = localStorage.getItem('cripto_chat_tema') || 'areia'; } catch (e) {}
         document.documentElement.setAttribute('data-tema', _temaInicial);
+        // Tamanho da fonte salvo — mesma ideia, aplicar antes de pintar
+        try { var _f = parseFloat(localStorage.getItem('cripto_chat_fonte')); if (!isNaN(_f)) document.documentElement.style.zoom = _f; } catch (e) {}
     </script>
 </head>
 <body>
@@ -656,9 +674,17 @@
             <div class="topbar-left">
                 <span class="topbar-logo">🔐 cripto.chat</span>
                 <span id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
-                      title="Modo demo desativado — clique para abrir/ativar">MODO DEMO <span class="demo-open">＋</span></span>
+                      title="Modo demo desativado — clique para abrir/ativar"><span class="modo-longo">MODO </span>DEMO <span class="demo-open">＋</span></span>
             </div>
             <div id="topbarActions" class="topbar-right">
+                <!-- Tamanho da fonte -->
+                <span class="fonte-wrap" title="Tamanho da fonte">
+                    <button id="btnFonteMenos" class="fonte-btn" onclick="mudarFonte(-1)"
+                            aria-label="Diminuir fonte"><span class="fonte-letra">A</span>−</button>
+                    <span id="fonteInfo" class="fonte-info">100%</span>
+                    <button id="btnFonteMais" class="fonte-btn" onclick="mudarFonte(1)"
+                            aria-label="Aumentar fonte"><span class="fonte-letra">A</span>+</button>
+                </span>
                 <!-- Combo de tema de cores (sempre visível) -->
                 <span class="tema-wrap" title="Escolher tema de cores">
                     <span class="tema-ico">🎨</span>
@@ -1503,10 +1529,37 @@
             console.log('[tema] Aplicado:', tema);
         }
 
-        // Combo começa no tema já salvo (o <head> já aplicou a cor antes de pintar)
+        // ============================================================
+        // TAMANHO DA FONTE — botões A− / A+ ao lado do combo de tema
+        // ============================================================
+        const FONTE_MIN = 0.8, FONTE_MAX = 1.6, FONTE_PASSO = 0.1;
+        let fonteEscala = 1;
+
+        function fonteSalva() {
+            try { const f = parseFloat(localStorage.getItem('cripto_chat_fonte')); return isNaN(f) ? 1 : f; } catch (e) { return 1; }
+        }
+
+        function aplicarFonte(escala) {
+            // Arredonda em 10% para não acumular erro de ponto flutuante
+            fonteEscala = Math.min(FONTE_MAX, Math.max(FONTE_MIN, Math.round(escala * 100) / 100));
+            document.documentElement.style.zoom = fonteEscala; // escala interface e textos juntos
+            try { localStorage.setItem('cripto_chat_fonte', String(fonteEscala)); } catch (e) {}
+            const info = document.getElementById('fonteInfo');
+            if (info) info.textContent = Math.round(fonteEscala * 100) + '%';
+            const btnMais = document.getElementById('btnFonteMais');
+            const btnMenos = document.getElementById('btnFonteMenos');
+            if (btnMais) btnMais.disabled = fonteEscala >= FONTE_MAX;
+            if (btnMenos) btnMenos.disabled = fonteEscala <= FONTE_MIN;
+        }
+
+        function mudarFonte(passo) { aplicarFonte(fonteEscala + passo * FONTE_PASSO); }
+
+        // Combo já começa no tema salvo e a fonte na escala salva
+        // (o <head> já aplicou os dois antes de pintar)
         document.addEventListener('DOMContentLoaded', () => {
             const sel = document.getElementById('temaSelect');
             if (sel) sel.value = temaSalvo();
+            aplicarFonte(fonteSalva());
         });
 
         // ============================================================
@@ -1553,11 +1606,11 @@
             const indicator = document.getElementById('modeIndicator');
             if (!indicator) return;
             if (ativo) {
-                indicator.innerHTML = 'MODO DEMO <span class="demo-x">✗</span>';
+                indicator.innerHTML = '<span class="modo-longo">MODO </span>DEMO <span class="demo-x">✗</span>';
                 indicator.className = 'mode-indicator mode-demo demo-on';
                 indicator.title = 'Modo demo ATIVO — clique para desativar';
             } else {
-                indicator.innerHTML = 'MODO DEMO <span class="demo-open">＋</span>';
+                indicator.innerHTML = '<span class="modo-longo">MODO </span>DEMO <span class="demo-open">＋</span>';
                 indicator.className = 'mode-indicator mode-login';
                 indicator.title = 'Modo demo desativado — clique para abrir/ativar';
             }

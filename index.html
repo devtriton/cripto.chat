@@ -639,7 +639,9 @@
                 <span class="topbar-logo">🔐 cripto.chat</span>
                 <span id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
                       title="Modo demo desativado — clique para abrir/ativar">MODO DEMO <span class="demo-open">＋</span></span>
-                <!-- Combo de tema de cores -->
+            </div>
+            <div id="topbarActions" class="topbar-right">
+                <!-- Combo de tema de cores (sempre visível) -->
                 <span class="tema-wrap" title="Escolher tema de cores">
                     <span class="tema-ico">🎨</span>
                     <select id="temaSelect" class="tema-select" onchange="mudarTema(this.value)" aria-label="Tema de cores">
@@ -662,9 +664,8 @@
                         <option value="menta">Menta</option>
                     </select>
                 </span>
-            </div>
-            <div id="topbarActions" class="topbar-right hidden">
-                <button id="btnSalaADM" class="btn-adm tu-btn" onclick="abrirSalaADM()">Sala ADM</button>
+                <!-- Sala ADM: aparece só após o login -->
+                <button id="btnSalaADM" class="btn-adm tu-btn hidden" onclick="abrirSalaADM()">Sala ADM</button>
             </div>
         </div>
         <!-- LINHA 2 (usuário) movida para o rodapé fixo -->
@@ -1387,7 +1388,8 @@
             document.getElementById('userEmailDisplay').textContent = currentUser.email;
             fecharEdicaoNome();
             document.getElementById('topbarUserRow').classList.remove('hidden');
-            document.getElementById('topbarActions').classList.remove('hidden');
+            document.getElementById('btnSalaADM').classList.remove('hidden');   // Sala ADM: só logado
+            document.getElementById('modeIndicator').classList.add('hidden');   // MODO DEMO: só no login
             // Atualiza o ícone de conexão no rodapé
             const online = MODO === 'pages' || (canal && canal.readyState === WebSocket.OPEN);
             atualizarStatusConexao(!!online);
@@ -1463,7 +1465,8 @@
             document.getElementById('otpCode').value = '';
             document.getElementById('loginEmail').value = '';
             document.getElementById('topbarUserRow').classList.add('hidden');
-            document.getElementById('topbarActions').classList.add('hidden');
+            document.getElementById('btnSalaADM').classList.add('hidden');
+            document.getElementById('modeIndicator').classList.remove('hidden');
         }
 
         // ============================================================

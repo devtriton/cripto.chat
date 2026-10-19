@@ -11,7 +11,8 @@
            sobrescrevem as variáveis que mudam.
            ============================================================== */
         :root {
-            /* 1. Neon Roxo (padrão) */
+            /* Neon Roxo (valores base — o tema padrão é o Areia Clara,
+               aplicado pelo <head> via atributo data-tema) */
             --bg-1: #0f0c29; --bg-2: #302b63; --bg-3: #24243e;
             --acento: #00d4ff; --acento-rgb: 0, 212, 255; --acento-esc: #0099cc;
             --acento-texto: #062033;      /* texto sobre fundo do acento */
@@ -640,11 +641,11 @@
         }
     </style>
     <script>
-        // Aplica o tema salvo ANTES de pintar a página (evita "flash" do tema padrão)
-        try {
-            var _t = localStorage.getItem('cripto_chat_tema');
-            if (_t && _t !== 'padrao') document.documentElement.setAttribute('data-tema', _t);
-        } catch (e) {}
+        // Aplica o tema ANTES de pintar a página (evita "flash").
+        // Sem escolha salva no navegador, o padrão é o Areia Clara.
+        var _temaInicial = 'areia';
+        try { _temaInicial = localStorage.getItem('cripto_chat_tema') || 'areia'; } catch (e) {}
+        document.documentElement.setAttribute('data-tema', _temaInicial);
     </script>
 </head>
 <body>
@@ -662,6 +663,7 @@
                 <span class="tema-wrap" title="Escolher tema de cores">
                     <span class="tema-ico">🎨</span>
                     <select id="temaSelect" class="tema-select" onchange="mudarTema(this.value)" aria-label="Tema de cores">
+                        <option value="areia">Areia Clara</option>
                         <option value="padrao">Neon Roxo</option>
                         <option value="oceano">Azul Oceano</option>
                         <option value="mata">Verde Mata</option>
@@ -1490,7 +1492,7 @@
         // TEMAS DE COR — combo 🎨 da barra superior
         // ============================================================
         function temaSalvo() {
-            try { return localStorage.getItem('cripto_chat_tema') || 'padrao'; } catch (e) { return 'padrao'; }
+            try { return localStorage.getItem('cripto_chat_tema') || 'areia'; } catch (e) { return 'areia'; }
         }
 
         function mudarTema(tema) {

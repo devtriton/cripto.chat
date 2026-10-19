@@ -869,16 +869,6 @@
                         <div id="demoResultado" style="margin-top: 15px;"></div>
                     </div>
                 </div>
-                <div class="panel">
-                    <h2>Visualização: O que o Servidor vê</h2>
-                    <div class="edu-note">
-                        <strong>Conceito-Chave:</strong> Quando você criptografa uma mensagem, o servidor (e qualquer observador) 
-                        apenas vê o texto cifrado. Apenas quem possui a chave consegue recuperar o conteúdo original.
-                    </div>
-                    <div id="serverView" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace; min-height: 100px;">
-                        <p style="color: var(--texto-fraco);">Nenhuma mensagem enviada ainda...</p>
-                    </div>
-                </div>
             </div>
 
             <!-- TAB: EDUCACIONAL -->
@@ -2112,7 +2102,6 @@
             }
             div.insertAdjacentHTML('beforeend', html);
             div.scrollTop = div.scrollHeight;
-            document.getElementById('serverView').innerHTML = div.innerHTML;
         }
 
         // Botão da Sala ADM: servidor descriptografa mensagem SIMÉTRICA (tinha a chave)
@@ -2127,7 +2116,6 @@
             pai.insertAdjacentHTML('beforeend', claro === null
                 ? '<em style="color:var(--vermelho-txt);">⛔ Falha ao descriptografar (chave incorreta ou formato não reconhecido).</em>'
                 : `<code style="color:var(--verde-txt);">✅ ${escaparHtml(claro)}</code><br><em>O servidor leu a mensagem porque a chave SIMÉTRICA viajou junto com ela. Em E2E (RSA) isso seria impossível.</em>`);
-            document.getElementById('serverView').innerHTML = document.getElementById('admMessages').innerHTML;
         }
 
         // ============================================================

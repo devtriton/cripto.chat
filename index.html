@@ -754,7 +754,7 @@
             if (MODO === 'pages') {
                 // Gerar código localmente para demo
                 otpAtual = Math.floor(100000 + Math.random() * 900000).toString();
-                const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
                 document.getElementById('otpInfo').innerHTML = 
                     `Código enviado para <strong>${email}</strong><br><br>` +
                     `<strong>Modo demo:</strong> O código é <strong style="color: #43e97b; font-size: 18px;">${otpAtual}</strong>`;
@@ -778,7 +778,7 @@
             if (MODO === 'pages') {
                 // Verificação local
                 if (codigo === otpAtual) {
-                    const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
                     conectarAoSistema(email, nome);
                 } else {
                     alert('Código incorreto. Verifique e tente novamente.');

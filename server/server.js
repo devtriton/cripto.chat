@@ -258,7 +258,7 @@ function gerarOTP() {
 
 function solicitarOTP(email) {
   const codigo = gerarOTP();
-  const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
   
   otps.set(email, {
     codigo,
@@ -349,7 +349,7 @@ wss.on('connection', (ws) => {
       case 'solicitar_otp': {
         const { email } = data;
         const codigo = gerarOTP();
-        const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
         
         otps.set(email, {
           codigo,

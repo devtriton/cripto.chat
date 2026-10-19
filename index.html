@@ -25,6 +25,8 @@
             --aviso: #ffc800;              /* notas de aviso / botão ADM descriptografar */
             --verde-txt: #43e97b;          /* OTP, texto descriptografado, status */
             --vermelho-txt: #ff8f8f;       /* notas de erro / E2E */
+            --btn-primario: linear-gradient(135deg, var(--acento), var(--acento-esc));
+            --btn-adm-grad: linear-gradient(135deg, #a18cd1, #fbc2eb); /* botão "Sala ADM" */
             --btn-enviar: linear-gradient(135deg, #fa709a, #fee140);
         }
 
@@ -33,28 +35,36 @@
             --bg-1: #02152b; --bg-2: #0b3f68; --bg-3: #062b4a;
             --acento: #31b3ff; --acento-rgb: 49, 179, 255; --acento-esc: #0d78b8;
             --barra-bg: rgba(2, 17, 35, 0.96); --popup-bg: #05263f;
+            --btn-enviar: linear-gradient(135deg, #1e9bd7, #0d6fa8);
+            --btn-adm-grad: linear-gradient(135deg, #4a69bd, #2f4f9e);
         }
         [data-tema="mata"] { /* 3. Verde Mata */
             --bg-1: #05170f; --bg-2: #0d3a26; --bg-3: #0a2918;
             --acento: #35e08f; --acento-rgb: 53, 224, 143; --acento-esc: #159e5e;
             --barra-bg: rgba(4, 20, 12, 0.96); --popup-bg: #07301d;
+            --btn-enviar: linear-gradient(135deg, #22c580, #0f8553);
+            --btn-adm-grad: linear-gradient(135deg, #2e8b6f, #1f6b52);
         }
         [data-tema="fogo"] { /* 4. Laranja Fogo */
             --bg-1: #1c0704; --bg-2: #41170a; --bg-3: #2b0f06;
             --acento: #ff8b3d; --acento-rgb: 255, 139, 61; --acento-esc: #d1651c;
             --barra-bg: rgba(24, 8, 4, 0.96); --popup-bg: #3a1408;
             --btn-enviar: linear-gradient(135deg, #ff5f6d, #ffc371);
+            --btn-adm-grad: linear-gradient(135deg, #b3392b, #d35400);
         }
         [data-tema="sakura"] { /* 5. Rosa Sakura */
             --bg-1: #1b0d1a; --bg-2: #3b1833; --bg-3: #2a1025;
             --acento: #ff7dc0; --acento-rgb: 255, 125, 192; --acento-esc: #d04e93;
             --barra-bg: rgba(24, 10, 22, 0.96); --popup-bg: #3a1632;
+            --btn-enviar: linear-gradient(135deg, #e84393, #8e5bd9);
+            --btn-adm-grad: linear-gradient(135deg, #b5176b, #9a4bd9);
         }
         [data-tema="matrix"] { /* 6. Matrix */
             --bg-1: #000000; --bg-2: #001a08; --bg-3: #000d04;
             --acento: #00ff6a; --acento-rgb: 0, 255, 106; --acento-esc: #00b84c;
             --barra-bg: rgba(0, 8, 3, 0.96); --popup-bg: #00160a;
             --btn-enviar: linear-gradient(135deg, #00c853, #76ff03);
+            --btn-adm-grad: linear-gradient(135deg, #005f3d, #008f56);
         }
         [data-tema="areia"] { /* 7. Areia Clara (tema CLARO) */
             --bg-1: #eef2f8; --bg-2: #dbe4f2; --bg-3: #e9eef7;
@@ -69,24 +79,49 @@
             --mencao: #9a5b00; --aviso: #8a6100;
             --verde-txt: #0d8a44; --vermelho-txt: #c62828;
             --btn-enviar: linear-gradient(135deg, #e0456f, #e0a800);
+            --btn-adm-grad: linear-gradient(135deg, #5b2d9e, #8e4fd6);
         }
         [data-tema="grafite"] { /* 8. Grafite (monocromático) */
             --bg-1: #0b0c0e; --bg-2: #1d2126; --bg-3: #14171b;
             --acento: #c2cad4; --acento-rgb: 194, 202, 212; --acento-esc: #7b8794;
             --barra-bg: rgba(11, 12, 14, 0.96); --popup-bg: #22262b;
             --btn-enviar: linear-gradient(135deg, #8e9aab, #5d6775);
+            --btn-adm-grad: linear-gradient(135deg, #495057, #7a828b);
         }
         [data-tema="violeta"] { /* 9. Violeta Real */
             --bg-1: #150a2c; --bg-2: #33185f; --bg-3: #231045;
             --acento: #a97bff; --acento-rgb: 169, 123, 255; --acento-esc: #7440d1;
             --barra-bg: rgba(18, 8, 36, 0.96); --popup-bg: #2b1550;
+            --btn-enviar: linear-gradient(135deg, #8e5bd9, #6430c9);
+            --btn-adm-grad: linear-gradient(135deg, #5b2fa8, #9a63e8);
         }
         [data-tema="ambar"] { /* 10. Âmbar Solar */
             --bg-1: #1a1405; --bg-2: #38290b; --bg-3: #271d07;
             --acento: #ffca28; --acento-rgb: 255, 202, 40; --acento-esc: #cf9b00;
             --barra-bg: rgba(24, 18, 4, 0.96); --popup-bg: #33270a;
-            --btn-enviar: linear-gradient(135deg, #ff8a3d, #ffd93d);
+            --btn-enviar: linear-gradient(135deg, #f08a2a, #d98c00);
+            --btn-adm-grad: linear-gradient(135deg, #8a5200, #c98200);
         }
+        [data-tema="pb"] { /* 11. Preto & Branco (alto contraste) */
+            --bg-1: #000000; --bg-2: #0a0a0a; --bg-3: #000000;
+            --acento: #ffffff; --acento-rgb: 255, 255, 255; --acento-esc: #c8c8c8;
+            --acento-texto: #000000;
+            --barra-bg: rgba(0, 0, 0, 0.97); --barra-borda: rgba(255, 255, 255, 0.3);
+            --painel-bg: rgba(255, 255, 255, 0.06); --painel-borda: rgba(255, 255, 255, 0.3);
+            --campo-bg: rgba(255, 255, 255, 0.08); --campo-borda: rgba(255, 255, 255, 0.45);
+            --popup-bg: #050505; --option-bg: #050505; --adm-bg: rgba(0, 0, 0, 0.6);
+            --texto: #ffffff; --texto-fraco: #c9c9c9; --texto-medio: #d8d8d8;
+            --texto-suave: #e0e0e0; --texto-forte: #ffffff; --texto-claro: #ffffff;
+            --texto-destaque: #e8e8e8;
+            --mencao: #ffe082; --aviso: #ffd54f;
+            --verde-txt: #a5d6a7; --vermelho-txt: #ef9a9a;
+            --btn-primario: linear-gradient(135deg, #ffffff, #cfcfcf);
+            --btn-enviar: linear-gradient(135deg, #ffffff, #cfcfcf);
+            --btn-adm-grad: linear-gradient(135deg, #ffffff, #cfcfcf);
+        }
+        /* Neste tema os botões claros pedem texto escuro (alto contraste) */
+        [data-tema="pb"] .btn-primary, [data-tema="pb"] .btn-warning,
+        [data-tema="pb"] .btn-adm { color: #000; }
 
         /* Combo do tema (barra superior) */
         .tema-wrap { display: inline-flex; align-items: center; gap: 4px; }
@@ -134,12 +169,12 @@
             cursor: pointer; font-size: 14px; font-weight: 600;
             transition: all 0.3s ease; margin-right: 10px; margin-bottom: 10px;
         }
-        .btn-primary { background: linear-gradient(135deg, var(--acento), var(--acento-esc)); color: #fff; }
+        .btn-primary { background: var(--btn-primario); color: #fff; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(var(--acento-rgb), 0.4); }
         .btn-secondary { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
         .btn-success { background: linear-gradient(135deg, var(--verde-txt), #38f9d7); color: #fff; }
         .btn-warning { background: var(--btn-enviar); color: #fff; }
-        .btn-adm { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; }
+        .btn-adm { background: var(--btn-adm-grad); color: #fff; }
         .hidden { display: none !important; }
         .login-container { max-width: 450px; margin: 0 auto; }
         .login-step { text-align: center; }
@@ -513,6 +548,7 @@
                         <option value="grafite">Grafite</option>
                         <option value="violeta">Violeta</option>
                         <option value="ambar">Âmbar Solar</option>
+                        <option value="pb">Preto &amp; Branco</option>
                     </select>
                 </span>
             </div>

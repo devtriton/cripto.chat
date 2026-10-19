@@ -5,56 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>cripto.chat</title>
     <style>
+        /* ==============================================================
+           TEMAS DE COR — o combo 🎨 da barra superior escolhe um deles.
+           O tema padrão são os valores do :root; os outros 9 apenas
+           sobrescrevem as variáveis que mudam.
+           ============================================================== */
+        :root {
+            /* 1. Neon Roxo (padrão) */
+            --bg-1: #0f0c29; --bg-2: #302b63; --bg-3: #24243e;
+            --acento: #00d4ff; --acento-rgb: 0, 212, 255; --acento-esc: #0099cc;
+            --acento-texto: #062033;      /* texto sobre fundo do acento */
+            --barra-bg: rgba(15, 12, 41, 0.96); --barra-borda: rgba(255, 255, 255, 0.12);
+            --painel-bg: rgba(255, 255, 255, 0.05); --painel-borda: rgba(255, 255, 255, 0.1);
+            --campo-bg: rgba(255, 255, 255, 0.05); --campo-borda: rgba(255, 255, 255, 0.2);
+            --popup-bg: #1c1740; --option-bg: #1a1a2e; --adm-bg: rgba(0, 0, 0, 0.3);
+            --texto: #e0e0e0; --texto-fraco: #888; --texto-medio: #9ab; --texto-suave: #aaa;
+            --texto-forte: #ccc; --texto-claro: #cfe; --texto-destaque: #9ad0ff;
+            --mencao: #fee140;             /* @menções destacadas no texto */
+            --aviso: #ffc800;              /* notas de aviso / botão ADM descriptografar */
+            --verde-txt: #43e97b;          /* OTP, texto descriptografado, status */
+            --vermelho-txt: #ff8f8f;       /* notas de erro / E2E */
+            --btn-enviar: linear-gradient(135deg, #fa709a, #fee140);
+        }
+
+        /* ===== OS 10 TEMAS (só o que muda em cada um) ===== */
+        [data-tema="oceano"] { /* 2. Azul Oceano */
+            --bg-1: #02152b; --bg-2: #0b3f68; --bg-3: #062b4a;
+            --acento: #31b3ff; --acento-rgb: 49, 179, 255; --acento-esc: #0d78b8;
+            --barra-bg: rgba(2, 17, 35, 0.96); --popup-bg: #05263f;
+        }
+        [data-tema="mata"] { /* 3. Verde Mata */
+            --bg-1: #05170f; --bg-2: #0d3a26; --bg-3: #0a2918;
+            --acento: #35e08f; --acento-rgb: 53, 224, 143; --acento-esc: #159e5e;
+            --barra-bg: rgba(4, 20, 12, 0.96); --popup-bg: #07301d;
+        }
+        [data-tema="fogo"] { /* 4. Laranja Fogo */
+            --bg-1: #1c0704; --bg-2: #41170a; --bg-3: #2b0f06;
+            --acento: #ff8b3d; --acento-rgb: 255, 139, 61; --acento-esc: #d1651c;
+            --barra-bg: rgba(24, 8, 4, 0.96); --popup-bg: #3a1408;
+            --btn-enviar: linear-gradient(135deg, #ff5f6d, #ffc371);
+        }
+        [data-tema="sakura"] { /* 5. Rosa Sakura */
+            --bg-1: #1b0d1a; --bg-2: #3b1833; --bg-3: #2a1025;
+            --acento: #ff7dc0; --acento-rgb: 255, 125, 192; --acento-esc: #d04e93;
+            --barra-bg: rgba(24, 10, 22, 0.96); --popup-bg: #3a1632;
+        }
+        [data-tema="matrix"] { /* 6. Matrix */
+            --bg-1: #000000; --bg-2: #001a08; --bg-3: #000d04;
+            --acento: #00ff6a; --acento-rgb: 0, 255, 106; --acento-esc: #00b84c;
+            --barra-bg: rgba(0, 8, 3, 0.96); --popup-bg: #00160a;
+            --btn-enviar: linear-gradient(135deg, #00c853, #76ff03);
+        }
+        [data-tema="areia"] { /* 7. Areia Clara (tema CLARO) */
+            --bg-1: #eef2f8; --bg-2: #dbe4f2; --bg-3: #e9eef7;
+            --acento: #0b63c5; --acento-rgb: 11, 99, 197; --acento-esc: #084b99;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(255, 255, 255, 0.95); --barra-borda: rgba(9, 37, 73, 0.15);
+            --painel-bg: rgba(255, 255, 255, 0.85); --painel-borda: rgba(9, 37, 73, 0.15);
+            --campo-bg: #ffffff; --campo-borda: rgba(9, 37, 73, 0.3);
+            --popup-bg: #ffffff; --option-bg: #ffffff; --adm-bg: rgba(255, 255, 255, 0.85);
+            --texto: #16202d; --texto-fraco: #5b6573; --texto-medio: #4d5766; --texto-suave: #4a5563;
+            --texto-forte: #28323f; --texto-claro: #1c3350; --texto-destaque: #0a58b0;
+            --mencao: #9a5b00; --aviso: #8a6100;
+            --verde-txt: #0d8a44; --vermelho-txt: #c62828;
+            --btn-enviar: linear-gradient(135deg, #e0456f, #e0a800);
+        }
+        [data-tema="grafite"] { /* 8. Grafite (monocromático) */
+            --bg-1: #0b0c0e; --bg-2: #1d2126; --bg-3: #14171b;
+            --acento: #c2cad4; --acento-rgb: 194, 202, 212; --acento-esc: #7b8794;
+            --barra-bg: rgba(11, 12, 14, 0.96); --popup-bg: #22262b;
+            --btn-enviar: linear-gradient(135deg, #8e9aab, #5d6775);
+        }
+        [data-tema="violeta"] { /* 9. Violeta Real */
+            --bg-1: #150a2c; --bg-2: #33185f; --bg-3: #231045;
+            --acento: #a97bff; --acento-rgb: 169, 123, 255; --acento-esc: #7440d1;
+            --barra-bg: rgba(18, 8, 36, 0.96); --popup-bg: #2b1550;
+        }
+        [data-tema="ambar"] { /* 10. Âmbar Solar */
+            --bg-1: #1a1405; --bg-2: #38290b; --bg-3: #271d07;
+            --acento: #ffca28; --acento-rgb: 255, 202, 40; --acento-esc: #cf9b00;
+            --barra-bg: rgba(24, 18, 4, 0.96); --popup-bg: #33270a;
+            --btn-enviar: linear-gradient(135deg, #ff8a3d, #ffd93d);
+        }
+
+        /* Combo do tema (barra superior) */
+        .tema-wrap { display: inline-flex; align-items: center; gap: 4px; }
+        .tema-select {
+            width: auto; padding: 3px 4px; font-size: 11px; margin: 0;
+            cursor: pointer; border-radius: 8px;
+            background: var(--painel-bg); color: var(--texto-claro);
+            border: 1px solid var(--painel-borda);
+        }
+        .tema-select:focus { border-color: var(--acento); }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh; color: #e0e0e0;
+            background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+            min-height: 100vh; color: var(--texto);
             padding-bottom: 64px; /* espaço para o rodapé fixo */
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; color: #00d4ff; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
-        h2 { color: #00d4ff; margin-bottom: 15px; }
-        h3 { color: #00d4ff; margin: 15px 0 10px; }
-        .subtitle { text-align: center; color: #aaa; margin-bottom: 30px; }
+        h1 { text-align: center; color: var(--acento); margin-bottom: 10px; text-shadow: 0 0 20px rgba(var(--acento-rgb), 0.5); }
+        h2 { color: var(--acento); margin-bottom: 15px; }
+        h3 { color: var(--acento); margin: 15px 0 10px; }
+        .subtitle { text-align: center; color: var(--texto-suave); margin-bottom: 30px; }
         .panel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--painel-bg);
+            border: 1px solid var(--painel-borda);
             border-radius: 12px; padding: 20px; margin-bottom: 20px;
             backdrop-filter: blur(10px);
         }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; color: var(--texto-forte); font-size: 14px; }
         input, select, textarea {
             width: 100%; padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px; background: rgba(255, 255, 255, 0.05);
-            color: #fff; font-size: 14px;
+            border: 1px solid var(--campo-borda);
+            border-radius: 8px; background: var(--campo-bg);
+            color: var(--texto); font-size: 14px;
         }
         input:focus, select:focus, textarea:focus {
-            outline: none; border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+            outline: none; border-color: var(--acento);
+            box-shadow: 0 0 10px rgba(var(--acento-rgb), 0.3);
         }
-        select option { background: #1a1a2e; }
+        select option { background: var(--option-bg); }
         button {
             padding: 10px 24px; border: none; border-radius: 8px;
             cursor: pointer; font-size: 14px; font-weight: 600;
             transition: all 0.3s ease; margin-right: 10px; margin-bottom: 10px;
         }
-        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099cc); color: #fff; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+        .btn-primary { background: linear-gradient(135deg, var(--acento), var(--acento-esc)); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(var(--acento-rgb), 0.4); }
         .btn-secondary { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
-        .btn-success { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #fff; }
-        .btn-warning { background: linear-gradient(135deg, #fa709a, #fee140); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, var(--verde-txt), #38f9d7); color: #fff; }
+        .btn-warning { background: var(--btn-enviar); color: #fff; }
         .btn-adm { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; }
         .hidden { display: none !important; }
         .login-container { max-width: 450px; margin: 0 auto; }
         .login-step { text-align: center; }
         .otp-input { font-size: 28px; letter-spacing: 12px; text-align: center; font-family: 'Courier New', monospace; }
         .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .step-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
-        .step-dot.active { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
-        .step-dot.completed { background: #43e97b; }
+        .step-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--painel-borda); transition: all 0.3s; }
+        .step-dot.active { background: var(--acento); box-shadow: 0 0 10px var(--acento); }
+        .step-dot.completed { background: var(--verde-txt); }
         /* Altura do chat: usa a ALTURA REAL da viewport (--app-height é atualizada pelo JS
            via visualViewport, então o teclado do celular não esconde o chat) */
         .chat-layout {
@@ -63,13 +156,13 @@
         }
         .chat-main {
             display: flex; flex-direction: column;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--painel-bg);
+            border: 1px solid var(--painel-borda);
             border-radius: 12px; overflow: hidden;
         }
         .chat-header {
-            padding: 15px 20px; background: rgba(0, 212, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 20px; background: rgba(var(--acento-rgb), 0.1);
+            border-bottom: 1px solid var(--painel-borda);
             display: flex; flex-direction: column; align-items: stretch; gap: 8px;
         }
         .chat-header-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -79,62 +172,62 @@
         /* Sair da sala: ícone sutil ao lado do nome */
         .btn-sair-sala {
             flex: none; padding: 3px 9px; margin: 0; font-size: 15px; line-height: 1.3;
-            background: transparent; color: #9ab; border: 1px solid rgba(255, 255, 255, 0.14);
+            background: transparent; color: var(--texto-medio); border: 1px solid var(--painel-borda);
             border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
         }
-        .btn-sair-sala:hover { color: #ff8f8f; border-color: rgba(255, 143, 143, 0.5); background: rgba(255, 143, 143, 0.1); }
+        .btn-sair-sala:hover { color: var(--vermelho-txt); border-color: rgba(255, 143, 143, 0.5); background: rgba(255, 143, 143, 0.1); }
         /* Combo de usuários da sala (abre a lista ao clicar) */
         .presenca-wrap { position: relative; }
         .presenca-combo {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 4px 10px; margin: 0; font-size: 12px; cursor: pointer;
-            background: rgba(255, 255, 255, 0.07); color: #cfe;
-            border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px;
+            background: var(--painel-bg); color: var(--texto-claro);
+            border: 1px solid var(--painel-borda); border-radius: 999px;
             transition: all 0.2s ease;
         }
         .presenca-combo:hover, .presenca-combo.aberto {
-            background: rgba(0, 212, 255, 0.15); border-color: rgba(0, 212, 255, 0.45); color: #fff;
+            background: rgba(var(--acento-rgb), 0.15); border-color: rgba(var(--acento-rgb), 0.45); color: #fff;
         }
         .presenca-popup {
             position: absolute; right: 0; top: calc(100% + 6px); z-index: 120;
             min-width: 220px; max-width: 80vw; max-height: 240px; overflow-y: auto;
-            background: #1c1740; border: 1px solid rgba(0, 212, 255, 0.35);
+            background: var(--popup-bg); border: 1px solid rgba(var(--acento-rgb), 0.35);
             border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); padding: 4px;
         }
         .presenca-popup .presenca-item {
             display: flex; align-items: center; gap: 8px;
-            padding: 7px 10px; border-radius: 8px; font-size: 13px; color: #cfe;
+            padding: 7px 10px; border-radius: 8px; font-size: 13px; color: var(--texto-claro);
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .presenca-popup .presenca-item .mention-email { font-size: 11px; color: #888; }
-        .presenca-popup .presenca-item.eu { background: rgba(67, 233, 123, 0.12); color: #43e97b; }
-        .presenca-popup .presenca-vazio { padding: 10px; font-size: 12px; color: #888; }
+        .presenca-popup .presenca-item .mention-email { font-size: 11px; color: var(--texto-fraco); }
+        .presenca-popup .presenca-item.eu { background: rgba(67, 233, 123, 0.12); color: var(--verde-txt); }
+        .presenca-popup .presenca-vazio { padding: 10px; font-size: 12px; color: var(--texto-fraco); }
         /* Linha central de eventos da sala: "entrou" / "saiu" */
         .message-system {
-            text-align: center; font-size: 12px; color: #9ab; margin: 10px 0;
+            text-align: center; font-size: 12px; color: var(--texto-medio); margin: 10px 0;
             animation: fadeIn 0.3s ease; overflow-wrap: anywhere;
         }
-        .message-system strong { color: #00d4ff; }
+        .message-system strong { color: var(--acento); }
         .chat-messages { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
-        .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .chat-input-area { padding: 15px; border-top: 1px solid var(--painel-borda); }
         .mention-wrap { position: relative; }
         .mention-popup {
             position: absolute; left: 0; right: 0; bottom: 100%;
             margin-bottom: 6px; z-index: 100;
-            background: #1c1740; border: 1px solid rgba(0, 212, 255, 0.35);
+            background: var(--popup-bg); border: 1px solid rgba(var(--acento-rgb), 0.35);
             border-radius: 10px; overflow-y: auto; max-height: 180px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         }
         .mention-popup .user-list-item { margin-bottom: 0; border-radius: 0; }
-        .mention-popup .user-list-item.selected { background: rgba(0, 212, 255, 0.3); }
-        .mention-popup .mention-email { font-size: 11px; color: #888; margin-left: 8px; }
+        .mention-popup .user-list-item.selected { background: rgba(var(--acento-rgb), 0.3); }
+        .mention-popup .mention-email { font-size: 11px; color: var(--texto-fraco); margin-left: 8px; }
         .message {
             margin-bottom: 12px; padding: 10px 15px; border-radius: 10px;
-            background: rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease;
+            background: var(--painel-bg); animation: fadeIn 0.3s ease;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .message-header { font-size: 12px; color: #888; margin-bottom: 5px; }
-        .message-author { font-weight: bold; color: #00d4ff; }
+        .message-header { font-size: 12px; color: var(--texto-fraco); margin-bottom: 5px; }
+        .message-author { font-weight: bold; color: var(--acento); }
         .message.encrypted { border-left: 3px solid #f5576c; background: rgba(245, 87, 108, 0.05); }
         /* Mensagem "encrypted": viajou cifrada, mas é exibida DESCRIPTOGRAFADA na sala */
         .message.encrypted { border-left: 3px solid #f5576c; }
@@ -144,77 +237,77 @@
             display: inline-block; padding: 2px 8px; border-radius: 4px;
             font-size: 11px; background: #f5576c; color: #fff; margin-left: 8px;
         }
-        .encryption-badge.e2e-badge { background: #00d4ff; color: #000; }
-        .message-note { font-size: 10px; color: #7a8aa0; margin-top: 5px; font-family: inherit; overflow-wrap: anywhere; }
-        .message-note.aviso-entrega { color: #ffc800; }
-        .message-note.nao-recebida { color: #ff6b6b; }
-        .crypto-hint { font-size: 11px; color: #9ab; margin-top: 8px; line-height: 1.5; }
+        .encryption-badge.e2e-badge { background: var(--acento); color: var(--acento-texto); }
+        .message-note { font-size: 10px; color: var(--texto-fraco); margin-top: 5px; font-family: inherit; overflow-wrap: anywhere; }
+        .message-note.aviso-entrega { color: var(--aviso); }
+        .message-note.nao-recebida { color: var(--vermelho-txt); }
+        .crypto-hint { font-size: 11px; color: var(--texto-medio); margin-top: 8px; line-height: 1.5; }
         .btn-adm-decrypt {
             margin-top: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
-            background: #ffc800; color: #000; border: none; border-radius: 6px;
+            background: var(--aviso); color: #000; border: none; border-radius: 6px;
         }
         .btn-adm-decrypt:disabled { opacity: 0.6; cursor: wait; }
-        .mention { color: #fee140; font-weight: bold; }
+        .mention { color: var(--mencao); font-weight: bold; }
         .dm-badge {
             display: inline-block; padding: 2px 8px; border-radius: 4px;
-            font-size: 11px; background: #43e97b; color: #fff; margin-left: 8px;
+            font-size: 11px; background: var(--verde-txt); color: #fff; margin-left: 8px;
         }
         .user-list-item {
             padding: 8px 12px; margin-bottom: 5px; border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s;
+            background: var(--painel-bg); cursor: pointer; transition: background 0.2s;
         }
-        .user-list-item:hover { background: rgba(0, 212, 255, 0.2); }
+        .user-list-item:hover { background: rgba(var(--acento-rgb), 0.2); }
         .crypto-select { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .crypto-select select { flex: 1; }
         .adm-container {
-            background: rgba(0, 0, 0, 0.3); border: 2px solid #f5576c;
+            background: var(--adm-bg); border: 2px solid #f5576c;
             border-radius: 12px; padding: 20px; margin-top: 20px;
         }
-        .adm-title { color: #f5576c; font-size: 18px; margin-bottom: 10px; }
+        .adm-title { color: var(--vermelho-txt); font-size: 18px; margin-bottom: 10px; }
         .adm-info {
-            font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px;
+            font-size: 13px; color: var(--texto-suave); margin-bottom: 15px; padding: 10px;
             background: rgba(245, 87, 108, 0.1); border-radius: 8px;
         }
         .adm-message {
             padding: 8px 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px;
-            font-family: 'Courier New', monospace; background: rgba(255, 255, 255, 0.05);
+            font-family: 'Courier New', monospace; background: var(--painel-bg);
             border-left: 3px solid #f5576c;
             overflow-wrap: anywhere; word-break: break-word; /* ciphertext longo não vaza do container */
         }
         .adm-message code {
             display: block; margin-top: 4px; padding: 6px 8px; border-radius: 6px;
-            background: rgba(0, 0, 0, 0.35); font-size: 12px;
+            background: var(--adm-bg); font-size: 12px;
             white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere;
         }
-        .adm-message.plaintext { border-left-color: #43e97b; }
+        .adm-message.plaintext { border-left-color: var(--verde-txt); }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab {
             padding: 10px 20px; border-radius: 8px; cursor: pointer;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;
+            background: var(--painel-bg); border: 1px solid var(--painel-borda); transition: all 0.3s;
         }
-        .tab.active { background: rgba(0, 212, 255, 0.2); border-color: #00d4ff; }
+        .tab.active { background: rgba(var(--acento-rgb), 0.2); border-color: var(--acento); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .room-list-item {
             padding: 12px 15px; margin-bottom: 8px; border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05); display: flex;
+            background: var(--painel-bg); display: flex;
             justify-content: space-between; align-items: center;
             cursor: pointer; transition: all 0.2s;
         }
-        .room-list-item:hover { background: rgba(0, 212, 255, 0.2); }
+        .room-list-item:hover { background: rgba(var(--acento-rgb), 0.2); }
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
-        .status-online { background: #43e97b; box-shadow: 0 0 8px #43e97b; }
+        .status-online { background: var(--verde-txt); box-shadow: 0 0 8px var(--verde-txt); }
         .status-offline { background: #f5576c; }
         .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
-        .alert-info { background: rgba(0, 212, 255, 0.15); border: 1px solid rgba(0, 212, 255, 0.3); color: #00d4ff; }
+        .alert-info { background: rgba(var(--acento-rgb), 0.15); border: 1px solid rgba(var(--acento-rgb), 0.3); color: var(--acento); }
         .alert-warning { background: rgba(250, 112, 154, 0.15); border: 1px solid rgba(250, 112, 154, 0.3); color: #fa709a; }
         .crypto-demo {
             background: rgba(67, 233, 123, 0.1); border: 1px solid rgba(67, 233, 123, 0.3);
             border-radius: 8px; padding: 15px; margin-bottom: 15px;
         }
-        .crypto-demo h3 { color: #43e97b; margin-bottom: 10px; }
+        .crypto-demo h3 { color: var(--verde-txt); margin-bottom: 10px; }
         .edu-note {
-            background: rgba(255, 200, 0, 0.1); border-left: 3px solid #ffc800;
+            background: rgba(255, 200, 0, 0.1); border-left: 3px solid var(--aviso);
             padding: 12px 16px; margin: 15px 0; border-radius: 0 8px 8px 0; font-size: 13px;
         }
         .flex-row { display: flex; gap: 10px; }
@@ -223,9 +316,9 @@
         /* ===== BARRA SUPERIOR (sempre visível) ===== */
         .topbar {
             position: sticky; top: 0; z-index: 2000;
-            background: rgba(15, 12, 41, 0.96);
+            background: var(--barra-bg);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            border-bottom: 1px solid var(--barra-borda);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             padding: 10px 20px;
         }
@@ -237,7 +330,7 @@
         .topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .topbar-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
         .topbar-right button { margin: 0; }
-        .topbar-logo { font-size: 18px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 12px rgba(0, 212, 255, 0.5); }
+        .topbar-logo { font-size: 18px; font-weight: bold; color: var(--acento); text-shadow: 0 0 12px rgba(var(--acento-rgb), 0.5); }
         .mode-indicator {
             padding: 3px 10px; border-radius: 20px;
             font-size: 10px; font-weight: bold; letter-spacing: 0.5px;
@@ -245,12 +338,12 @@
             transition: all 0.2s ease;
         }
         .mode-indicator:hover { transform: scale(1.05); filter: brightness(1.2); }
-        .mode-login { background: rgba(0, 212, 255, 0.18); color: #00d4ff; border: 1px solid rgba(0, 212, 255, 0.45); }
-        .mode-demo { background: rgba(67, 233, 123, 0.18); color: #43e97b; border: 1px solid rgba(67, 233, 123, 0.45); }
+        .mode-login { background: rgba(var(--acento-rgb), 0.18); color: var(--acento); border: 1px solid rgba(var(--acento-rgb), 0.45); }
+        .mode-demo { background: rgba(67, 233, 123, 0.18); color: var(--verde-txt); border: 1px solid rgba(67, 233, 123, 0.45); }
         .topbar-email {
-            color: #ccc; font-size: 13px; padding: 4px 12px;
-            background: rgba(255, 255, 255, 0.08); border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15); max-width: 280px;
+            color: var(--texto-forte); font-size: 13px; padding: 4px 12px;
+            background: var(--painel-bg); border-radius: 20px;
+            border: 1px solid var(--painel-borda); max-width: 280px;
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .topbar-btn { padding: 7px 16px; font-size: 12px; margin: 0; }
@@ -262,9 +355,9 @@
         }
         .demo-open {
             display: inline-block; margin-left: 4px; padding: 0 4px;
-            color: #062033; background: #00d4ff; font-weight: bold;
+            color: var(--acento-texto); background: var(--acento); font-weight: bold;
             border-radius: 3px; font-size: 9px; line-height: 1.5;
-            box-shadow: 0 0 5px rgba(0, 212, 255, 0.7);
+            box-shadow: 0 0 5px rgba(var(--acento-rgb), 0.7);
             animation: openPulse 1.6s ease-in-out infinite;
         }
         @keyframes openPulse {
@@ -289,33 +382,33 @@
             display: flex; align-items: center; justify-content: flex-start;
             gap: 8px; flex-wrap: nowrap;
             padding: 8px 20px;
-            background: rgba(15, 12, 41, 0.96);
+            background: var(--barra-bg);
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid var(--barra-borda);
             box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
         }
         .fb-name {
-            font-size: 13px; font-weight: 600; color: #fff;
+            font-size: 13px; font-weight: 600; color: var(--texto);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             max-width: 40%;
         }
         .fb-edit {
             padding: 2px 8px; margin: 0; font-size: 14px; line-height: 1.4;
-            background: transparent; color: #9ad0ff; border: none;
+            background: transparent; color: var(--texto-destaque); border: none;
             border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
         }
-        .fb-edit:hover { background: rgba(0, 212, 255, 0.15); transform: scale(1.1); }
+        .fb-edit:hover { background: rgba(var(--acento-rgb), 0.15); transform: scale(1.1); }
         .fb-edit:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; transform: none; }
         .fb-input {
             margin: 0; padding: 8px 14px; font-size: 15px;
             min-width: 220px; max-width: 300px;
-            border-radius: 8px; border-color: #00d4ff;
+            border-radius: 8px; border-color: var(--acento);
         }
         .tu-email {
             flex: 1; min-width: 0;
-            font-size: 12px; color: #9ad0ff; padding: 4px 10px;
-            background: rgba(0, 212, 255, 0.08);
-            border: 1px solid rgba(0, 212, 255, 0.2);
+            font-size: 12px; color: var(--texto-destaque); padding: 4px 10px;
+            background: rgba(var(--acento-rgb), 0.08);
+            border: 1px solid rgba(var(--acento-rgb), 0.2);
             border-radius: 12px;
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
@@ -324,7 +417,7 @@
             display: inline-block; width: 10px; height: 10px; border-radius: 50%;
             flex-shrink: 0; cursor: default;
         }
-        .conn-online { background: #43e97b; box-shadow: 0 0 8px #43e97b; }
+        .conn-online { background: var(--verde-txt); box-shadow: 0 0 8px var(--verde-txt); }
         .conn-offline { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: demoPulse 1.2s ease-in-out infinite; }
         .fb-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
         .fb-right { display: flex; align-items: center; margin-left: auto; }
@@ -342,6 +435,8 @@
             .topbar-right { flex: 0 0 auto; }
             .topbar-right .tu-btn { flex: none; }
             .mode-indicator { font-size: 9px; padding: 2px 7px; }
+            .tema-select { font-size: 10px; padding: 2px 3px; max-width: 88px; }
+            .tema-ico { font-size: 12px; }
             .tu-btn { padding: 4px 8px; font-size: 11px; }
             .topbar-pass { flex-direction: column; align-items: stretch; }
             .topbar-pass input { width: 100%; }
@@ -379,12 +474,21 @@
             .topbar-left { gap: 6px; }
             .mode-indicator { font-size: 8px; padding: 2px 5px; }
             .tu-btn { padding: 4px 7px; font-size: 10px; }
+            .tema-select { max-width: 76px; font-size: 9px; padding: 2px 2px; }
+            .tema-ico { display: none; } /* esconde o emoji para caber em uma linha */
             /* RODAPÉ ainda mais compacto, mantendo uma linha */
             .fb-name { max-width: 40%; font-size: 11px; }
             .tu-email { font-size: 10px; }
             .fb-input { min-width: 120px; max-width: 160px; font-size: 12px; }
         }
     </style>
+    <script>
+        // Aplica o tema salvo ANTES de pintar a página (evita "flash" do tema padrão)
+        try {
+            var _t = localStorage.getItem('cripto_chat_tema');
+            if (_t && _t !== 'padrao') document.documentElement.setAttribute('data-tema', _t);
+        } catch (e) {}
+    </script>
 </head>
 <body>
     <!-- ===== BARRA SUPERIOR (sempre visível em todas as etapas) ===== -->
@@ -395,6 +499,22 @@
                 <span class="topbar-logo">🔐 cripto.chat</span>
                 <span id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
                       title="Modo demo desativado — clique para abrir/ativar">MODO DEMO <span class="demo-open">＋</span></span>
+                <!-- Combo de tema de cores -->
+                <span class="tema-wrap" title="Escolher tema de cores">
+                    <span class="tema-ico">🎨</span>
+                    <select id="temaSelect" class="tema-select" onchange="mudarTema(this.value)" aria-label="Tema de cores">
+                        <option value="padrao">Neon Roxo</option>
+                        <option value="oceano">Azul Oceano</option>
+                        <option value="mata">Verde Mata</option>
+                        <option value="fogo">Laranja Fogo</option>
+                        <option value="sakura">Rosa Sakura</option>
+                        <option value="matrix">Matrix</option>
+                        <option value="areia">Areia Clara</option>
+                        <option value="grafite">Grafite</option>
+                        <option value="violeta">Violeta</option>
+                        <option value="ambar">Âmbar Solar</option>
+                    </select>
+                </span>
             </div>
             <div id="topbarActions" class="topbar-right hidden">
                 <button id="btnSalaADM" class="btn-adm tu-btn" onclick="abrirSalaADM()">Sala ADM</button>
@@ -491,7 +611,7 @@
                                         <strong id="chatSalaNome"></strong>
                                     </div>
                                     <div class="chat-header-dir">
-                                        <span id="chatSalaInfo" style="font-size: 12px; color: #888;"></span>
+                                        <span id="chatSalaInfo" style="font-size: 12px; color: var(--texto-fraco);"></span>
                                         <!-- Combo de usuários da sala: você primeiro, depois ordem alfabética -->
                                         <div class="presenca-wrap">
                                             <button id="presencaBtn" class="presenca-combo" onclick="alternarPresenca(event)"
@@ -563,7 +683,7 @@
                         apenas vê o texto cifrado. Apenas quem possui a chave consegue recuperar o conteúdo original.
                     </div>
                     <div id="serverView" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace; min-height: 100px;">
-                        <p style="color: #888;">Nenhuma mensagem enviada ainda...</p>
+                        <p style="color: var(--texto-fraco);">Nenhuma mensagem enviada ainda...</p>
                     </div>
                 </div>
             </div>
@@ -757,7 +877,7 @@
                 const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
                 document.getElementById('otpInfo').innerHTML = 
                     `Código enviado para <strong>${email}</strong><br><br>` +
-                    `<strong>Modo demo:</strong> O código é <strong style="color: #43e97b; font-size: 18px;">${otpAtual}</strong>`;
+                    `<strong>Modo demo:</strong> O código é <strong style="color: var(--verde-txt); font-size: 18px;">${otpAtual}</strong>`;
                 document.getElementById('loginStep1').classList.add('hidden');
                 document.getElementById('loginStep2').classList.remove('hidden');
                 document.getElementById('otpCode').focus();
@@ -909,8 +1029,8 @@
                     if (data.demo && data.codigo) {
                         document.getElementById('otpInfo').innerHTML = 
                             `Código enviado para <strong>${data.email}</strong><br><br>` +
-                            `<strong style="color: #ffc800;">MODO DEMO</strong><br>` +
-                            `Seu código é: <strong style="color: #43e97b; font-size: 28px; letter-spacing: 4px;">${data.codigo}</strong><br>` +
+                            `<strong style="color: var(--aviso);">MODO DEMO</strong><br>` +
+                            `Seu código é: <strong style="color: var(--verde-txt); font-size: 28px; letter-spacing: 4px;">${data.codigo}</strong><br>` +
                             `<small>Configure SMTP para envio real de email</small>`;
                     } else {
                         document.getElementById('otpInfo').innerHTML = 
@@ -1200,6 +1320,27 @@
         }
 
         // ============================================================
+        // TEMAS DE COR — combo 🎨 da barra superior
+        // ============================================================
+        function temaSalvo() {
+            try { return localStorage.getItem('cripto_chat_tema') || 'padrao'; } catch (e) { return 'padrao'; }
+        }
+
+        function mudarTema(tema) {
+            document.documentElement.setAttribute('data-tema', tema);
+            try { localStorage.setItem('cripto_chat_tema', tema); } catch (e) {}
+            const sel = document.getElementById('temaSelect');
+            if (sel && sel.value !== tema) sel.value = tema;
+            console.log('[tema] Aplicado:', tema);
+        }
+
+        // Combo começa no tema já salvo (o <head> já aplicou a cor antes de pintar)
+        document.addEventListener('DOMContentLoaded', () => {
+            const sel = document.getElementById('temaSelect');
+            if (sel) sel.value = temaSalvo();
+        });
+
+        // ============================================================
         // MODO DEMO: Botão ao lado de Enviar Código
         // ============================================================
         let demoAtivo = false;
@@ -1329,11 +1470,11 @@
 
         function exibirListaSalas(salas) {
             const div = document.getElementById('listaSalas');
-            if (salas.length === 0) { div.innerHTML = '<p style="color: #888;">Nenhuma sala disponível no momento.</p>'; return; }
+            if (salas.length === 0) { div.innerHTML = '<p style="color: var(--texto-fraco);">Nenhuma sala disponível no momento.</p>'; return; }
             div.innerHTML = salas.map(s => `
                 <div class="room-list-item" onclick="entrarNaSala('${s.salaId}', '${s.nome}')">
                     <span>${s.nome}</span>
-                    <span style="color: #888; font-size: 12px;">${s.usuarios || 1} usuário(s)</span>
+                    <span style="color: var(--texto-fraco); font-size: 12px;">${s.usuarios || 1} usuário(s)</span>
                 </div>
             `).join('');
         }
@@ -1463,12 +1604,12 @@
                 // PONTA A PONTA: só o destinatário (chave privada) consegue ler
                 classe = 'message encrypted';
                 header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge e2e-badge">E2E · RSA-2048</span> ${dmBadge}`;
-                corpo = '<em style="color:#aaa;">🔓 verificando chave privada…</em>';
+                corpo = '<em style="color:var(--texto-suave);">🔓 verificando chave privada…</em>';
             } else if (data.criptografada) {
                 // SIMÉTRICA: viajou cifrada com a chave junto → aqui é exibida DESCRIPTOGRAFADA
                 classe = 'message encrypted';
                 header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge">${(data.algoritmo || '').toUpperCase()}</span> ${dmBadge}`;
-                corpo = '<em style="color:#aaa;">🔓 descriptografando…</em>';
+                corpo = '<em style="color:var(--texto-suave);">🔓 descriptografando…</em>';
             } else {
                 classe = 'message';
                 header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> ${dmBadge}`;
@@ -1494,7 +1635,7 @@
                     extra = `<div class="message-note nao-recebida">⚠️ Não entregue para ${data.semChave.length === 1 ? 'o usuário' : 'os usuários'} sem chave pública: ${data.semChave.map(escaparHtml).join(', ')}</div>`;
                 }
                 preencherMensagem(id, texto === null
-                    ? '<em style="color:#ff8f8f;">🔒 Mensagem E2E — apenas os destinatários têm a chave para ler</em>'
+                    ? '<em style="color:var(--vermelho-txt);">🔒 Mensagem E2E — apenas os destinatários têm a chave para ler</em>'
                     : destacarMencoes(texto, data.mencoes), texto !== null, 'Chave privada (seu navegador) decifrou. O servidor só viu ciphertext.', extra);
             } else if (data.criptografada) {
                 // Clientes antigos não enviavam a chave; o AES legado ([AES-256] base64) ainda pode ser lido
@@ -1762,8 +1903,8 @@
             const pai = btn.parentElement;
             btn.remove();
             pai.insertAdjacentHTML('beforeend', claro === null
-                ? '<em style="color:#ff6b6b;">⛔ Falha ao descriptografar (chave incorreta ou formato não reconhecido).</em>'
-                : `<code style="color:#43e97b;">✅ ${escaparHtml(claro)}</code><br><em>O servidor leu a mensagem porque a chave SIMÉTRICA viajou junto com ela. Em E2E (RSA) isso seria impossível.</em>`);
+                ? '<em style="color:var(--vermelho-txt);">⛔ Falha ao descriptografar (chave incorreta ou formato não reconhecido).</em>'
+                : `<code style="color:var(--verde-txt);">✅ ${escaparHtml(claro)}</code><br><em>O servidor leu a mensagem porque a chave SIMÉTRICA viajou junto com ela. Em E2E (RSA) isso seria impossível.</em>`);
             document.getElementById('serverView').innerHTML = document.getElementById('admMessages').innerHTML;
         }
 
@@ -1785,7 +1926,7 @@
             const texto = document.getElementById('demoTexto').value;
             if (!texto || !chave) { alert('Preencha chave e texto.'); return; }
             const resultado = await descriptografar(texto, algo, chave);
-            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid #43e97b;"><strong style="color:#43e97b;">Texto Descriptografado:</strong><br><code>${resultado === null ? 'Erro: não foi possível descriptografar.' : escaparHtml(resultado)}</code></div>`;
+            document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid var(--verde-txt);"><strong style="color:var(--verde-txt);">Texto Descriptografado:</strong><br><code>${resultado === null ? 'Erro: não foi possível descriptografar.' : escaparHtml(resultado)}</code></div>`;
         }
 
         // ============================================================

@@ -469,39 +469,11 @@
                             <label for="novaSalaNome">Nome da Sala:</label>
                             <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024">
                         </div>
-                        <div class="form-group">
-                            <label>Tipo:</label>
-                            <select id="novaSalaTipo">
-                                <option value="publica">Pública - qualquer um pode entrar</option>
-                                <option value="privada">Privada - requer senha</option>
-                            </select>
-                        </div>
-                        <div class="form-group hidden" id="senhaSalaGroup">
-                            <label for="novaSalaSenha">Senha da Sala (privada):</label>
-                            <input type="password" id="novaSalaSenha" placeholder="Senha de acesso">
-                        </div>
                         <button class="btn-success" onclick="criarSala()">Criar Sala</button>
                     </div>
                     <div class="panel" style="flex: 1;">
-                        <h2>Salas Públicas Disponíveis</h2>
+                        <h2>Salas Disponíveis</h2>
                         <div id="listaSalas"></div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <h2>Entrar em Sala Privada</h2>
-                    <div class="flex-row">
-                        <div class="form-group">
-                            <label for="salaPrivadaId">Código da Sala:</label>
-                            <input type="text" id="salaPrivadaId" placeholder="Ex: ABC123">
-                        </div>
-                        <div class="form-group">
-                            <label for="salaPrivadaSenha">Senha:</label>
-                            <input type="password" id="salaPrivadaSenha" placeholder="Senha da sala">
-                        </div>
-                        <div style="display: flex; align-items: flex-end;">
-                            <button class="btn-primary" onclick="entrarSalaPrivada()">Entrar</button>
-                        </div>
                     </div>
                 </div>
                 </div><!-- /dashboardArea -->
@@ -667,7 +639,6 @@
         let currentUser = null;
         let currentSala = null;
         let salasLocais = {};
-        let senhaSalaAtual = null; // senha da sala privada (para re-entrar após reconexão)
         let otpAtual = null;
         let emailParaVerificar = null;
 
@@ -874,9 +845,7 @@
                 if (currentUser) {
                     ws.send(JSON.stringify({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome }));
                     if (currentSala) {
-                        const payload = { tipo: 'entrar_sala', salaId: currentSala.id };
-                        if (senhaSalaAtual) payload.senha = senhaSalaAtual; // sala privada
-                        ws.send(JSON.stringify(payload));
+                        ws.send(JSON.stringify({ tipo: 'entrar_sala', salaId: currentSala.id }));
                         console.log('[WebSocket] Re-sincronizando sala:', currentSala.id);
                     }
                 }
@@ -982,7 +951,7 @@
 
                 case 'sala_criada':
                     if (MODO !== 'pages') {
-                        currentSala = { id: data.salaId, nome: data.nome, publica: data.publica, usuarios: [currentUser] };
+                        currentSala = { id: data.salaId, nome: data.nome, usuarios: [currentUser] };
                         salasLocais[data.salaId] = currentSala;
                         atualizarInfoSala();
                         atualizarListaUsuarios();
@@ -997,7 +966,7 @@
                         // (após uma reconexão o servidor reenvia sala_info — evita duplicar)
                         const primeiraVez = !currentSala || currentSala.id !== data.salaId;
                         currentSala = {
-                            id: data.salaId, nome: data.nome, publica: data.publica,
+                            id: data.salaId, nome: data.nome,
                             usuarios: data.usuarios || []
                         };
                         atualizarInfoSala();
@@ -1012,7 +981,7 @@
 
                 case 'entrar_sala':
                     if (data.email === currentUser.email) {
-                        currentSala = salasLocais[data.salaId] || { id: data.salaId, nome: data.nomeSala, publica: true, usuarios: [] };
+                        currentSala = salasLocais[data.salaId] || { id: data.salaId, nome: data.nomeSala, usuarios: [] };
                         if (!currentSala.usuarios.find(u => u.email === currentUser.email)) {
                             currentSala.usuarios.push(currentUser);
                         }
@@ -1092,12 +1061,12 @@
                     break;
 
                 case 'lista_salas':
-                    // Resposta do servidor com as salas públicas REAIS
+                    // Resposta do servidor com as salas abertas REAIS
                     exibirListaSalas(data.salas || []);
                     break;
 
                 case 'atualizar_salas':
-                    // Avisado pelo servidor: alguém criou/entrou/saiu de sala pública
+                    // Avisado pelo servidor: alguém criou/entrou/saiu de sala
                     listarSalas();
                     break;
 
@@ -1111,7 +1080,7 @@
 
                 case 'listar_salas': {
                     // Eco local (modo BroadcastChannel / GitHub Pages)
-                    const lista = Object.values(salasLocais).filter(s => s.publica).map(s => ({ salaId: s.id, nome: s.nome, usuarios: s.usuarios.length }));
+                    const lista = Object.values(salasLocais).map(s => ({ salaId: s.id, nome: s.nome, usuarios: s.usuarios.length }));
                     exibirListaSalas(lista);
                     break;
                 }
@@ -1212,7 +1181,6 @@
             if (canal) canal.close();
             currentUser = null;
             currentSala = null;
-            senhaSalaAtual = null;
             admIniciada = false; // ao logar de novo na aba ADM, entra na ADM novamente
             otpAtual = null;
             emailParaVerificar = null;
@@ -1297,31 +1265,26 @@
         // ============================================================
         function criarSala() {
             const nome = document.getElementById('novaSalaNome').value.trim();
-            const tipo = document.getElementById('novaSalaTipo').value;
-            const senha = document.getElementById('novaSalaSenha').value;
             if (!nome) { alert('Digite um nome para a sala.'); return; }
-            if (tipo === 'privada' && !senha) { alert('Defina uma senha para a sala privada.'); return; }
 
             const salaId = gerarIdSala();
-            const sala = { id: salaId, nome, publica: tipo === 'publica', senha: tipo === 'privada' ? senha : null, usuarios: [currentUser] };
+            const sala = { id: salaId, nome, usuarios: [currentUser] };
             salasLocais[salaId] = sala;
-            senhaSalaAtual = tipo === 'privada' ? senha : null; // guardado para re-entrar após reconexão
 
             if (MODO === 'pages') {
-                entrarNaSala(salaId, nome, tipo === 'publica');
+                entrarNaSala(salaId, nome);
                 enviar({ tipo: 'criar_sala', sala, email: currentUser.email, nome: currentUser.nome });
                 listarSalas();
             } else {
-                enviar({ tipo: 'criar_sala', nome, publica: tipo === 'publica', senha: tipo === 'privada' ? senha : null });
+                enviar({ tipo: 'criar_sala', nome });
             }
             document.getElementById('novaSalaNome').value = '';
-            document.getElementById('novaSalaSenha').value = '';
         }
 
-        function entrarNaSala(salaId, nome, publica) {
+        function entrarNaSala(salaId, nome) {
             if (MODO === 'pages') {
                 enviar({ tipo: 'entrar_sala', salaId, email: currentUser.email, nome: currentUser.nome, nomeSala: nome });
-                currentSala = salasLocais[salaId] || { id: salaId, nome, publica, usuarios: [] };
+                currentSala = salasLocais[salaId] || { id: salaId, nome, usuarios: [] };
                 if (!currentSala.usuarios.find(u => u.email === currentUser.email)) {
                     currentSala.usuarios.push(currentUser);
                 }
@@ -1330,7 +1293,6 @@
                 mostrarChat();
                 exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(nome || salaId)}</strong>`);
             } else {
-                if (publica) senhaSalaAtual = null; // sala pública não exige senha
                 enviar({ tipo: 'entrar_sala', salaId });
             }
         }
@@ -1353,7 +1315,6 @@
                 console.log('[Sala] Usuário saiu da sala:', currentSala.id);
             }
             currentSala = null;
-            senhaSalaAtual = null;
             atualizarListaUsuarios(); // zera o combo de usuários do cabeçalho
             desabilitarEdicaoNome(false); // voltou ao painel principal: ✎ reabilitado
             document.getElementById('chatArea').classList.add('hidden');
@@ -1364,28 +1325,13 @@
             listarSalas();
         }
 
-        function entrarSalaPrivada() {
-            const salaId = document.getElementById('salaPrivadaId').value.trim().toUpperCase();
-            const senha = document.getElementById('salaPrivadaSenha').value;
-            if (!salaId || !senha) { alert('Preencha código e senha.'); return; }
-            if (MODO === 'pages') {
-                const sala = salasLocais[salaId];
-                if (!sala) { alert('Sala não encontrada nesta aba. Crie a sala primeiro.'); return; }
-                if (sala.senha !== senha) { alert('Senha incorreta.'); return; }
-                entrarNaSala(salaId, sala.nome, sala.publica);
-            } else {
-                senhaSalaAtual = senha; // guardada para reconectar já dentro da sala privada
-                enviar({ tipo: 'entrar_sala', salaId, senha });
-            }
-        }
-
         function listarSalas() { enviar({ tipo: 'listar_salas' }); }
 
         function exibirListaSalas(salas) {
             const div = document.getElementById('listaSalas');
-            if (salas.length === 0) { div.innerHTML = '<p style="color: #888;">Nenhuma sala pública disponível.</p>'; return; }
+            if (salas.length === 0) { div.innerHTML = '<p style="color: #888;">Nenhuma sala disponível no momento.</p>'; return; }
             div.innerHTML = salas.map(s => `
-                <div class="room-list-item" onclick="entrarNaSala('${s.salaId}', '${s.nome}', true)">
+                <div class="room-list-item" onclick="entrarNaSala('${s.salaId}', '${s.nome}')">
                     <span>${s.nome}</span>
                     <span style="color: #888; font-size: 12px;">${s.usuarios || 1} usuário(s)</span>
                 </div>
@@ -1962,7 +1908,7 @@
         function atualizarInfoSala() {
             if (currentSala) {
                 document.getElementById('chatSalaNome').textContent = currentSala.nome;
-                document.getElementById('chatSalaInfo').textContent = `${currentSala.publica ? 'Pública' : 'Privada'} | ${currentSala.usuarios.length} usuário(s)`;
+                document.getElementById('chatSalaInfo').textContent = `${currentSala.usuarios.length} usuário(s)`;
                 atualizarListaUsuarios();
             }
         }

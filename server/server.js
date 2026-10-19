@@ -110,7 +110,7 @@ async function enviarEmailOTP(email, codigo, nome) {
 // ESTADO DO SERVIDOR
 // ============================================================
 
-const salas = new Map();       // salaId -> { nome, publica, usuarios: Set, senha }
+const salas = new Map();       // salaId -> { nome, usuarios: Set } — TODAS as salas são públicas
 const usuarios = new Map();    // email -> { ws, nome, salaAtual }
 const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
@@ -203,13 +203,11 @@ function broadcastTodos(msg, exceto = null) {
   }
 }
 
-// Lista das salas públicas (formato do client)
+// Lista das salas abertas (formato do client) — todas são públicas
 function listaSalasPublicas() {
   const lista = [];
   for (const [id, sala] of salas) {
-    if (sala.publica) {
-      lista.push({ salaId: id, nome: sala.nome, usuarios: sala.usuarios.size });
-    }
+    lista.push({ salaId: id, nome: sala.nome, usuarios: sala.usuarios.size });
   }
   return lista;
 }
@@ -238,7 +236,7 @@ function removerUsuarioDaSala(salaId, email) {
     console.log(`[SALA] "${sala.nome}" (${salaId}) apagada — sem usuários online`);
   }
   
-  if (sala.publica) avisarAtualizacaoSalas();
+  avisarAtualizacaoSalas();
 }
 
 function enviarParaAdm(msg) {
@@ -496,13 +494,11 @@ wss.on('connection', (ws) => {
       // CRIAR SALA
       // --------------------------------------------------------
       case 'criar_sala': {
-        const { nome, publica, senha } = data;
+        const { nome } = data;
         const salaId = gerarIdSala();
         
         salas.set(salaId, {
           nome,
-          publica: publica !== false,
-          senha: senha || null,
           usuarios: new Set([ws.email]),
           criador: ws.email
         });
@@ -514,12 +510,11 @@ wss.on('connection', (ws) => {
         ws.send(JSON.stringify({
           tipo: 'sala_criada',
           salaId,
-          nome,
-          publica: publica !== false
+          nome
         }));
         
-        // Avisar todos os clientes para atualizarem a lista de salas públicas
-        if (publica !== false) avisarAtualizacaoSalas();
+        // Avisar todos os clientes para atualizarem a lista de salas
+        avisarAtualizacaoSalas();
         
         console.log(`[SALA] ${nome} (${salaId}) criada por ${ws.email}`);
         break;
@@ -529,17 +524,11 @@ wss.on('connection', (ws) => {
       // ENTRAR EM SALA
       // --------------------------------------------------------
       case 'entrar_sala': {
-        const { salaId, senha } = data;
+        const { salaId } = data;
         const sala = salas.get(salaId);
         
         if (!sala) {
           ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Sala não encontrada' }));
-          return;
-        }
-        
-        // Sala privada exige senha
-        if (!sala.publica && sala.senha !== senha) {
-          ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Senha incorreta para sala privada' }));
           return;
         }
         
@@ -566,15 +555,14 @@ wss.on('connection', (ws) => {
           tipo: 'sala_info',
           salaId,
           nome: sala.nome,
-          publica: sala.publica,
           usuarios: Array.from(sala.usuarios).map(email => ({
             email,
             nome: usuarios.get(email)?.nome
           }))
         }));
         
-        // Atualizar contagem de usuários na lista de salas públicas de todos
-        if (sala.publica) avisarAtualizacaoSalas();
+        // Atualizar a lista de salas de todos
+        avisarAtualizacaoSalas();
         
         console.log(`[SALA] ${ws.email} entrou em ${sala.nome}`);
         break;

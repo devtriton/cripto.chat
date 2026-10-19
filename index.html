@@ -7,7 +7,7 @@
     <style>
         /* ==============================================================
            TEMAS DE COR — o combo 🎨 da barra superior escolhe um deles.
-           O tema padrão são os valores do :root; os outros 9 apenas
+           O tema padrão são os valores do :root; os outros 16 apenas
            sobrescrevem as variáveis que mudam.
            ============================================================== */
         :root {
@@ -30,7 +30,7 @@
             --btn-enviar: linear-gradient(135deg, #fa709a, #fee140);
         }
 
-        /* ===== OS 10 TEMAS (só o que muda em cada um) ===== */
+        /* ===== OS 17 TEMAS (só o que muda em cada um) ===== */
         [data-tema="oceano"] { /* 2. Azul Oceano */
             --bg-1: #02152b; --bg-2: #0b3f68; --bg-3: #062b4a;
             --acento: #31b3ff; --acento-rgb: 49, 179, 255; --acento-esc: #0d78b8;
@@ -122,6 +122,111 @@
         /* Neste tema os botões claros pedem texto escuro (alto contraste) */
         [data-tema="pb"] .btn-primary, [data-tema="pb"] .btn-warning,
         [data-tema="pb"] .btn-adm { color: #000; }
+
+        /* ---- Fundo PRETO + cores vivas ---- */
+        [data-tema="cyberpunk"] { /* 12. Cyberpunk (magenta + ciano neon) */
+            --bg-1: #000000; --bg-2: #12001a; --bg-3: #000000;
+            --acento: #ff2ec4; --acento-rgb: 255, 46, 196; --acento-esc: #b8008a;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(0, 0, 0, 0.97); --barra-borda: rgba(255, 46, 196, 0.35);
+            --painel-bg: rgba(255, 46, 196, 0.07); --painel-borda: rgba(255, 46, 196, 0.3);
+            --campo-bg: rgba(0, 229, 255, 0.07); --campo-borda: rgba(0, 229, 255, 0.45);
+            --popup-bg: #14001f; --option-bg: #14001f; --adm-bg: rgba(0, 0, 0, 0.65);
+            --texto: #ffffff; --texto-fraco: #b8a6c2; --texto-medio: #ccc0d4;
+            --texto-suave: #d8ccdd; --texto-forte: #f5e9f8; --texto-claro: #ffd6f2;
+            --texto-destaque: #00e5ff;
+            --mencao: #ffe600; --aviso: #ffe600;
+            --verde-txt: #3dffab; --vermelho-txt: #ff7d9c;
+            --btn-primario: linear-gradient(135deg, #ff2ec4, #8a00c7);
+            --btn-enviar: linear-gradient(135deg, #d900a8, #7a00d9);
+            --btn-adm-grad: linear-gradient(135deg, #0090b3, #005f80);
+        }
+        [data-tema="synthwave"] { /* 13. Synthwave (rosa/violeta pôr do sol) */
+            --bg-1: #000000; --bg-2: #1a0033; --bg-3: #000000;
+            --acento: #ff5ef0; --acento-rgb: 255, 94, 240; --acento-esc: #c02bb8;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(0, 0, 0, 0.97); --barra-borda: rgba(255, 94, 240, 0.35);
+            --painel-bg: rgba(140, 60, 255, 0.09); --painel-borda: rgba(255, 94, 240, 0.3);
+            --campo-bg: rgba(140, 60, 255, 0.1); --campo-borda: rgba(255, 94, 240, 0.4);
+            --popup-bg: #1c0030; --option-bg: #1c0030; --adm-bg: rgba(0, 0, 0, 0.65);
+            --texto: #ffffff; --texto-fraco: #c4a8d8; --texto-medio: #d6c2e6;
+            --texto-suave: #e0d0ee; --texto-forte: #f6ecff; --texto-claro: #ffd9f6;
+            --texto-destaque: #ff9e3d;
+            --mencao: #ffd54f; --aviso: #ffb300;
+            --verde-txt: #69f0ae; --vermelho-txt: #ff8a80;
+            --btn-primario: linear-gradient(135deg, #ff5ef0, #7c3aed);
+            --btn-enviar: linear-gradient(135deg, #ff3d9a, #e8590c);
+            --btn-adm-grad: linear-gradient(135deg, #7c3aed, #4527a0);
+        }
+        [data-tema="tropicalia"] { /* 14. Tropicália (limão + laranja) */
+            --bg-1: #000000; --bg-2: #001a0d; --bg-3: #000000;
+            --acento: #8ce10b; --acento-rgb: 140, 225, 11; --acento-esc: #5aa300;
+            --acento-texto: #000000;
+            --barra-bg: rgba(0, 0, 0, 0.97); --barra-borda: rgba(140, 225, 11, 0.35);
+            --painel-bg: rgba(140, 225, 11, 0.06); --painel-borda: rgba(140, 225, 11, 0.3);
+            --campo-bg: rgba(255, 111, 0, 0.08); --campo-borda: rgba(255, 111, 0, 0.4);
+            --popup-bg: #0a1400; --option-bg: #0a1400; --adm-bg: rgba(0, 0, 0, 0.65);
+            --texto: #ffffff; --texto-fraco: #b9c9a0; --texto-medio: #cddaa8;
+            --texto-suave: #d8e6b8; --texto-forte: #eef7dc; --texto-claro: #dcf5a8;
+            --texto-destaque: #ff9e3d;
+            --mencao: #ffd54f; --aviso: #ff9e3d;
+            --verde-txt: #8ce10b; --vermelho-txt: #ff7a7a;
+            --btn-primario: linear-gradient(135deg, #3d8a00, #1f5c00);
+            --btn-enviar: linear-gradient(135deg, #ff6f00, #c2410c);
+            --btn-adm-grad: linear-gradient(135deg, #00897b, #00695c);
+        }
+        /* ---- Fundo BRANCO + cores vivas ---- */
+        [data-tema="algodao"] { /* 15. Algodão-doce (rosa) */
+            --bg-1: #fff5fa; --bg-2: #ffe3f1; --bg-3: #fff0f7;
+            --acento: #e91e8c; --acento-rgb: 233, 30, 140; --acento-esc: #b3006b;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(255, 255, 255, 0.96); --barra-borda: rgba(150, 20, 90, 0.15);
+            --painel-bg: rgba(255, 255, 255, 0.9); --painel-borda: rgba(150, 20, 90, 0.15);
+            --campo-bg: #ffffff; --campo-borda: rgba(150, 20, 90, 0.3);
+            --popup-bg: #ffffff; --option-bg: #ffffff; --adm-bg: rgba(255, 255, 255, 0.9);
+            --texto: #2b1220; --texto-fraco: #7a5568; --texto-medio: #6b4a5c;
+            --texto-suave: #664455; --texto-forte: #3d2030; --texto-claro: #5c1f42;
+            --texto-destaque: #c2185b;
+            --mencao: #ad1457; --aviso: #b26a00;
+            --verde-txt: #0d8a44; --vermelho-txt: #c62828;
+            --btn-primario: linear-gradient(135deg, #e91e8c, #ad1457);
+            --btn-enviar: linear-gradient(135deg, #ff5fa2, #c2185b);
+            --btn-adm-grad: linear-gradient(135deg, #7b1fa2, #9c4dcc);
+        }
+        [data-tema="maracuja"] { /* 16. Maracujá (laranja + amarelo) */
+            --bg-1: #fffaf0; --bg-2: #ffefd6; --bg-3: #fff6e8;
+            --acento: #e8590c; --acento-rgb: 232, 89, 12; --acento-esc: #b34200;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(255, 255, 255, 0.96); --barra-borda: rgba(140, 60, 0, 0.15);
+            --painel-bg: rgba(255, 255, 255, 0.9); --painel-borda: rgba(140, 60, 0, 0.15);
+            --campo-bg: #ffffff; --campo-borda: rgba(140, 60, 0, 0.3);
+            --popup-bg: #ffffff; --option-bg: #ffffff; --adm-bg: rgba(255, 255, 255, 0.9);
+            --texto: #2e1c08; --texto-fraco: #8a6a4a; --texto-medio: #7a5f42;
+            --texto-suave: #755a40; --texto-forte: #40290f; --texto-claro: #6b3d10;
+            --texto-destaque: #c2410c;
+            --mencao: #b45309; --aviso: #92500a;
+            --verde-txt: #0d8a44; --vermelho-txt: #c62828;
+            --btn-primario: linear-gradient(135deg, #e8590c, #b34200);
+            --btn-enviar: linear-gradient(135deg, #ff7a00, #c2410c);
+            --btn-adm-grad: linear-gradient(135deg, #5d4037, #795548);
+        }
+        [data-tema="menta"] { /* 17. Menta (verde-água) */
+            --bg-1: #f2fffb; --bg-2: #ddf7ee; --bg-3: #ecfff9;
+            --acento: #00897b; --acento-rgb: 0, 137, 123; --acento-esc: #00695c;
+            --acento-texto: #ffffff;
+            --barra-bg: rgba(255, 255, 255, 0.96); --barra-borda: rgba(0, 90, 80, 0.15);
+            --painel-bg: rgba(255, 255, 255, 0.9); --painel-borda: rgba(0, 90, 80, 0.15);
+            --campo-bg: #ffffff; --campo-borda: rgba(0, 90, 80, 0.3);
+            --popup-bg: #ffffff; --option-bg: #ffffff; --adm-bg: rgba(255, 255, 255, 0.9);
+            --texto: #0f2b26; --texto-fraco: #527069; --texto-medio: #45635c;
+            --texto-suave: #41605a; --texto-forte: #1d3b35; --texto-claro: #0d4f45;
+            --texto-destaque: #00695c;
+            --mencao: #9a5b00; --aviso: #8a6100;
+            --verde-txt: #0d8a44; --vermelho-txt: #c62828;
+            --btn-primario: linear-gradient(135deg, #00897b, #00695c);
+            --btn-enviar: linear-gradient(135deg, #43a047, #2e7d32);
+            --btn-adm-grad: linear-gradient(135deg, #00695c, #004d40);
+        }
 
         /* Combo do tema (barra superior) */
         .tema-wrap { display: inline-flex; align-items: center; gap: 4px; }
@@ -549,6 +654,12 @@
                         <option value="violeta">Violeta</option>
                         <option value="ambar">Âmbar Solar</option>
                         <option value="pb">Preto &amp; Branco</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="synthwave">Synthwave</option>
+                        <option value="tropicalia">Tropicália</option>
+                        <option value="algodao">Algodão-doce</option>
+                        <option value="maracuja">Maracujá</option>
+                        <option value="menta">Menta</option>
                     </select>
                 </span>
             </div>

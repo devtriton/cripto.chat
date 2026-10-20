@@ -1746,7 +1746,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         // Mensagem de sistema visível (eu não recebo a minha própria entrada aqui:
                         // o servidor envia "usuario_entrou" antes do "sala_info" da minha entrada)
                         if (!jaEstava && (!currentUser || data.email !== currentUser.email)) {
-                            exibirMensagemSistema(`📥 <strong>${escaparHtml(data.nome || data.email)}</strong> entrou na sala`);
+                            const hora = data.dataHora ? new Date(data.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            exibirMensagemSistema(`📥 <strong>${escaparHtml(data.nome || data.email)}</strong> entrou na sala <span style="color:var(--texto-fraco);font-size:0.85em;">${hora}</span>`);
                         }
                         console.log('[Sala] Usuário entrou:', data.nome);
                     }
@@ -1760,9 +1761,21 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         if (quem && (!currentUser || data.email !== currentUser.email)) {
-                            exibirMensagemSistema(`📤 <strong>${escaparHtml(quem.nome || quem.email)}</strong> saiu da sala`);
+                            const hora = data.dataHora ? new Date(data.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            exibirMensagemSistema(`📤 <strong>${escaparHtml(quem.nome || quem.email)}</strong> saiu da sala <span style="color:var(--texto-fraco);font-size:0.85em;">${hora}</span>`);
                         }
                         console.log('[Sala] Usuário saiu:', data.email);
+                    }
+                    break;
+
+                case 'timeout_sala':
+                    // Usuário removido da sala por inatividade (30 min)
+                    if (currentSala && data.salaId === currentSala.id) {
+                        const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        exibirMensagemSistema(`⏱️ <strong>Você foi removido da sala por inatividade (30 min sem interação)</strong> <span style="color:var(--texto-fraco);font-size:0.85em;">${hora}</span>`);
+                        currentSala = null;
+                        atualizarInfoSala();
+                        atualizarListaUsuarios();
                     }
                     break;
 

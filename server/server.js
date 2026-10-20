@@ -231,7 +231,8 @@ function removerUsuarioDaSala(salaId, email) {
   const sala = salas.get(salaId);
   if (!sala) return;
   sala.usuarios.delete(email);
-  broadcast(salaId, { tipo: 'usuario_saiu', salaId, email });
+  const agora = new Date().toISOString();
+  broadcast(salaId, { tipo: 'usuario_saiu', salaId, email, dataHora: agora });
   
   if (sala.usuarios.size === 0) {
     // Sala sem usuários online → apagada permanentemente
@@ -572,11 +573,13 @@ wss.on('connection', (ws) => {
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
         // Notificar todos da sala
+        const agora = new Date().toISOString();
         broadcast(salaId, {
           tipo: 'usuario_entrou',
           salaId,
           email: ws.email,
-          nome: user?.nome
+          nome: user?.nome,
+          dataHora: agora
         });
         
         // Enviar lista de usuários para quem entrou

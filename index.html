@@ -2108,24 +2108,38 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ============================================================
         // MENSAGENS
         // ============================================================
-        // Resolve "@Nome..." contra os usuários da sala (suporta nomes com espaços)
+        // Resolve "@Nome..." contra os usuários da sala (suporta nomes com espaços, em qualquer posição)
+        // Retorna o PRIMEIRO @Nome válido encontrado no texto (da esquerda para a direita)
+        // ============================================================
         function resolverDestinatarioDM(texto) {
-            if (!texto.startsWith('@')) return null;
             const usuarios = currentSala ? currentSala.usuarios : [];
-            const resto = texto.substring(1).toLowerCase();
-            // Nome mais longo primeiro: "@Aluno Teste" antes de "@Aluno"
-            const candidatos = usuarios
-                .filter(u => u.nome && resto.startsWith(u.nome.toLowerCase()))
-                .sort((a, b) => b.nome.length - a.nome.length);
-            for (const u of candidatos) {
-                const fim = resto[u.nome.length];
-                // Nome deve terminar ali (fim do texto ou espaço/pontuação antes da mensagem)
-                if (fim === undefined || !/[0-9a-zà-ÿ]/.test(fim)) return u;
+            if (!usuarios.length) return null;
+            // Nomes ordenados do mais longo para o mais curto (para pegar "Maria Silva" antes de "Maria")
+            const nomesOrdenados = usuarios
+                .filter(u => u.nome)
+                .map(u => u.nome)
+                .sort((a, b) => b.length - a.length);
+            let pos = 0;
+            while (pos < texto.length) {
+                const i = texto.indexOf('@', pos);
+                if (i === -1) break;
+                const depois = texto.substring(i + 1);
+                // Tenta achar um nome válido logo após o @
+                const match = nomesOrdenados.find(nome => {
+                    if (!depois.toLowerCase().startsWith(nome.toLowerCase())) return false;
+                    const fim = depois[nome.length];
+                    // Fim válido: fim do texto ou espaço/pontuação (não letra/dígito)
+                    return fim === undefined || !/[0-9a-zà-ÿ]/.test(fim);
+                });
+                if (match) {
+                    return usuarios.find(u => u.nome === match);
+                }
+                pos = i + 1;
             }
             return null;
         }
 
-        // Extrai menções "#Nome..." do texto (suporta nomes com espaços e pontuação após o nome)
+        // Extrai menções "#Nome..." do texto (suporta nomes com espaços e pontuação após o nome, em qualquer posição)
         function extrairMencoes(texto) {
             if (!currentSala) return [];
             const nomes = (currentSala.usuarios || [])
@@ -2141,7 +2155,6 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 const nome = nomes.find(n => {
                     if (!depois.startsWith(n.toLowerCase())) return false;
                     const fim = depois[n.length];
-                    // Fim válido: fim do texto ou pontuação/espaço (não letra/dígito)
                     return fim === undefined || !/[0-9a-zà-ÿ]/.test(fim);
                 });
                 if (nome) {
@@ -2151,7 +2164,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     pos = i + 1;
                 }
             }
-            return mencoes;
+            return [...new Set(mencoes)]; // remove duplicatas
         }
 
         async function enviarMensagem() {
@@ -2160,9 +2173,11 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             const chave = document.getElementById('cryptoKeyInput').value;
             if (!texto) return;
 
-            const ehDM = texto.startsWith('@');
-            const destino = ehDM ? resolverDestinatarioDM(texto) : null;
+            // DM: procura @Nome em QUALQUER posição do texto (primeiro match da esquerda para a direita)
+            const destino = resolverDestinatarioDM(texto);
+            const ehDM = !!destino;
             if (ehDM && !destino) { alert('Usuário não encontrado na sala.'); return; }
+            // Menções: extrai todos os #Nome do texto (exceto se for DM, onde não há menções públicas)
             const mencoes = ehDM ? [] : extrairMencoes(texto);
 
             if (algoritmo === 'e2e') {

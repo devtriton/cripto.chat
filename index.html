@@ -315,6 +315,11 @@
         .hidden { display: none !important; }
         .login-container { max-width: 450px; margin: 0 auto; }
         .login-step { text-align: center; }
+        .login-copyright, .footer-copyright, .tab-footer-copyright {
+            text-align: center; font-size: 11px; color: var(--texto-fraco);
+            margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--painel-borda);
+        }
+        .footer-copyright { margin-top: 8px; padding-top: 8px; font-size: 10px; }
         .otp-input { font-size: 28px; letter-spacing: 12px; text-align: center; font-family: 'Courier New', monospace; }
         .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .step-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--painel-borda); transition: all 0.3s; }
@@ -819,6 +824,7 @@
                 <button class="btn-success" onclick="verificarOTP()">Verificar e Entrar</button>
                 <button class="btn-secondary" onclick="voltarParaEmail()">Voltar</button>
             </div>
+            <div class="login-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
         </div>
 
         <!-- ========== PAINEL PRINCIPAL ========== -->
@@ -935,6 +941,7 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
 
             <!-- TAB: EDUCACIONAL -->
             <div id="tabEducacional" class="tab-content">
@@ -1310,6 +1317,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     </ul>
                 </div>
             </div>
+            <div class="tab-footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
         </div>
 
         <!-- ADM MODAL -->
@@ -1339,6 +1347,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             <button class="btn-secondary tu-btn fb-sair" onclick="desconectar()">Sair</button>
         </div>
     </div>
+    <div class="footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
 
     <script>
         // ============================================================
@@ -1430,6 +1439,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
         if (MODO !== 'pages') {
             window.addEventListener('load', () => {
+                console.log('%c🔐 cripto.chat v2025', 'font-size:14px;font-weight:bold;color:#c4a35a');
+                console.log('%c© 2025 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
                 console.log('[cripto.chat] Conectando WebSocket...');
                 const sessaoRestaurada = restaurarSessaoSalva();
                 tentativasWs = 0;

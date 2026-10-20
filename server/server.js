@@ -732,11 +732,24 @@ wss.on('connection', (ws) => {
         const restantes = conexoes.get(ws.email);
         user.ws = restantes ? restantes.values().next().value : null; // outra aba assume
       }
-      // Se ESTA aba era a que estava numa sala (ex.: a página foi recarregada),
-      // tira o usuário da sala: a nova aba começa no painel, não dentro da sala.
+      // Se ESTA aba era a que estava numa sala, só remove da sala se NENHUMA
+      // outra conexão do MESMO usuário estiver nessa sala.
+      // Isso evita o bug onde uma aba caindo expulsa o usuário mesmo com outras abas na sala.
       if (user && user.salaAtual && ws.entrouEmSala) {
-        removerUsuarioDaSala(user.salaAtual, ws.email);
-        user.salaAtual = null;
+        const conjunto = conexoes.get(ws.email);
+        let outraNaSala = false;
+        if (conjunto) {
+          for (const c of conjunto) {
+            if (c !== ws && c.entrouEmSala && c.salaAtual === user.salaAtual) {
+              outraNaSala = true;
+              break;
+            }
+          }
+        }
+        if (!outraNaSala) {
+          removerUsuarioDaSala(user.salaAtual, ws.email);
+          user.salaAtual = null;
+        }
       }
       console.log(`[SESSÃO] ${ws.email}: uma aba desconectou — outras conexões continuam online`);
       return;
@@ -750,6 +763,29 @@ wss.on('connection', (ws) => {
     console.log(`[LOGOUT] ${ws.email} desconectou`);
   });
 });
+
+// ============================================================
+// HEARTBEAT (ping/pong) — detecta conexões mortas / mobile suspend
+// ============================================================
+const HEARTBEAT_INTERVAL = 25000;   // ping a cada 25s
+const MAX_MISSED_PINGS = 2;         // fecha após 2 pings sem resposta (~50-75s)
+
+function iniciarHeartbeat() {
+  setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      if (ws._missedPings === undefined) ws._missedPings = 0;
+      ws._missedPings++;
+      if (ws._missedPings > MAX_MISSED_PINGS) {
+        console.log(`[HEARTBEAT] Fechando conexão morta: ${ws.email || 'sem-email'} (missed=${ws._missedPings})`);
+        return ws.terminate(); // força close → dispara ws.on('close')
+      }
+      try { ws.ping(); } catch (e) { ws.terminate(); }
+    });
+  }, HEARTBEAT_INTERVAL);
+}
+
+iniciarHeartbeat();
 
 // ============================================================
 // UTILITÁRIOS

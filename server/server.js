@@ -115,6 +115,7 @@ const usuarios = new Map();    // email -> { ws, nome, salaAtual }
 const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
 const chavesPublicas = new Map(); // email -> { chavePublica, nome } — chaves RSA públicas (E2E). O servidor NUNCA recebe chaves privadas.
+const chavesPublicasECC = new Map(); // email -> { chavePublica, nome } — chaves ECDH P-256 públicas (E2E). O servidor NUNCA recebe chaves privadas.
 
 // UM usuário pode ter VÁRIAS conexões abertas ao mesmo tempo (ex.: aba normal +
 // aba da SALA ADM, ou duas abas do navegador). Guardamos todas elas: antes, a
@@ -221,6 +222,8 @@ function avisarAtualizacaoSalas() {
 function enviarChavesPublicas(ws) {
   const chaves = [...chavesPublicas.entries()].map(([email, v]) => ({ email, chavePublica: v.chavePublica, nome: v.nome }));
   ws.send(JSON.stringify({ tipo: 'lista_chaves', chaves }));
+  const chavesEcc = [...chavesPublicasECC.entries()].map(([email, v]) => ({ email, chavePublica: v.chavePublica, nome: v.nome }));
+  ws.send(JSON.stringify({ tipo: 'lista_chaves_ecc', chaves: chavesEcc }));
 }
 
 // Remove um usuário de uma sala; se a sala ficar vazia, é apagada permanentemente
@@ -474,6 +477,20 @@ wss.on('connection', (ws) => {
         console.log(`[E2E] Chave pública de ${ws.email} publicada`);
         break;
       }
+
+      // --------------------------------------------------------
+      // PUBLICAR CHAVE PÚBLICA ECDH P-256 (ECC / ponta a ponta)
+      // O servidor guarda e distribui apenas a chave PÚBLICA.
+      // A chave privada nunca sai do computador do usuário.
+      // --------------------------------------------------------
+      case 'publicar_chave_ecc': {
+        if (!data.chavePublica || !ws.email) break;
+        const nomeUser = usuarios.get(ws.email)?.nome || ws.email;
+        chavesPublicasECC.set(ws.email, { chavePublica: data.chavePublica, nome: nomeUser });
+        broadcastTodos({ tipo: 'chave_publica_ecc', email: ws.email, nome: nomeUser, chavePublica: data.chavePublica });
+        console.log(`[ECC] Chave pública P-256 de ${ws.email} publicada`);
+        break;
+      }
       
       // --------------------------------------------------------
       // ALTERAR NOME DE USUÁRIO (email permanece o mesmo)
@@ -591,6 +608,7 @@ wss.on('connection', (ws) => {
           algoritmo: data.algoritmo || null,
           chave: data.chave || null,          // simétrica: a chave viaja com a mensagem (servidor PODE descriptografar)
           e2e: data.e2e || false,             // ponta a ponta: servidor NÃO consegue descriptografar
+          ecc: data.ecc || false,             // ponta a ponta ECC: ECDH P-256 + AES-GCM (servidor NÃO consegue descriptografar)
           blocos: data.blocos || null,        // E2E: { email: ciphertext } por destinatário
           semChave: data.semChave || [],      // E2E: quem NÃO tem chave pública (não recebeu)
           texto: data.texto,
@@ -604,7 +622,7 @@ wss.on('connection', (ws) => {
         const e2eInfo = data.e2e ? (Array.isArray(data.semChave)
           ? (data.semChave.length ? ` [sem chave: ${data.semChave.join(', ')}]` : '')
           : ' [CLIENTE ANTIGO: sem campo semChave]') : '';
-        console.log(`[MSG] ${user.nome} em ${sala.nome}${data.e2e ? ' [E2E:RSA]' : data.criptografada ? ' [CRIPTOGRAFADA: ' + data.algoritmo + ']' : ' [CLARA]'}${e2eInfo}`);
+        console.log(`[MSG] ${user.nome} em ${sala.nome}${data.ecc ? ' [E2E:ECC]' : data.e2e ? ' [E2E:RSA]' : data.criptografada ? ' [CRIPTOGRAFADA: ' + data.algoritmo + ']' : ' [CLARA]'}${e2eInfo}`);
         break;
       }
       
@@ -625,6 +643,7 @@ wss.on('connection', (ws) => {
           algoritmo: algoritmo || null,
           chave: data.chave || null,     // simétrica: chave junto (servidor pode ler)
           e2e: data.e2e || false,        // ponta a ponta
+          ecc: data.ecc || false,        // ponta a ponta ECC (ECDH P-256)
           blocos: data.blocos || null,   // E2E: { email: ciphertext }
           semChave: data.semChave || [], // E2E: quem NÃO tem chave pública (não recebeu)
           mencoes: data.mencoes || [],
@@ -643,7 +662,7 @@ wss.on('connection', (ws) => {
         const e2eInfoDm = data.e2e ? (Array.isArray(data.semChave)
           ? (data.semChave.length ? ` [sem chave: ${data.semChave.join(', ')}]` : '')
           : ' [CLIENTE ANTIGO: sem campo semChave]') : '';
-        console.log(`[DM] ${ws.email} -> ${paraEmail}${data.e2e ? ' [E2E:RSA]' : criptografada ? ' [CRIPTOGRAFADA]' : ' [CLARA]'}${e2eInfoDm}`);
+        console.log(`[DM] ${ws.email} -> ${paraEmail}${data.ecc ? ' [E2E:ECC]' : data.e2e ? ' [E2E:RSA]' : criptografada ? ' [CRIPTOGRAFADA]' : ' [CLARA]'}${e2eInfoDm}`);
         break;
       }
       

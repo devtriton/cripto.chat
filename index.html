@@ -433,7 +433,7 @@
         .demo-intro a { color: var(--acento); font-weight: 600; text-decoration: none; }
         .demo-intro a:hover { text-decoration: underline; }
         #guia-cifra-cesar { scroll-margin-top: 64px; } /* compensa a barra superior fixa */
-        #guia-cifra-vigenere, #guia-cifra-xor, #guia-cifra-aes { scroll-margin-top: 64px; }
+        #guia-cifra-vigenere, #guia-cifra-xor, #guia-cifra-aes, #guia-cifra-e2e, #guia-cifra-ecc { scroll-margin-top: 64px; }
         .rot13-tabela {
             background: rgba(var(--acento-rgb), 0.07);
             border: 1px dashed var(--painel-borda);
@@ -879,6 +879,7 @@
                                         <option value="xor">XOR com chave</option>
                                         <option value="aes">AES-256-GCM (Web Crypto)</option>
                                         <option value="e2e">E2E — RSA-2048 (ponta a ponta)</option>
+                                        <option value="ecc">E2E — ECC P-256 (curvas elípticas)</option>
                                     </select>
                                     <input type="text" id="cryptoKeyInput" placeholder="Chave..." class="hidden" style="max-width: 200px;"
                                            oninput="validarCampoChave(this, document.getElementById('cryptoSelect').value)">
@@ -905,11 +906,13 @@
                                 <option value="vigenere">Cifra de Vigenère</option>
                                 <option value="xor">XOR com chave</option>
                                 <option value="aes">AES-256 (Web Crypto)</option>
+                                <option value="e2e">E2E — RSA-2048 (ponta a ponta)</option>
+                                <option value="ecc">ECC — ECDH P-256 + AES-256-GCM</option>
                             </select>
                         </div>
                         <!-- Definição didática do algoritmo escolhido + link ao Guia -->
                         <div id="demoIntro" class="demo-intro hidden"></div>
-                        <div class="form-group">
+                        <div class="form-group" id="demoKeyGroup">
                             <label>Chave:</label>
                             <input type="text" id="demoKey" placeholder="Chave..."
                                    oninput="aoDigitarChaveDemo(this)">
@@ -942,6 +945,8 @@
                         <li><strong>Cifra de Vigenère:</strong> Usa uma palavra-chave para variar o deslocamento. Mais segura que César.</li>
                         <li><strong>XOR:</strong> Operação bit a bit com chave. Base para muitos sistemas modernos.</li>
                         <li><strong>AES-256:</strong> Padrão avançado. Usado em sistemas reais de segurança.</li>
+                        <li><strong>E2E (RSA-2048):</strong> Chave pública cifra, chave privada decifra — só o destinatário lê.</li>
+                        <li><strong>ECC (curvas elípticas):</strong> ECDH P-256 + AES-256-GCM — a base do TLS moderno e do WhatsApp.</li>
                     </ul>
                     <h4 id="guia-cifra-cesar" style="margin-top: 18px;">3.1 Cifra de César (Rot-N) — em detalhes</h4>
                     <p>A <strong>Cifra de César</strong> substitui cada letra por outra que está <strong>N posições à frente no alfabeto</strong>,
@@ -1173,6 +1178,115 @@ AES-256    256 bits (32 bytes)    14</pre>
                         quem vê a mensagem passar</strong>.</p>
                         <p><strong>Erros comuns:</strong> "AES é invencível, então tanto faz a senha" → o elo é a senha; "salt e IV são
                         secretos" → não são; "AES garante anonimato" → garante confidencialidade e integridade, não anonimato.</p>
+                    </div>
+                    <h4 id="guia-cifra-e2e" style="margin-top: 18px;">3.5 E2E — RSA-2048 (ponta a ponta)</h4>
+                    <p><strong>E2E (end-to-end, "ponta a ponta")</strong> é a criptografia em que <strong>só o remetente e o destinatário
+                    leem</strong> a mensagem — nem o servidor. Para isso ela usa <strong>criptografia assimétrica</strong>: cada pessoa tem um
+                    <strong>par de chaves</strong>, uma <strong>pública</strong> (pode ser distribuída abertamente) e uma <strong>privada</strong>
+                    (nunca sai do computador de quem recebe).</p>
+                    <p><strong>Analogia — a caixa de correio:</strong> a chave pública é a <em>fenda</em> da caixa: qualquer um pode depositar
+                    uma carta, mas só quem tem a chave privada abre a caixa para ler. Você pode divulgar sua chave pública na praça — ela só
+                    serve para <strong>fechar</strong>, não para abrir.</p>
+                    <p><strong>Como funciona nesta demonstração:</strong></p>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li>No login, o navegador gera um par <strong>RSA-2048</strong> (OAEP + SHA-256).</li>
+                        <li>A chave <strong>pública</strong> é publicada no servidor; a <strong>privada</strong> fica no
+                        <code>localStorage</code> do seu navegador e nunca é enviada.</li>
+                        <li>Ao enviar, a mensagem é cifrada com a chave pública de <strong>cada destinatário</strong> (inclusive a sua), em
+                        blocos de 190 bytes.</li>
+                        <li>Ao receber, cada um decifra com a própria chave privada. O servidor só vê o texto cifrado.</li>
+                    </ul>
+                    <p><strong>Simétrica × assimétrica:</strong></p>
+                    <pre class="rot13-tabela">Simétrica (César, Vigenère, XOR, AES)      Assimétrica (RSA / E2E)
+1 chave cifra e decifra                    2 chaves: pública (cifra) e privada (decifra)
+A chave precisa ser combinada antes        A chave pública pode ser divulgada
+Rápida                                     Mais lenta (por isso o AES cuida do volume)</pre>
+                    <p><strong>Por que o E2E é o mais forte aqui:</strong> a Sala ADM vê apenas o ciphertext — não existe chave no servidor para
+                    abrir a mensagem. É a diferença entre "trancar a porta e entregar a chave junto" (simétrica) e "trancar a porta e guardar
+                    a única chave no seu bolso" (E2E).</p>
+                    <p><strong>Limites importantes (para não vender ilusão):</strong></p>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Metadados:</strong> o servidor ainda vê <em>quem</em> fala com <em>quem</em> e <em>quando</em> — o E2E
+                        protege o conteúdo, não o anonimato.</li>
+                        <li><strong>Confiança na chave pública:</strong> se o servidor trocar a chave pública por outra, ele poderia
+                        interceptar (ataque <strong>MITM</strong>). Por isso apps reais usam verificação de chaves/identidade.</li>
+                        <li><strong>Sem forward secrecy:</strong> a mesma chave privada decifra mensagens antigas; se ela vazar, o histórico
+                        também vaza.</li>
+                        <li><strong>localStorage é uma simplificação didática:</strong> em produção, a chave privada ficaria em armazenamento
+                        seguro (keychain/HSM).</li>
+                    </ul>
+                    <div class="prof-box">
+                        <strong class="prof-titulo">📚 Para o professor — como explicar o E2E com a metáfora da caixa de correio</strong>
+                        <p><strong>Linha-mestre:</strong> "a chave pública é a <em>fenda</em> da caixa; a privada é a <em>chave</em> que abre a
+                        caixa." Qualquer um deposita, só o dono lê — e o carteiro (servidor) não consegue abrir.</p>
+                        <ul>
+                            <li><strong>O problema que o E2E resolve:</strong> na cifra simétrica, remetente e destinatário precisam combinar a
+                            mesma chave antes — e, se ela viaja pela rede, o servidor a vê. O par público/privado elimina essa combinação
+                            prévia.</li>
+                            <li><strong>Por que RSA não cifra tudo:</strong> é lento. Na prática, usa-se <strong>criptografia híbrida</strong>:
+                            o RSA combina uma chave AES, e o AES cifra o volume.</li>
+                            <li><strong>Metadados continuam visíveis:</strong> o E2E esconde o conteúdo, mas o servidor ainda sabe quem enviou,
+                            para quem e quando — anonimato é outro problema.</li>
+                            <li><strong>O ponto fraco é a confiança:</strong> se a chave pública for trocada no caminho, o atacante lê tudo
+                            (MITM). A criptografia sozinha não prova <em>de quem</em> é a chave.</li>
+                        </ul>
+                        <p><strong>Dinâmica de 5 minutos:</strong> ① Dois alunos trocam "chaves públicas" (cartões com um cadeado desenhado) e
+                        guardam a "privada" (um cartão secreto). ② Um cifra uma mensagem com a pública do outro. ③ O professor faz o papel de
+                        servidor e tenta ler — não consegue. ④ O professor então troca a chave pública por uma falsa e mostra o MITM: a
+                        mensagem vai para ele. ⑤ Fechem: <strong>E2E protege o conteúdo, mas exige confiar em quem entrega as chaves</strong>.</p>
+                        <p><strong>Erros comuns:</strong> "E2E = anonimato" → não, metadados aparecem; "E2E dispensa senha" → a chave privada
+                        é o segredo; "RSA cifra arquivos grandes" → na prática é híbrido com AES.</p>
+                    </div>
+                    <h4 id="guia-cifra-ecc" style="margin-top: 18px;">3.6 ECC — curvas elípticas (ECDH P-256)</h4>
+                    <p><strong>ECC (Elliptic Curve Cryptography)</strong> é a família de criptografia assimétrica usada pelos sistemas modernos:
+                    TLS 1.3, Signal/WhatsApp, iMessage e Bitcoin. Em vez de números gigantes (como no RSA), ela trabalha com <strong>pontos de
+                    uma curva elíptica</strong> sobre um campo finito, na forma <code>y² = x³ + ax + b (mod p)</code>. Aqui usamos a curva
+                    <strong>P-256</strong> (também chamada secp256r1), com chaves de apenas <strong>256 bits</strong>.</p>
+                    <p><strong>Por que chaves tão menores?</strong> A segurança não vem do tamanho da chave, mas do problema matemático por trás:
+                    no RSA, é fatorar números enormes; no ECC, é o <strong>logaritmo discreto em curvas elípticas</strong> — dado um ponto
+                    público, descobrir o multiplicador secreto é inviável. Com ~256 bits, o ECC oferece segurança comparável ao RSA de
+                    ~3072 bits.</p>
+                    <pre class="rot13-tabela">Segurança aproximada   RSA          ECC
+112 bits               RSA-2048     P-224
+128 bits               RSA-3072     P-256
+192 bits               RSA-7680     P-384</pre>
+                    <p><strong>ECDH — o segredo que ninguém transmite:</strong> cada lado tem um par (privada, pública). O remetente combina a
+                    <em>sua privada</em> com a <em>pública do destinatário</em>; o destinatário combina a <em>sua privada</em> com a
+                    <em>pública do remetente</em>. Os dois chegam ao <strong>mesmo segredo</strong> — e ele nunca viajou pela rede.</p>
+                    <p><strong>Analogia das tintas:</strong> ambos começam com a mesma tinta pública (amarela). Alice mistura um segredo só
+                    dela (azul) e envia a mistura; Bob mistura um segredo só dele (vermelho) e envia a dele. Cada um adiciona o próprio
+                    segredo à mistura do outro e ambos chegam ao <strong>mesmo tom final</strong>. Quem intercepta vê só as misturas — separar
+                    as cores é o problema difícil.</p>
+                    <p><strong>Na prática, o ECC não cifra a mensagem:</strong> ele só combina chaves. O segredo derivado vira uma chave
+                    <strong>AES-256-GCM</strong> (via HKDF) que cifra o texto. Isso é <strong>criptografia híbrida</strong> — a mesma ideia do
+                    TLS e do WhatsApp (que usa X25519, uma curva mais moderna; aqui usamos P-256 pela compatibilidade do navegador). Nesta
+                    demo, cada mensagem usa uma chave <strong>efêmera</strong> (ECIES), então o segredo é diferente a cada envio.</p>
+                    <p><strong>Limites desta demonstração:</strong></p>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>P-256, não X25519:</strong> o WhatsApp usa Curve25519; a Web Crypto padroniza P-256 — o conceito é o mesmo.</li>
+                        <li><strong>Sem Double Ratchet:</strong> não há renovação contínua de chaves nem "post-compromise security" (o Signal tem).</li>
+                        <li><strong>Chave privada no localStorage:</strong> simplificação didática; em produção ficaria em armazenamento seguro.</li>
+                        <li><strong>Metadados visíveis:</strong> o servidor vê quem fala com quem e quando, mesmo sem ler o conteúdo.</li>
+                    </ul>
+                    <div class="prof-box">
+                        <strong class="prof-titulo">📚 Para o professor — como explicar o ECDH com a analogia das tintas</strong>
+                        <p><strong>Linha-mestre:</strong> "os dois chegam à mesma cor misturando o próprio segredo à mistura do outro — e quem
+                        só vê as misturas não consegue separar as cores."</p>
+                        <ul>
+                            <li><strong>O problema que o ECDH resolve:</strong> combinar um segredo sem transmiti-lo — a mesma dor da chave
+                            simétrica viajando junto.</li>
+                            <li><strong>Por que ECC é menor e mais rápido:</strong> cada bit de segurança "rende" muito mais; ideal para celular
+                            e para o volume de conexões da internet.</li>
+                            <li><strong>Híbrido:</strong> o ECDH combina a chave; o AES cifra o volume. É assim no TLS 1.3 e no WhatsApp.</li>
+                            <li><strong>O ponto fraco:</strong> a confiança na chave pública (MITM) e os metadados — a matemática não resolve
+                            esses dois sozinha.</li>
+                        </ul>
+                        <p><strong>Dinâmica de 5 minutos:</strong> ① Dê a cada aluno uma "tinta pública" (amarela) e uma "tinta secreta"
+                        (azul/vermelha). ② Cada um mistura e troca a mistura com um colega. ③ Cada um adiciona sua tinta secreta à mistura
+                        recebida — todos chegam à mesma cor. ④ Um "espião" tenta separar as cores: não consegue. ⑤ Fechem mostrando que o
+                        WhatsApp faz isso com curvas elípticas, e o AES entra depois para cifrar o texto.</p>
+                        <p><strong>Erros comuns:</strong> "ECC é só para Bitcoin" → está no TLS e no WhatsApp; "chave de 256 bits é fraca" →
+                        equivale a ~RSA-3072; "o ECDH cifra a mensagem" → ele <em>deriva a chave</em>; quem cifra é o AES.</p>
                     </div>
                     <h3>4. A Sala ADM</h3>
                     <p>A Sala ADM representa o <strong>ponto de vista do servidor</strong>. Tudo que passa pelo servidor é visível aqui.</p>
@@ -1525,6 +1639,8 @@ AES-256    256 bits (32 bytes)    14</pre>
                     iniciarModoADM(); // se esta aba é a da SALA ADM (?adm=1)
                     // Gera/recupera o par de chaves RSA e publica a pública (E2E)
                     prepararChavesE2E().catch(e => console.warn('[E2E] Falha ao preparar chaves:', e));
+                    // Gera/recupera o par de chaves ECDH P-256 e publica a pública (ECC)
+                    prepararChavesECC().catch(e => console.warn('[ECC] Falha ao preparar chaves:', e));
                     break;
 
                 case 'chave_publica':
@@ -1532,10 +1648,21 @@ AES-256    256 bits (32 bytes)    14</pre>
                     if (data.email && data.chavePublica) chavesPublicasE2E[data.email] = data.chavePublica;
                     break;
 
+                case 'chave_publica_ecc':
+                    // O servidor distribuiu a chave pública ECDH de alguém (ECC)
+                    if (data.email && data.chavePublica) chavesPublicasECC[data.email] = data.chavePublica;
+                    break;
+
                 case 'lista_chaves':
                     // Conjunto completo de chaves públicas (enviado no login)
                     (data.chaves || []).forEach(c => { if (c.email && c.chavePublica) chavesPublicasE2E[c.email] = c.chavePublica; });
                     console.log('[E2E] Chaves públicas recebidas:', Object.keys(chavesPublicasE2E).length);
+                    break;
+
+                case 'lista_chaves_ecc':
+                    // Conjunto completo de chaves públicas ECDH (enviado no login)
+                    (data.chaves || []).forEach(c => { if (c.email && c.chavePublica) chavesPublicasECC[c.email] = c.chavePublica; });
+                    console.log('[ECC] Chaves públicas P-256 recebidas:', Object.keys(chavesPublicasECC).length);
                     break;
 
                 case 'sala_criada':
@@ -2056,6 +2183,29 @@ AES-256    256 bits (32 bytes)    14</pre>
                     (currentSala?.usuarios || []).find(u => u.email === email)?.nome || email);
                 if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto: '', criptografada: false, e2e: true, algoritmo: 'rsa', blocos, semChave: semChaveNomes, mencoes: [destino.nome] });
                 else enviar({ tipo: 'mensagem', texto: '', criptografada: false, e2e: true, algoritmo: 'rsa', blocos, semChave: semChaveNomes, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
+            } else if (algoritmo === 'ecc') {
+                // ECC (ECDH P-256 + AES-256-GCM): híbrido ponta a ponta.
+                // Gera uma chave EFÊMERA por destinatário, deriva o segredo ECDH e cifra com AES-GCM.
+                if (!minhaChavePrivadaECC) await prepararChavesECC();
+                const destinatarios = ehDM
+                    ? [destino.email]
+                    : (currentSala?.usuarios || []).map(u => u.email);
+                destinatarios.push(currentUser.email);
+                const unicos = [...new Set(destinatarios)];
+                const semChave = unicos.filter(e => e !== currentUser.email && !chavesPublicasECC[e]);
+                const comChave = unicos.filter(e => e === currentUser.email || chavesPublicasECC[e]);
+                const blocos = {};
+                try {
+                    for (const email of comChave) {
+                        const pub = email === currentUser.email ? minhaChavePublicaECCB64 : chavesPublicasECC[email];
+                        blocos[email] = await cifrarECC(texto, pub);
+                    }
+                } catch (e) { console.warn('[ECC] Falha ao cifrar:', e); alert('Falha ao cifrar a mensagem com ECC.'); return; }
+                const semChaveNomes = semChave.map(email =>
+                    (currentSala?.usuarios || []).find(u => u.email === email)?.nome || email);
+                const base = { texto: '', criptografada: true, ecc: true, algoritmo: 'ecc', blocos, semChave: semChaveNomes };
+                if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, ...base, mencoes: [destino.nome] });
+                else enviar({ tipo: 'mensagem', ...base, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
             } else if (algoritmo !== 'none') {
                 const erroChave = validarChave(algoritmo, chave);
                 if (erroChave) { alert(erroChave); validarCampoChave(document.getElementById('cryptoKeyInput'), algoritmo); return; }
@@ -2100,7 +2250,12 @@ AES-256    256 bits (32 bytes)    14</pre>
             const autor = escaparHtml(data.nome || '?');
             let classe, header, corpo;
 
-            if (data.e2e) {
+            if (data.ecc) {
+                // PONTA A PONTA ECC: ECDH P-256 deriva a chave AES-GCM no destinatário
+                classe = 'message encrypted';
+                header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge e2e-badge">ECC · P-256</span> ${dmBadge}`;
+                corpo = '<em style="color:var(--texto-suave);">🔓 derivando segredo ECDH…</em>';
+            } else if (data.e2e) {
                 // PONTA A PONTA: só o destinatário (chave privada) consegue ler
                 classe = 'message encrypted';
                 header = `<span class="message-author">${autor}</span> <span>${dataHora}</span> <span class="encryption-badge e2e-badge">E2E · RSA-2048</span> ${dmBadge}`;
@@ -2120,7 +2275,25 @@ AES-256    256 bits (32 bytes)    14</pre>
             div.scrollTop = div.scrollHeight;
 
             // Descriptografa e revela o texto (a ordem é preservada porque o container já existe)
-            if (data.e2e) {
+            if (data.ecc) {
+                const pacote = (data.blocos || {})[currentUser.email];
+                const texto = pacote ? await decifrarECC(pacote) : null;
+                const souRemetente = data.de === currentUser.email;
+                let extra = '';
+                if (texto === null) {
+                    if (!souRemetente) {
+                        // Não tenho a chave privada → AVISO O REMETENTE que não pude ler
+                        enviar({ tipo: 'e2e_falha_leitura', paraEmail: data.de, msgId: data.id, nome: currentUser.nome });
+                        extra = '<div class="message-note">📨 O remetente já foi avisado de que você não pôde decifrar</div>';
+                    }
+                } else if (souRemetente && data.semChave && data.semChave.length) {
+                    // Quem está SEM chave pública não recebeu — só o REMETENTE vê este aviso
+                    extra = `<div class="message-note nao-recebida">⚠️ Não entregue para ${data.semChave.length === 1 ? 'o usuário' : 'os usuários'} sem chave pública: ${data.semChave.map(escaparHtml).join(', ')}</div>`;
+                }
+                preencherMensagem(id, texto === null
+                    ? '<em style="color:var(--vermelho-txt);">🔒 Mensagem ECC — apenas os destinatários têm a chave para ler</em>'
+                    : destacarMencoes(texto, data.mencoes), texto !== null, 'Segredo ECDH derivado e chave AES-GCM montada no seu navegador. O servidor só viu ciphertext.', extra);
+            } else if (data.e2e) {
                 const texto = await descriptografarE2E(data.blocos);
                 const souRemetente = data.de === currentUser.email;
                 let extra = '';
@@ -2381,6 +2554,75 @@ AES-256    256 bits (32 bytes)    14</pre>
             } catch (e) { console.warn('[E2E] Falha ao decifrar:', e); return null; }
         }
 
+        // ===== ECC — curvas elípticas (ECDH P-256 + AES-256-GCM) =====
+        // E2E híbrido: o ECDH deriva um segredo compartilhado SEM transmiti-lo;
+        // esse segredo vira uma chave AES-GCM que cifra a mensagem.
+        // Chave privada ECDH: fica SEMPRE no navegador (localStorage, nunca enviada).
+        // Chave pública ECDH: publicada no servidor para quem quiser enviar mensagens.
+        let minhaChavePrivadaECC = null;    // CryptoKey (ECDH P-256)
+        let minhaChavePublicaECCB64 = null; // SPKI em base64
+        const chavesPublicasECC = {};       // email -> chave pública (SPKI base64)
+
+        async function prepararChavesECC() {
+            if (!currentUser || !window.crypto?.subtle) return;
+            const kPriv = 'cripto_chat_ecc_priv_' + currentUser.email;
+            const kPub = 'cripto_chat_ecc_pub_' + currentUser.email;
+            try {
+                const jwk = JSON.parse(localStorage.getItem(kPriv) || 'null');
+                const pubB64 = localStorage.getItem(kPub);
+                if (jwk && pubB64) {
+                    minhaChavePrivadaECC = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+                    minhaChavePublicaECCB64 = pubB64;
+                }
+            } catch (e) { console.warn('[ECC] Chave local inválida, gerando nova:', e); minhaChavePrivadaECC = null; }
+            if (!minhaChavePrivadaECC) {
+                console.log('[ECC] Gerando par de chaves ECDH P-256...');
+                const par = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+                const jwk = await crypto.subtle.exportKey('jwk', par.privateKey);
+                const spki = await crypto.subtle.exportKey('spki', par.publicKey);
+                minhaChavePrivadaECC = par.privateKey;
+                minhaChavePublicaECCB64 = u8ParaB64(new Uint8Array(spki));
+                try {
+                    localStorage.setItem(kPriv, JSON.stringify(jwk));
+                    localStorage.setItem(kPub, minhaChavePublicaECCB64);
+                } catch (e) { console.warn('[ECC] Não foi possível salvar as chaves no navegador:', e); }
+            }
+            enviar({ tipo: 'publicar_chave_ecc', chavePublica: minhaChavePublicaECCB64 });
+            console.log('[ECC] Chave pública P-256 publicada (a privada ficou no navegador)');
+        }
+        async function importarChavePublicaECC(b64) {
+            return crypto.subtle.importKey('spki', b64ParaU8(b64), { name: 'ECDH', namedCurve: 'P-256' }, true, []);
+        }
+        // Deriva a mesma chave AES-GCM dos dois lados: (privada A, pública B) = (privada B, pública A)
+        async function derivarAESECC(chavePrivada, chavePublica) {
+            const segredo = await crypto.subtle.deriveBits({ name: 'ECDH', public: chavePublica }, chavePrivada, 256);
+            const base = await crypto.subtle.importKey('raw', segredo, 'HKDF', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: new TextEncoder().encode('cripto.chat/ecc-p256/v1') },
+                base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        }
+        // ECIES: gera uma chave EFÊMERA por mensagem → o destinatário usa a privada estática
+        async function cifrarECC(texto, chavePublicaB64) {
+            const pub = await importarChavePublicaECC(chavePublicaB64);
+            const efemera = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+            const aes = await derivarAESECC(efemera.privateKey, pub);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, new TextEncoder().encode(texto));
+            const epk = await crypto.subtle.exportKey('spki', efemera.publicKey);
+            return 'v1.' + u8ParaB64(new Uint8Array(epk)) + '.' + u8ParaB64(iv) + '.' + u8ParaB64(new Uint8Array(ct));
+        }
+        async function decifrarECC(pacote, chavePrivada = minhaChavePrivadaECC) {
+            try {
+                if (!chavePrivada) return null;
+                const p = String(pacote || '').split('.');
+                if (p.length !== 4 || p[0] !== 'v1') return null;
+                const epk = await importarChavePublicaECC(p[1]);
+                const aes = await derivarAESECC(chavePrivada, epk);
+                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ParaU8(p[2]) }, aes, b64ParaU8(p[3]));
+                return new TextDecoder().decode(pt);
+            } catch (e) { console.warn('[ECC] Falha ao decifrar:', e); return null; }
+        }
+
         // ============================================================
         // SALA ADM (abre em ABA SEPARADA: ?adm=1)
         // ============================================================
@@ -2417,7 +2659,18 @@ AES-256    256 bits (32 bytes)    14</pre>
             const dataHora = new Date(data.dataHora || Date.now()).toLocaleString('pt-BR');
             const nome = escaparHtml(data.nome || '?');
             let html;
-            if (data.e2e) {
+            if (data.ecc) {
+                // ECC: o servidor vê APENAS ciphertext por destinatário — o segredo ECDH é só dos dois lados
+                const blocos = data.blocos || {};
+                const chaves = Object.keys(blocos);
+                const exemplo = chaves.length ? blocos[chaves[0]] : '';
+                html = `<div class="adm-message">
+                    [${dataHora}] ${nome} | <strong>🔒 E2E — ECC P-256 (ponta a ponta)</strong><br>
+                    <code>${escaparHtml(exemplo.slice(0, 140))}${exemplo.length > 140 ? '…' : ''}</code><br>
+                    <em>⛔ O servidor NÃO pode descriptografar: o segredo ECDH só existe entre remetente e destinatário.</em>
+                    ${chaves.length > 1 ? `<br><small>Copiado (cifrado) para: ${chaves.map(escaparHtml).join(', ')}</small>` : ''}
+                </div>`;
+            } else if (data.e2e) {
                 // E2E: o servidor vê APENAS ciphertext por destinatário — impossível decifrar
                 const blocos = data.blocos || {};
                 const chaves = Object.keys(blocos);
@@ -2495,7 +2748,21 @@ AES-256    256 bits (32 bytes)    14</pre>
             em chave por <strong>PBKDF2</strong> (100 mil iterações de SHA-256) e cada mensagem usa um <strong>salt</strong> e um
             <strong>IV</strong> aleatórios. Como aqui a cifra é <strong>simétrica</strong>, a chave viaja junto com a mensagem — por isso
             a Sala ADM consegue decifrar. Aqui a senha aceita <strong>qualquer texto não vazio</strong> (ex.: minha-chave).
-            <a href="#" onclick="irParaGuia('guia-cifra-aes'); return false;">📖 Ver no Guia Educacional: <strong>AES-256 em detalhes</strong> →</a></p>`
+            <a href="#" onclick="irParaGuia('guia-cifra-aes'); return false;">📖 Ver no Guia Educacional: <strong>AES-256 em detalhes</strong> →</a></p>`,
+            e2e: `<p>O <strong>E2E (ponta a ponta)</strong> é a criptografia em que <strong>só o remetente e o destinatário leem</strong> — nem o
+            servidor. Ele usa <strong>criptografia assimétrica</strong>: cada pessoa tem um par de chaves, uma <strong>pública</strong>
+            (que pode ser distribuída abertamente e só serve para <em>fechar</em>) e uma <strong>privada</strong> (que nunca sai do
+            navegador e só serve para <em>abrir</em>). Aqui o par é <strong>RSA-2048</strong> (OAEP + SHA-256), gerado no seu
+            navegador; a pública é publicada no servidor e a privada fica no <code>localStorage</code>. Por isso a Sala ADM vê apenas o
+            texto cifrado. <strong>Não há chave para digitar</strong>: o par é automático.
+            <a href="#" onclick="irParaGuia('guia-cifra-e2e'); return false;">📖 Ver no Guia Educacional: <strong>E2E — RSA-2048 em detalhes</strong> →</a></p>`,
+            ecc: `<p>O <strong>ECC (criptografia de curvas elípticas)</strong> é o que os sistemas modernos usam de verdade — inclusive o
+            <strong>WhatsApp</strong> (com o protocolo Signal). A ideia é o <strong>ECDH</strong>: cada lado tem um par de chaves
+            (pública/privada) e, combinando a <strong>sua privada</strong> com a <strong>pública do outro</strong>, os dois chegam ao
+            <strong>mesmo segredo</strong> — sem nunca transmiti-lo. Esse segredo vira uma chave <strong>AES-256-GCM</strong> que cifra a
+            mensagem (é a chamada criptografia <strong>híbrida</strong>). Aqui usamos a curva <strong>P-256</strong> e uma chave
+            <strong>efêmera por mensagem</strong>. <strong>Não há chave para digitar</strong>: o par é gerado automaticamente no seu navegador.
+            <a href="#" onclick="irParaGuia('guia-cifra-ecc'); return false;">📖 Ver no Guia Educacional: <strong>ECC — curvas elípticas em detalhes</strong> →</a></p>`
         };
         // Link do texto introdutório: leva para a seção correspondente do Guia Educacional
         function irParaGuia(idSecao) {
@@ -2510,12 +2777,18 @@ AES-256    256 bits (32 bytes)    14</pre>
             const algo = document.getElementById('demoAlgo').value;
             const inp = document.getElementById('demoKey');
             const hint = document.getElementById('demoChaveHint');
+            const grupoChave = document.getElementById('demoKeyGroup');
+            const semChaveDigitada = algo === 'e2e' || algo === 'ecc';
+            // E2E/ECC não usam chave digitada: o par é gerado automaticamente pelo navegador
+            grupoChave.classList.toggle('hidden', semChaveDigitada);
             const exemplos = { caesar: ' (ex.: 7)', vigenere: ' (ex.: SEGREDO)', xor: ' (ex.: minha-chave)', aes: ' (ex.: minha-chave)' };
             inp.placeholder = 'Chave: ' + regraChave(algo) + (exemplos[algo] || '');
             inp.inputMode = algo === 'caesar' ? 'numeric' : 'text';
             inp.classList.remove('chave-invalida');
             hint.classList.remove('erro');
-            hint.textContent = 'Esta chave aceita: ' + regraChave(algo) + '.';
+            if (algo === 'e2e') hint.textContent = 'E2E não usa chave digitada: o par RSA-2048 (pública + privada) é gerado automaticamente no seu navegador.';
+            else if (algo === 'ecc') hint.textContent = 'ECC não usa chave digitada: o par P-256 é gerado automaticamente e o segredo ECDH vira uma chave AES-256-GCM.';
+            else hint.textContent = 'Esta chave aceita: ' + regraChave(algo) + '.';
             // Texto didático antes da chave (só os algoritmos com intro cadastrada)
             const intro = document.getElementById('demoIntro');
             const texto = introsDemo[algo] || '';
@@ -2528,6 +2801,27 @@ AES-256    256 bits (32 bytes)    14</pre>
             const chave = keyInput.value;
             const texto = document.getElementById('demoTexto').value.trim();
             if (!texto) { mostrarErroDemo('Digite o texto para criptografar.'); return; }
+            // E2E: assimétrico — não usa chave digitada; cifra com a chave PÚBLICA do próprio usuário
+            if (algo === 'e2e') {
+                if (!currentUser) { mostrarErroDemo('Entre com seu e-mail para usar o E2E: o par de chaves é por usuário.'); return; }
+                try {
+                    if (!minhaChavePrivada) await prepararChavesE2E();
+                    const blocos = await criptografarE2E(texto, [currentUser.email]);
+                    if (!blocos || !blocos[currentUser.email]) { mostrarErroDemo('Falha ao cifrar com E2E.'); return; }
+                    document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado (E2E — RSA-2048):</strong><br><code style="word-break:break-all;">${escaparHtml(blocos[currentUser.email])}</code><div class="message-note">🔒 Cifrado com a chave PÚBLICA. Só a chave PRIVADA deste navegador decifra — a Sala ADM vê apenas este ciphertext.</div></div>`;
+                } catch (e) { console.warn('[E2E] Falha na demo:', e); mostrarErroDemo('Falha ao cifrar com E2E.'); }
+                return;
+            }
+            // ECC: ECDH P-256 + AES-GCM — par automático; cifra com a chave pública do próprio usuário
+            if (algo === 'ecc') {
+                if (!currentUser) { mostrarErroDemo('Entre com seu e-mail para usar o ECC: o par de chaves é por usuário.'); return; }
+                try {
+                    if (!minhaChavePublicaECCB64) await prepararChavesECC();
+                    const pacote = await cifrarECC(texto, minhaChavePublicaECCB64);
+                    document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado (ECC — ECDH P-256 + AES-256-GCM):</strong><br><code style="word-break:break-all;">${escaparHtml(pacote)}</code><div class="message-note">🔒 Chave efêmera + segredo ECDH + AES-256-GCM. Só a chave PRIVADA deste navegador decifra — a Sala ADM vê apenas este ciphertext.</div></div>`;
+                } catch (e) { console.warn('[ECC] Falha na demo:', e); mostrarErroDemo('Falha ao cifrar com ECC.'); }
+                return;
+            }
             const erroChave = validarChave(algo, chave);
             if (erroChave) {
                 keyInput.classList.toggle('chave-invalida', !!chave.trim());
@@ -2543,6 +2837,28 @@ AES-256    256 bits (32 bytes)    14</pre>
             const chave = keyInput.value;
             const texto = document.getElementById('demoTexto').value.trim();
             if (!texto) { mostrarErroDemo('Cole o texto cifrado para descriptografar.'); return; }
+            // E2E: decifra com a chave PRIVADA (que nunca saiu deste navegador)
+            if (algo === 'e2e') {
+                if (!currentUser) { mostrarErroDemo('Entre com seu e-mail para usar o E2E: o par de chaves é por usuário.'); return; }
+                let resultado = null;
+                try {
+                    if (!minhaChavePrivada) await prepararChavesE2E();
+                    resultado = await descriptografarE2E({ [currentUser.email]: texto });
+                } catch (e) { console.warn('[E2E] Falha na demo:', e); }
+                document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid var(--verde-txt);"><strong style="color:var(--verde-txt);">Texto Descriptografado:</strong><br><code>${resultado === null ? 'Erro: não foi possível descriptografar (a chave privada é de outro par ou o texto está corrompido).' : escaparHtml(resultado)}</code></div>`;
+                return;
+            }
+            // ECC: decifra derivando o mesmo segredo ECDH com a chave PRIVADA local
+            if (algo === 'ecc') {
+                if (!currentUser) { mostrarErroDemo('Entre com seu e-mail para usar o ECC: o par de chaves é por usuário.'); return; }
+                let resultado = null;
+                try {
+                    if (!minhaChavePrivadaECC) await prepararChavesECC();
+                    resultado = await decifrarECC(texto);
+                } catch (e) { console.warn('[ECC] Falha na demo:', e); }
+                document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(67,233,123,0.1); padding:12px; border-radius:8px; border-left:3px solid var(--verde-txt);"><strong style="color:var(--verde-txt);">Texto Descriptografado:</strong><br><code>${resultado === null ? 'Erro: não foi possível descriptografar (a chave privada é de outro par ou o texto está corrompido).' : escaparHtml(resultado)}</code></div>`;
+                return;
+            }
             const erroChave = validarChave(algo, chave);
             if (erroChave) {
                 keyInput.classList.toggle('chave-invalida', !!chave.trim());
@@ -2570,9 +2886,9 @@ AES-256    256 bits (32 bytes)    14</pre>
             const algo = document.getElementById('cryptoSelect').value;
             const inp = document.getElementById('cryptoKeyInput');
             // E2E não usa chave digitada — as chaves RSA são automáticas
-            inp.classList.toggle('hidden', algo === 'none' || algo === 'e2e');
+            inp.classList.toggle('hidden', algo === 'none' || algo === 'e2e' || algo === 'ecc');
             // Placeholder mostra a regra da chave; César abre o teclado numérico no celular
-            inp.placeholder = (algo === 'none' || algo === 'e2e') ? 'Chave...'
+            inp.placeholder = (algo === 'none' || algo === 'e2e' || algo === 'ecc') ? 'Chave...'
                 : 'Chave: ' + regraChave(algo) + (algo === 'caesar' ? ' (ex.: 7)' : '');
             inp.inputMode = algo === 'caesar' ? 'numeric' : 'text';
             inp.classList.remove('chave-invalida');
@@ -2588,7 +2904,8 @@ AES-256    256 bits (32 bytes)    14</pre>
                 vigenere: simetricas + 'Vigenère repete uma palavra-chave para deslocar as letras. Chave: SOMENTE LETRAS E NÚMEROS (sem espaços ou símbolos). Fraca por ataques de frequência.',
                 xor: simetricas + 'XOR aplica operação binária com a chave. Chave: qualquer texto, não vazio. Fraca: reutilização da chave revela padrões.',
                 aes: simetricas + 'AES-256-GCM é forte (padrão mundial), mas como a chave viaja com a mensagem, quem a obtém lê tudo. Senha: qualquer texto, não vazio.',
-                e2e: 'PONTA A PONTA (RSA-2048): a mensagem é cifrada com a chave PÚBLICA de cada destinatário. A chave privada NUNCA sai do computador de quem recebe — nem o servidor consegue descriptografar. A Sala ADM vê apenas ciphertext.'
+                e2e: 'PONTA A PONTA (RSA-2048): a mensagem é cifrada com a chave PÚBLICA de cada destinatário. A chave privada NUNCA sai do computador de quem recebe — nem o servidor consegue descriptografar. A Sala ADM vê apenas ciphertext.',
+                ecc: 'PONTA A PONTA (ECC P-256): o ECDH combina as chaves pública e privada para criar um segredo que só os dois lados conhecem; esse segredo vira uma chave AES-256-GCM que cifra a mensagem. Chaves automáticas, nada para digitar. A Sala ADM vê apenas ciphertext.'
             };
             dica.textContent = dicas[algo] || '';
         }

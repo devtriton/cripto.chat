@@ -111,7 +111,7 @@ async function enviarEmailOTP(email, codigo, nome) {
 // ============================================================
 
 const salas = new Map();       // salaId -> { nome, usuarios: Set } — TODAS as salas são públicas
-const usuarios = new Map();    // email -> { ws, nome, salaAtual }
+const usuarios = new Map();    // email -> { ws, nome, salaAtual, lastActivity, entrouEmSalaEm }
 const salaAdmWs = new Set();   // Conexões da sala ADM
 const otps = new Map();        // email -> { codigo, nome, expira }
 const chavesPublicas = new Map(); // email -> { chavePublica, nome } — chaves RSA públicas (E2E). O servidor NUNCA recebe chaves privadas.
@@ -415,8 +415,12 @@ wss.on('connection', (ws) => {
         
         // Registrar usuário (mantém as outras abas já conectadas com este email)
         const usuarioLogin = usuarios.get(email);
-        if (usuarioLogin) { usuarioLogin.ws = ws; usuarioLogin.nome = result.nome; }
-        else usuarios.set(email, { ws, nome: result.nome, salaAtual: null });
+        const agora = new Date();
+        if (usuarioLogin) { 
+            usuarioLogin.ws = ws; 
+            usuarioLogin.nome = result.nome; 
+            usuarioLogin.lastActivity = agora;
+        } else usuarios.set(email, { ws, nome: result.nome, salaAtual: null, lastActivity: agora, entrouEmSalaEm: null });
         registrarConexao(email, ws);
         ws.email = email;
         
@@ -444,11 +448,13 @@ wss.on('connection', (ws) => {
         // Re-registrar usuário com a nova conexão ws.
         // IMPORTANTE: não zera a sala atual nem apaga as outras abas conectadas.
         const usuarioExistente = usuarios.get(email);
+        const agora = new Date();
         if (usuarioExistente) {
           usuarioExistente.ws = ws;
           if (nome) usuarioExistente.nome = nome;
+          usuarioExistente.lastActivity = agora;
         } else {
-          usuarios.set(email, { ws, nome: nomeUser, salaAtual: null });
+          usuarios.set(email, { ws, nome: nomeUser, salaAtual: null, lastActivity: agora, entrouEmSalaEm: null });
         }
         registrarConexao(email, ws);
         ws.email = email;
@@ -521,7 +527,10 @@ wss.on('connection', (ws) => {
         });
         
         const user = usuarios.get(ws.email);
-        if (user) user.salaAtual = salaId;
+        if (user) { 
+            user.salaAtual = salaId; 
+            user.entrouEmSalaEm = new Date();
+        }
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
         ws.send(JSON.stringify({
@@ -556,7 +565,10 @@ wss.on('connection', (ws) => {
         }
         
         sala.usuarios.add(ws.email);
-        if (user) user.salaAtual = salaId;
+        if (user) { 
+            user.salaAtual = salaId; 
+            user.entrouEmSalaEm = new Date();
+        }
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
         // Notificar todos da sala
@@ -581,7 +593,7 @@ wss.on('connection', (ws) => {
         // Atualizar a lista de salas de todos
         avisarAtualizacaoSalas();
         
-        console.log(`[SALA] ${ws.email} entrou em ${sala.nome}`);
+        console.log(`[SALA] ${ws.email} entrou em ${sala.nome} em ${new Date().toISOString()}`);
         break;
       }
       
@@ -591,6 +603,7 @@ wss.on('connection', (ws) => {
       case 'mensagem': {
         const user = usuarios.get(ws.email);
         if (!user || !user.salaAtual) return;
+        user.lastActivity = new Date();
         
         const salaId = user.salaAtual;
         const sala = salas.get(salaId);
@@ -630,6 +643,8 @@ wss.on('connection', (ws) => {
       // MENSAGEM DIRETA (@usuario)
       // --------------------------------------------------------
       case 'mensagem_direta': {
+        const user = usuarios.get(ws.email);
+        if (user) user.lastActivity = new Date();
         const { paraEmail, texto, criptografada, algoritmo } = data;
         
         const msg = {
@@ -710,8 +725,13 @@ wss.on('connection', (ws) => {
       case 'sair_sala': {
         const user = usuarios.get(ws.email);
         if (user && user.salaAtual) {
+          const salaId = user.salaAtual;
+          const salaNome = salas.get(salaId)?.nome || salaId;
+          const entrouEm = user.entrouEmSalaEm ? new Date(user.entrouEmSalaEm).toISOString() : 'desconhecido';
+          console.log(`[SALA] ${ws.email} saiu de "${salaNome}" (${salaId}) em ${new Date().toISOString()} — entrou em ${entrouEm}`);
           removerUsuarioDaSala(user.salaAtual, ws.email);
           user.salaAtual = null;
+          user.entrouEmSalaEm = null;
         }
         ws.entrouEmSala = false;
         break;
@@ -786,6 +806,53 @@ function iniciarHeartbeat() {
 }
 
 iniciarHeartbeat();
+
+// ============================================================
+// TIMEOUT DE INATIVIDADE (30 min sem interação → sai da sala)
+// ============================================================
+const INATIVIDADE_MAX_MS = 30 * 60 * 1000; // 30 minutos
+const CHECK_INTERVAL_MS = 60 * 1000;       // verifica a cada 1 minuto
+
+function iniciarTimeoutInatividade() {
+  setInterval(() => {
+    const agora = Date.now();
+    for (const [email, user] of usuarios.entries()) {
+      if (!user.salaAtual) continue; // não está em sala
+      if (!user.lastActivity) continue; // sem registro de atividade
+      
+      const inativoHa = agora - new Date(user.lastActivity).getTime();
+      if (inativoHa >= INATIVIDADE_MAX_MS) {
+        const salaId = user.salaAtual;
+        const sala = salas.get(salaId);
+        const salaNome = sala?.nome || salaId;
+        const entrouEm = user.entrouEmSalaEm ? new Date(user.entrouEmSalaEm).toISOString() : 'desconhecido';
+        const ultimaAtividade = user.lastActivity ? new Date(user.lastActivity).toISOString() : 'desconhecida';
+        
+        console.log(`[TIMEOUT] ${email} removido da sala "${sala.nome}" (${salaId}) por inatividade de ${Math.round(inativoHa / 60000)} min — entrou em ${entrouEm}, última atividade em ${ultimaAtividade}`);
+        
+        removerUsuarioDaSala(salaId, email);
+        user.salaAtual = null;
+        user.entrouEmSalaEm = null;
+        
+        // Notificar conexões do usuário (outras abas) que saiu por timeout
+        const conjunto = conexoes.get(email);
+        if (conjunto) {
+          for (const ws of conjunto) {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ 
+                tipo: 'timeout_sala', 
+                salaId, 
+                mensagem: 'Você foi removido da sala por inatividade (30 min sem interação).' 
+              }));
+            }
+          }
+        }
+      }
+    }
+  }, CHECK_INTERVAL_MS);
+}
+
+iniciarTimeoutInatividade();
 
 // ============================================================
 // UTILITÁRIOS

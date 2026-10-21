@@ -1579,12 +1579,12 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             // Pong handler: server heartbeat → client responds automatically (browser does this)
             // But we also send our own ping to keep Apache proxy / mobile alive
             ws.onpong = () => { ws._missedPings = 0; };
-            // Client-side ping: mantém a conexão viva no Apache proxy / mobile background
+            // Client-side ping: mantém a conexão viva no Render proxy / Apache proxy / mobile background
             ws._pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
                     try { ws.ping(); } catch (e) { console.warn('[WS] Ping falhou, fechando'); ws.close(); }
                 } else { clearInterval(ws._pingInterval); }
-            }, 30000); // ping a cada 30s
+            }, 10000); // ping a cada 10s (Render free tier fecha conexões ociosas ~30-55s)
             // Ao FECHAR (queda, reinício do servidor etc.): agenda reconexão automática
             ws.onclose = () => { if (ws._pingInterval) clearInterval(ws._pingInterval); if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; agendarReconexao(); };
             // ERRO: NÃO zera "canal" — o mesmo socket ainda pode estar vivo.

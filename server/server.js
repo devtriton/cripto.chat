@@ -794,8 +794,10 @@ wss.on('connection', (ws) => {
 // ============================================================
 // HEARTBEAT (ping/pong) — detecta conexões mortas / mobile suspend
 // ============================================================
-const HEARTBEAT_INTERVAL = 25000;   // ping a cada 25s
-const MAX_MISSED_PINGS = 2;         // fecha após 2 pings sem resposta (~50-75s)
+// Render free tier: proxy fecha conexões WebSocket ociosas ~30-55s
+// Ping mais frequente (10s) + tolerância maior mantém conexão viva
+const HEARTBEAT_INTERVAL = 10000;   // ping a cada 10s (antes 25s)
+const MAX_MISSED_PINGS = 5;         // tolera até 5 pings perdidos (~50s)
 
 function iniciarHeartbeat() {
   setInterval(() => {

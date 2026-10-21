@@ -792,12 +792,12 @@ wss.on('connection', (ws) => {
 });
 
 // ============================================================
-// HEARTBEAT (ping/pong) — detecta conexões mortas / mobile suspend
+// HEARTBEAT com payload real — mantém conexão viva no Render free tier
 // ============================================================
 // Render free tier: proxy fecha conexões WebSocket ociosas ~30-55s
-// Ping mais frequente (10s) + tolerância maior mantém conexão viva
-const HEARTBEAT_INTERVAL = 10000;   // ping a cada 10s (antes 25s)
-const MAX_MISSED_PINGS = 5;         // tolera até 5 pings perdidos (~50s)
+// Heartbeat com payload JSON real mantém proxy ativo
+const HEARTBEAT_INTERVAL = 10000;   // envia heartbeat a cada 10s
+const MAX_MISSED_PINGS = 5;         // tolera até 5 heartbeats perdidos (~50s)
 
 function iniciarHeartbeat() {
   setInterval(() => {
@@ -807,9 +807,17 @@ function iniciarHeartbeat() {
       ws._missedPings++;
       if (ws._missedPings > MAX_MISSED_PINGS) {
         console.log(`[HEARTBEAT] Fechando conexão morta: ${ws.email || 'sem-email'} (missed=${ws._missedPings})`);
-        return ws.terminate(); // força close → dispara ws.on('close')
+        return ws.terminate();
       }
-      try { ws.ping(); } catch (e) { ws.terminate(); }
+      try {
+        // Heartbeat com payload JSON real (não apenas ping vazio)
+        // Isso gera tráfego REAL que o proxy do Render detecta
+        ws.send(JSON.stringify({
+          tipo: 'heartbeat',
+          timestamp: Date.now(),
+          serverTime: new Date().toISOString()
+        }));
+      } catch (e) { ws.terminate(); }
     });
   }, HEARTBEAT_INTERVAL);
 }

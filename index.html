@@ -843,7 +843,7 @@
                         <h2>Criar Nova Sala</h2>
                         <div class="form-group">
                             <label for="novaSalaNome">Nome da Sala:</label>
-                            <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024">
+                            <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024" onkeydown="if(event.key==='Enter') criarSala()">
                         </div>
                         <button class="btn-success" onclick="criarSala()">Criar Sala</button>
                     </div>
@@ -1701,7 +1701,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         mostrarChat();
-                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong>`);
+                        const horaCriacao = data.dataHora ? new Date(data.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong> <span style="color:var(--texto-fraco);font-size:0.85em;">${horaCriacao}</span>`);
                     }
                     break;
 
@@ -1718,7 +1719,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         atualizarListaUsuarios();
                         mostrarChat();
                         if (primeiraVez) {
-                            exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong>`);
+                            const horaEntrada = data.dataHora ? new Date(data.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(data.nome)}</strong> <span style="color:var(--texto-fraco);font-size:0.85em;">${horaEntrada}</span>`);
                         }
                     }
                     break;
@@ -1733,7 +1735,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         atualizarInfoSala();
                         atualizarListaUsuarios();
                         mostrarChat();
-                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(currentSala.nome || data.salaId)}</strong>`);
+                        const horaEntradaPaginas = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(currentSala.nome || data.salaId)}</strong> <span style="color:var(--texto-fraco);font-size:0.85em;">${horaEntradaPaginas}</span>`);
                     } else if (currentSala && currentSala.id === data.salaId) {
                         const jaEstava = currentSala.usuarios.find(u => u.email === data.email);
                         if (!jaEstava) {

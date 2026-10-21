@@ -534,10 +534,12 @@ wss.on('connection', (ws) => {
         }
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
         
+        const agoraCriacao = new Date().toISOString();
         ws.send(JSON.stringify({
           tipo: 'sala_criada',
           salaId,
-          nome
+          nome,
+          dataHora: agoraCriacao
         }));
         
         // Avisar todos os clientes para atualizarem a lista de salas
@@ -582,6 +584,7 @@ wss.on('connection', (ws) => {
           dataHora: agora
         });
         
+        const agoraEntrada = new Date().toISOString();
         // Enviar lista de usuários para quem entrou
         ws.send(JSON.stringify({
           tipo: 'sala_info',
@@ -590,7 +593,8 @@ wss.on('connection', (ws) => {
           usuarios: Array.from(sala.usuarios).map(email => ({
             email,
             nome: usuarios.get(email)?.nome
-          }))
+          })),
+          dataHora: agoraEntrada
         }));
         
         // Atualizar a lista de salas de todos

@@ -1,4 +1,16 @@
-{
+﻿{
+  "name": "cripto-chat",
+  "version": "1.0.0",
+  "description": "Objeto Educacional para demonstraÃ§Ã£o de Criptografia",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "nodemailer": "^10.1.2",
+    "ws": "^8.16.0"
+  },
   "devDependencies": {
     "sharp": "^0.35.5"
   }

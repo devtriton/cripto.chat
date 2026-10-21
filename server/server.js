@@ -167,7 +167,14 @@ const MIME = {
   '.txt':  'text/plain; charset=utf-8'
 };
 
-const PUBLIC_DIR = path.resolve(__dirname, 'public');
+// Localiza a pasta pública (prioriza server/public, com fallback automático)
+let PUBLIC_DIR = path.resolve(__dirname, 'public');
+if (!fs.existsSync(PUBLIC_DIR)) {
+  const fallbackRoot = path.resolve(__dirname, '..', 'public');
+  if (fs.existsSync(fallbackRoot)) {
+    PUBLIC_DIR = fallbackRoot;
+  }
+}
 
 const server = http.createServer((req, res) => {
   // Trata apenas requisições GET e HEAD
@@ -951,19 +958,30 @@ function gerarIdSala() {
 const PORTA = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-server.listen(PORTA, HOST, () => {
-  console.log('========================================');
-  console.log('  cripto.chat: Servidor de Criptografia');
-  console.log(`  Rodando em http://localhost:${PORTA}`);
-  console.log(`  Host: ${HOST}`);
-  console.log('========================================');
-  
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        console.log(`  Acesso na rede local: http://${iface.address}:${PORTA}`);
+if (isNaN(Number(PORTA))) {
+  // Socket UNIX / Named Pipe (utilizado pelo Phusion Passenger no Plesk / cPanel)
+  server.listen(PORTA, () => {
+    console.log('========================================');
+    console.log('  cripto.chat: Servidor de Criptografia');
+    console.log(`  Rodando no socket do Plesk/Passenger: ${PORTA}`);
+    console.log('========================================');
+  });
+} else {
+  // Porta TCP normal (localhost, VPS ou Docker)
+  server.listen(Number(PORTA), HOST, () => {
+    console.log('========================================');
+    console.log('  cripto.chat: Servidor de Criptografia');
+    console.log(`  Rodando em http://localhost:${PORTA}`);
+    console.log(`  Host: ${HOST}`);
+    console.log('========================================');
+    
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          console.log(`  Acesso na rede local: http://${iface.address}:${PORTA}`);
+        }
       }
     }
-  }
-});
+  });
+}

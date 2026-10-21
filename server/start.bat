@@ -1,6 +1,0 @@
-@echo off
-echo Instalando dependencias...
-call npm install
-echo Iniciando servidor OBJ-EDU...
-call npm start
-pause

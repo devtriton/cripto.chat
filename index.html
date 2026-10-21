@@ -824,7 +824,7 @@
                 <button class="btn-success" onclick="verificarOTP()">Verificar e Entrar</button>
                 <button class="btn-secondary" onclick="voltarParaEmail()">Voltar</button>
             </div>
-            <div class="login-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
+            <div class="login-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
         </div>
 
         <!-- ========== PAINEL PRINCIPAL ========== -->
@@ -941,7 +941,7 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
+            <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
 
             <!-- TAB: EDUCACIONAL -->
             <div id="tabEducacional" class="tab-content">
@@ -1317,7 +1317,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     </ul>
                 </div>
             </div>
-            <div class="tab-footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
+            <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
         </div>
 
         <!-- ADM MODAL -->
@@ -1347,7 +1347,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             <button class="btn-secondary tu-btn fb-sair" onclick="desconectar()">Sair</button>
         </div>
     </div>
-    <div class="footer-copyright">© 2025 cripto.chat — Projeto educacional de criptografia</div>
+    <div class="footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
 
     <script>
         // ============================================================
@@ -1439,8 +1439,10 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
         if (MODO !== 'pages') {
             window.addEventListener('load', () => {
-                console.log('%c🔐 cripto.chat v2025', 'font-size:14px;font-weight:bold;color:#c4a35a');
-                console.log('%c© 2025 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
+                console.log('%c🔐 cripto.chat v2026', 'font-size:14px;font-weight:bold;color:#c4a35a');
+                console.log('%c© 2026 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
+                console.log('%cLicenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)', 'font-size:10px;color:#888');
+                console.log('%cMarlon Antonio Stoeberl — Rio Negro, Paraná', 'font-size:10px;color:#888');
                 console.log('[cripto.chat] Conectando WebSocket...');
                 const sessaoRestaurada = restaurarSessaoSalva();
                 tentativasWs = 0;
@@ -3144,7 +3146,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
     // PWA Install prompt handling
     let deferredPrompt = null;
-    let installDismissed = localStorage.getItem('pwa_install_dismissed') === 'true';
+    // Dismissed apenas para a sessão atual (limpa no logout/login)
+    let installDismissed = sessionStorage.getItem('pwa_install_dismissed') === 'true';
     const installBtn = document.createElement('div');
     installBtn.id = 'pwaInstallBtn';
     installBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;display:none;';
@@ -3152,7 +3155,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         <button class="btn-secondary" id="pwaInstallAction" style="padding:10px 14px;border-radius:24px;box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:13px;display:flex;align-items:center;gap:6px;">
             📱 Instalar app
         </button>
-        <button id="pwaInstallClose" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background:var(--painel-bg);border:1px solid var(--painel-borda);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto-fraco);line-height:1;" title="Ocultar">✕</button>
+        <button id="pwaInstallClose" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background:var(--painel-bg);border:1px solid var(--painel-borda);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto-fraco);line-height:1;" title="Ocultar por esta sessão">✕</button>
     `;
     if (!installDismissed) {
         document.body.appendChild(installBtn);
@@ -3169,8 +3172,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
     };
     installCloseBtn.onclick = () => {
         installBtn.style.display = 'none';
-        localStorage.setItem('pwa_install_dismissed', 'true');
-        console.log('[PWA] Install prompt dismissed by user');
+        sessionStorage.setItem('pwa_install_dismissed', 'true');
+        console.log('[PWA] Install prompt dismissed for this session');
     };
 
     window.addEventListener('beforeinstallprompt', (e) => {

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: cripto-chat
+    runtime: node
+    plan: free
+    buildCommand: cd server && npm ci
+    startCommand: cd server && node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: NODE_VERSION
+        value: 20.x
+    # Configure estas variáveis no dashboard do Render (Environment Variables):
+    # SMTP_HOST=smtp.gmail.com
+    # SMTP_PORT=587
+    # SMTP_USER=seu@email.com
+    # SMTP_PASS=sua_senha_app_16_chars
+    # SMTP_FROM="cripto.chat <noreply@seudominio.com>"
+    # RENDER_EXTERNAL_HOSTNAME=seu-app.onrender.com
+    # NODE_ENV=production
+    # PORT=3000
+    autoDeploy: true

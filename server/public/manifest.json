@@ -1,0 +1,43 @@
+{
+  "name": "cripto.chat",
+  "short_name": "cripto.chat",
+  "description": "Chat educacional com criptografia: César, Vigenère, XOR, AES-256, E2E (RSA/ECC). Salas, DMs, menções, Sala ADM.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#c4a35a",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Demonstração",
+      "short_name": "Demo",
+      "description": "Testar algoritmos de criptografia",
+      "url": "/?tab=demo",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Guia Educacional",
+      "short_name": "Guia",
+      "description": "Conceitos e detalhes dos algoritmos",
+      "url": "/?tab=educacional",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -476,6 +476,24 @@
             display: inline-block; padding: 2px 8px; border-radius: 4px;
             font-size: 11px; background: var(--verde-txt); color: #fff; margin-left: 8px;
         }
+        /* Tabelas comparativas didáticas */
+        .tabela-comparativa {
+            width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px;
+            background: var(--painel); border: 1px solid var(--painel-borda); border-radius: 8px;
+            overflow: hidden;
+        }
+        .tabela-comparativa th, .tabela-comparativa td {
+            padding: 10px 12px; border: 1px solid var(--painel-borda); text-align: left;
+        }
+        .tabela-comparativa th {
+            background: rgba(var(--acento-rgb), 0.12); color: var(--acento); font-weight: 600;
+        }
+        .tabela-comparativa tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+        .demo-ferramentas button { font-size: 12px; padding: 6px 12px; }
+        .badge-status { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-verde { background: rgba(67, 233, 123, 0.2); color: var(--verde-txt); border: 1px solid var(--verde-txt); }
+        .badge-amarelo { background: rgba(245, 166, 35, 0.2); color: var(--aviso); border: 1px solid var(--aviso); }
+        .badge-roxo { background: rgba(138, 43, 226, 0.2); color: #bb86fc; border: 1px solid #bb86fc; }
         .user-list-item {
             padding: 8px 12px; margin-bottom: 5px; border-radius: 8px;
             background: var(--painel-bg); cursor: pointer; transition: background 0.2s;
@@ -794,6 +812,7 @@
         <div id="loginPanel" class="panel login-container">
             <!-- Etapa 1: Email -->
             <div id="loginStep1" class="login-step">
+                <div id="avisoInatividade" class="hidden" style="background: rgba(245, 166, 35, 0.15); border: 1px solid var(--aviso); color: var(--texto-forte); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; line-height: 1.5; text-align: left;"></div>
                 <h2>Bem-vindo ao cripto.chat</h2>
                 <div class="step-indicator">
                     <div class="step-dot active"></div>
@@ -874,6 +893,7 @@
                                                     title="Ver usuários na sala">👥 <span id="presencaCount">0</span></button>
                                             <div id="presencaPopup" class="presenca-popup hidden"></div>
                                         </div>
+                                        <button class="btn-secondary" onclick="exportarRelatorioAtividade()" title="Exportar Relatório de Atividade Pedagógica" style="padding: 4px 10px; font-size: 12px; margin-left: 6px;">📄 Relatório</button>
                                     </div>
                                 </div>
                             </div>
@@ -936,8 +956,16 @@
                             <label>Texto original:</label>
                             <textarea id="demoTexto" rows="3" placeholder="Digite o texto para criptografar..."></textarea>
                         </div>
-                        <button class="btn-success" onclick="demoCriptografar()">Criptografar</button>
-                        <button class="btn-primary" onclick="demoDescriptografar()">Descriptografar</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                            <button class="btn-success" onclick="demoCriptografar()">Criptografar</button>
+                            <button class="btn-primary" onclick="demoDescriptografar()">Descriptografar</button>
+                        </div>
+                        <div class="demo-ferramentas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--painel-borda);">
+                            <button class="btn-secondary" onclick="demoQuebrarCesar()" title="Testa todas as 26 rotações possíveis instantaneamente">💥 Força Bruta: Quebrar César (26 Chaves)</button>
+                            <button class="btn-secondary" onclick="demoAnaliseFrequencia()" title="Compara as estatísticas de letras do texto cifrado com a Língua Portuguesa">📊 Análise de Frequência</button>
+                            <button class="btn-secondary" onclick="demoHashSha256()" title="Calcula o Hash SHA-256 e demonstra o efeito avalanche">🛡️ Testar Hash SHA-256</button>
+                            <button class="btn-secondary" onclick="exportarRelatorioAtividade()" title="Baixar relatório de estudos desta sessão">📄 Exportar Relatório de Atividade</button>
+                        </div>
                         <div id="demoResultado" style="margin-top: 15px;"></div>
                     </div>
                 </div>
@@ -949,19 +977,30 @@
                 <div class="panel">
                     <h2>Guia Educacional: Fundamentos da Criptografia</h2>
                     <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
-                    <h3>1. O que é Criptografia?</h3>
-                    <p>Criptografia é o processo de transformar uma mensagem legível (texto claro) em uma mensagem ilegível (texto cifrado), 
-                    de modo que apenas quem possui a chave correta possa reverter o processo.</p>
-                    <h3>2. Criptografia Simétrica</h3>
-                    <p>Neste projeto, usamos <strong>criptografia simétrica</strong>: a mesma chave é usada para criptografar e descriptografar.
-                    Isso significa que o remetente e o destinatário precisam compartilhar a mesma chave.</p>
-                    <h3>3. Algoritmos Implementados</h3>
+                    <h3>1. O que é Criptografia e a Tríade CIA</h3>
+                    <p>A <strong>Criptografia</strong> (do grego <em>kryptós</em>, "escondido", e <em>gráphein</em>, "escrita") é a ciência e a arte de transformar dados legíveis (<strong>texto claro / plaintext</strong>) em uma forma incompreensível (<strong>texto cifrado / ciphertext</strong>), de modo que apenas pessoas autorizadas consigam recuperar o conteúdo original.</p>
+                    <p>Na Segurança da Informação, a criptografia é o pilar que sustenta a chamada <strong>Tríade CIA</strong>:</p>
                     <ul style="margin-left: 20px; line-height: 2;">
-                        <li><strong>Cifra de César:</strong> Desloca cada letra por N posições no alfabeto. Simples, mas vulnerável.</li>
-                        <li><strong>Cifra de Vigenère:</strong> Usa uma palavra-chave para variar o deslocamento. Mais segura que César.</li>
-                        <li><strong>XOR:</strong> Operação bit a bit com chave. Base para muitos sistemas modernos.</li>
-                        <li><strong>AES-256:</strong> Padrão avançado. Usado em sistemas reais de segurança.</li>
-                        <li><strong>E2E (RSA-2048):</strong> Chave pública cifra, chave privada decifra — só o destinatário lê.</li>
+                        <li><strong>Confidencialidade (Confidentiality):</strong> Garantir que a informação não seja lida por pessoas não autorizadas, intermediários ou provedores de rede (resolvido por cifras simétricas e assimétricas).</li>
+                        <li><strong>Integridade (Integrity):</strong> Garantir que a mensagem recebida não foi adulterada, corrompida ou falsificada em trânsito (resolvido por códigos de autenticação como HMAC, modos autenticados como GCM e Hashes como SHA-256).</li>
+                        <li><strong>Autenticidade e Não-repúdio (Authenticity):</strong> Garantir a identidade real de quem enviou e impedir que o emissor negue a autoria da mensagem (resolvido por chaves privadas e assinaturas digitais).</li>
+                    </ul>
+
+                    <h3>2. Criptografia Simétrica vs. Assimétrica: O Desafio da Distribuição de Chaves</h3>
+                    <p>No universo da criptografia, existem dois grandes paradigmas demonstrados neste projeto:</p>
+                    <div style="background: rgba(var(--acento-rgb), 0.05); border: 1px solid var(--painel-borda); border-radius: 8px; padding: 14px; margin-bottom: 15px;">
+                        <p><strong>A) Criptografia Simétrica (Chave Secreta Compartilhada):</strong> A mesma chave é usada para <em>cifrar</em> e <em>decifrar</em>. É extremamente rápida e eficiente em volume de dados (ex.: César, Vigenère, XOR e AES-256).<br>
+                        <strong>O Grande Problema:</strong> Como remetente e destinatário combinam essa chave em uma rede insegura (Internet) sem que alguém intercepte? Se a chave viajar com a mensagem, qualquer um (como a Sala ADM) lê o conteúdo.</p>
+                        <p><strong>B) Criptografia Assimétrica / Ponta a Ponta (Par de Chaves Pública/Privada):</strong> Cada usuário possui duas chaves matematicamente vinculadas: uma <strong>chave pública</strong> (que todos conhecem e serve para <em>trancar</em>) e uma <strong>chave privada</strong> (que nunca sai do computador e serve para <em>destrancar</em>). Resolve o problema da troca de chaves (ex.: RSA-2048 e ECC P-256 / Curvas Elípticas).</p>
+                    </div>
+
+                    <h3>3. Algoritmos Implementados neste Objeto Educacional</h3>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Cifra de César:</strong> Substituição monoalfabética histórica por rotação N (espaço minúsculo de 26 chaves).</li>
+                        <li><strong>Cifra de Vigenère:</strong> Substituição polialfabética que varia o deslocamento via palavra-chave.</li>
+                        <li><strong>XOR:</strong> Operação lógica binária bit a bit; base de cifras de fluxo e do <em>One-Time Pad</em>.</li>
+                        <li><strong>AES-256-GCM:</strong> O padrão criptográfico mundial moderno de chave simétrica autenticada.</li>
+                        <li><strong>E2E (RSA-2048):</strong> Criptografia assimétrica ponta a ponta onde só o detentor da chave privada lê.</li>
                         <li><strong>ECC (curvas elípticas):</strong> ECDH P-256 + AES-256-GCM — a base do TLS moderno e do WhatsApp.</li>
                     </ul>
                     <h4 id="guia-cifra-cesar" style="margin-top: 18px;">3.1 Cifra de César (Rot-N) — em detalhes</h4>
@@ -1304,18 +1343,101 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         <p><strong>Erros comuns:</strong> "ECC é só para Bitcoin" → está no TLS e no WhatsApp; "chave de 256 bits é fraca" →
                         equivale a ~RSA-3072; "o ECDH cifra a mensagem" → ele <em>deriva a chave</em>; quem cifra é o AES.</p>
                     </div>
-                    <h3>4. A Sala ADM</h3>
-                    <p>A Sala ADM representa o <strong>ponto de vista do servidor</strong>. Tudo que passa pelo servidor é visível aqui.</p>
+                    <h3>4. A Sala ADM e o Ataque Man-in-the-Middle (Homem no Meio)</h3>
+                    <p>A <strong>Sala ADM</strong> representa o ponto de vista de um <strong>intermediário na rede</strong> — pode ser o próprio servidor da aplicação, o provedor de internet (ISP), um roteador Wi-Fi público ou um invasor executando um ataque <em>Man-in-the-Middle</em> (MITM).</p>
                     <ul style="margin-left: 20px; line-height: 2;">
-                        <li><strong>Sem criptografia:</strong> O servidor vê a mensagem em texto claro (verde na ADM).</li>
-                        <li><strong>Com criptografia:</strong> O servidor vê apenas o texto cifrado (vermelho na ADM).</li>
+                        <li><strong>Mensagens em Texto Claro:</strong> O servidor lê o texto integralmente (aparece em verde na Sala ADM).</li>
+                        <li><strong>Mensagens Simétricas (César, Vigenère, XOR, AES-256):</strong> Para fins pedagógicos nesta demonstração, a chave viaja junto com o pacote para que os outros colegas na sala consigam decifrar. O resultado é imediato: o servidor captura a chave e disponibiliza o botão <code>🔓 Descriptografar</code>. <strong>Conclusão didática:</strong> Sem um canal seguro prévio para trocar a chave, a cifra simétrica é ineficaz contra quem intercepta o tráfego.</li>
+                        <li><strong>Mensagens Ponta a Ponta (RSA e ECC):</strong> O navegador cifra os blocos com a chave pública de cada destinatário. A chave privada correspondente <strong>nunca sai do navegador do destinatário</strong>. O servidor vê apenas uma sequência ininteligível de caracteres (ciphertext) e recebe o aviso de bloqueio <code>⛔ O servidor NÃO pode descriptografar</code>.</li>
                     </ul>
-                    <h3>5. Conceitos Importantes</h3>
+
+                    <h3>5. Integridade, Hashes e o Modo Autenticado (GCM)</h3>
+                    <p>Criptografar esconde o texto, mas não impede que um invasor altere os bits da mensagem em trânsito (por exemplo, adulterando valores ou comandos). Para garantir que a mensagem não foi modificada, usam-se técnicas de <strong>integridade</strong>:</p>
                     <ul style="margin-left: 20px; line-height: 2;">
-                        <li><strong>Texto Claro (Plaintext):</strong> Mensagem original, legível.</li>
-                        <li><strong>Texto Cifrado (Ciphertext):</strong> Mensagem após criptografia, ilegível.</li>
-                        <li><strong>Chave:</strong> Segredo usado para criptografar/descriptografar.</li>
-                        <li><strong>Ataque de Força Bruta:</strong> Tentar todas as chaves possíveis.</li>
+                        <li><strong>Hashes Criptográficos (ex: SHA-256):</strong> Funções matemáticas de mão única que geram uma impressão digital fixa de 256 bits. Se um único bit for alterado no texto original, mais de 50% dos bits do hash mudam (o chamado <em>Efeito Avalanche</em>).</li>
+                        <li><strong>Modo Galois/Counter Mode (GCM):</strong> No AES-256-GCM utilizado aqui, cada mensagem cifrada inclui uma etiqueta de autenticação (<em>Auth Tag</em>). Se qualquer bit do texto cifrado for adulterado no caminho, a decifração falha imediatamente, alertando sobre a quebra de integridade.</li>
+                    </ul>
+
+                    <h3>6. Verificação de Identidade e Código de Segurança (Fingerprint / SAS)</h3>
+                    <p>Mesmo na criptografia assimétrica ponta a ponta, existe um risco: e se o servidor ou intermediário malicioso substituir a chave pública do seu colega pela chave pública do próprio atacante? O atacante decifraria com a sua própria chave privada e cifraria novamente para o destinatário sem ninguém desconfiar.</p>
+                    <p>É exatamente por isso que mensageiros como <strong>Signal e WhatsApp</strong> possuem a função de <strong>"Confirmar Código de Segurança"</strong> (ou <em>Safety Number / Fingerprint</em>). Ao comparar esse código com seu contato (pessoalmente ou por outro canal), você confirma que a chave pública recebida é legítima e que nenhum intermediário está bisbilhotando a conversa.</p>
+
+                    <h3>7. Tabela Comparativa Resumida dos 6 Algoritmos</h3>
+                    <div style="overflow-x: auto;">
+                    <table class="tabela-comparativa">
+                        <thead>
+                            <tr>
+                                <th>Algoritmo</th>
+                                <th>Classificação</th>
+                                <th>Tamanho da Chave</th>
+                                <th>Segurança / Vulnerabilidade</th>
+                                <th>Sala ADM Consegue Ler?</th>
+                                <th>Onde é Usado no Mundo Real?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Cifra de César</strong></td>
+                                <td>Simétrica Clássica</td>
+                                <td>0 a 25 (apenas 26 chaves)</td>
+                                <td>Nula; quebrada em &lt; 1 ms por força bruta ou análise de frequência.</td>
+                                <td><span class="badge-status badge-amarelo">SIM (chave viaja junto)</span></td>
+                                <td>Didática e jogos (ROT-13 para spoilers).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cifra de Vigenère</strong></td>
+                                <td>Simétrica Polialfabética</td>
+                                <td>Tamanho da palavra-chave</td>
+                                <td>Muito fraca; quebra com o teste de Kasiski se a chave for repetitiva.</td>
+                                <td><span class="badge-status badge-amarelo">SIM (chave viaja junto)</span></td>
+                                <td>Marcos históricos (século XVI ao XIX).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cifra XOR</strong></td>
+                                <td>Simétrica em Fluxo</td>
+                                <td>Tamanho da chave (bytes)</td>
+                                <td>Se chave for curta, é fraca; se chave for do tamanho do texto e única, é o <em>One-Time Pad</em> (perfeito).</td>
+                                <td><span class="badge-status badge-amarelo">SIM (chave viaja junto)</span></td>
+                                <td>Base de circuitos lógicos e geradores pseudoaleatórios (RC4, ChaCha20).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AES-256-GCM</strong></td>
+                                <td>Simétrica Moderna em Bloco</td>
+                                <td>256 bits (32 bytes)</td>
+                                <td>Altíssima; resistente a qualquer computador clássico existente (2<sup>256</sup> operações).</td>
+                                <td><span class="badge-status badge-amarelo">SIM nesta demo (em sistema real a chave não viaja)</span></td>
+                                <td>HTTPS, Wi-Fi WPA3, bancos, discos criptografados (BitLocker, FileVault).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RSA-2048 (E2E)</strong></td>
+                                <td>Assimétrica Ponta a Ponta</td>
+                                <td>2048 bits (módulo primo)</td>
+                                <td>Alta; baseada na dificuldade de fatoração de produtos de primos gigantes.</td>
+                                <td><span class="badge-status badge-roxo">NÃO (chave privada só no navegador)</span></td>
+                                <td>Certificados digitais SSL/TLS, SSH, PGP/GPG.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ECC P-256 (E2E)</strong></td>
+                                <td>Assimétrica Híbrida (ECDH + AES)</td>
+                                <td>256 bits (Curva Elíptica)</td>
+                                <td>Altíssima; segurança de RSA-3072 com chaves muito menores e ultra-rápidas.</td>
+                                <td><span class="badge-status badge-roxo">NÃO (segredo derivado nos dispositivos)</span></td>
+                                <td>WhatsApp, Signal, TLS 1.3, Apple iMessage, Criptomoedas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+
+                    <h3>8. Glossário e Conceitos Fundamentais</h3>
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Texto Claro (Plaintext):</strong> Mensagem legível original sem qualquer proteção.</li>
+                        <li><strong>Texto Cifrado (Ciphertext):</strong> Mensagem após a transformação matemática, ininteligível sem a chave.</li>
+                        <li><strong>Chave Criptográfica:</strong> O segredo numérico ou textual que parametriza o algoritmo para cifrar e decifrar.</li>
+                        <li><strong>Ataque de Força Bruta:</strong> Método exaustivo que testa sistematicamente todas as chaves possíveis até encontrar a correta.</li>
+                        <li><strong>Criptoanálise:</strong> O estudo de métodos para decifrar textos cifrados sem ter acesso prévio à chave (ex.: análise estatística de frequência).</li>
+                        <li><strong>Vetor de Inicialização (IV / Nonce):</strong> Número aleatório usado uma única vez por mensagem para garantir que mensagens idênticas gerem textos cifrados completamente diferentes.</li>
+                        <li><strong>Salt:</strong> Sequência aleatória adicionada à senha antes de gerar uma chave, impedindo o uso de tabelas pré-computadas (Rainbow Tables).</li>
+                        <li><strong>KDF (Key Derivation Function):</strong> Função como o PBKDF2 que estica senhas humanas fracas aplicando milhares de rodadas de hash para desacelerar invasores.</li>
                     </ul>
                 </div>
             </div>
@@ -1444,22 +1566,10 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 console.log('%c© 2026 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
                 console.log('%cLicenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)', 'font-size:10px;color:#888');
                 console.log('%cMarlon Antonio Stoeberl — Rio Negro, Paraná', 'font-size:10px;color:#888');
-                console.log('[cripto.chat] Conectando WebSocket...');
-                const sessaoRestaurada = restaurarSessaoSalva();
+                console.log('[cripto.chat] Inicializando conexão...');
+                restaurarSessaoSalva();
                 tentativasWs = 0;
                 conectarWebSocket();
-                setTimeout(() => {
-                    if (canal && canal.readyState === WebSocket.OPEN) {
-                        console.log('[cripto.chat] WebSocket conectado!');
-                        enviar({ tipo: 'verificar_demo' });
-                        if (sessaoRestaurada && currentUser) {
-                            enviar({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome });
-                        }
-                    } else {
-                        console.log('[cripto.chat] WebSocket NÃO conectado. Aguardando backoff...');
-                        agendarReconexao();
-                    }
-                }, 1000);
             });
         }
 
@@ -1576,21 +1686,17 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 // Consultar status do demo ao conectar
                 ws.send(JSON.stringify({ tipo: 'verificar_demo' }));
             };
-            // Pong handler: server heartbeat → client responds automatically (browser does this)
-            ws.onpong = () => { ws._missedPings = 0; };
-            // Client-side keep-alive: envia heartbeat com payload real para Render proxy
-            // Isso gera tráfego REAL que o proxy do Render detecta como tráfego ativo
+            // Client-side keep-alive: envia heartbeat leve a cada 20s para manter proxies e firewalls ativos
             ws._keepAliveInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
                     try {
                         ws.send(JSON.stringify({
                             tipo: 'heartbeat',
-                            timestamp: Date.now(),
-                            clientTime: new Date().toISOString()
+                            timestamp: Date.now()
                         }));
                     } catch (e) { console.warn('[WS] Keep-alive falhou'); }
                 } else { clearInterval(ws._keepAliveInterval); }
-            }, 15000); // a cada 15s - tráfego real para Render proxy
+            }, 20000);
             // Ao FECHAR (queda, reinício do servidor etc.): agenda reconexão automática
             ws.onclose = () => { if (ws._pingInterval) clearInterval(ws._pingInterval); if (ws._keepAliveInterval) clearInterval(ws._keepAliveInterval); if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; agendarReconexao(); };
             // ERRO: NÃO zera "canal" — o mesmo socket ainda pode estar vivo.
@@ -1809,9 +1915,28 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     break;
 
                 case 'heartbeat':
-                    // Heartbeat do servidor com payload real — apenas confirma recepção
-                    // Mantém conexão viva no Render free tier (proxy vê tráfego real)
+                    // Responde ao servidor imediatamente para manter a sessão ativa
+                    enviar({ tipo: 'heartbeat_ack', timestamp: Date.now() });
                     break;
+
+                case 'heartbeat_ack':
+                    // Confirmação de recebimento do servidor
+                    break;
+
+                case 'timeout_logoff': {
+                    // Usuário desconectado e deslogado por 30 minutos de inatividade
+                    if (currentSala) currentSala = null;
+                    try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
+                    currentUser = null;
+                    document.getElementById('chatArea').classList.add('hidden');
+                    document.getElementById('mainPanel').classList.add('hidden');
+                    document.getElementById('topbarUserRow').classList.add('hidden');
+                    document.getElementById('loginPanel').classList.remove('hidden');
+                    document.getElementById('loginStep1').classList.remove('hidden');
+                    document.getElementById('loginStep2').classList.add('hidden');
+                    mostrarAvisoInatividade(data.mensagem || 'Sua sessão foi encerrada por inatividade (30 minutos sem interação no chat). Digite seu e-mail para entrar novamente.');
+                    break;
+                }
 
                 case 'mensagem':
                     if (currentSala && data.salaId === currentSala.id) exibirMensagem(data);
@@ -1893,7 +2018,37 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ============================================================
         // INTERFACE
         // ============================================================
+        function mostrarAvisoInatividade(msg) {
+            const el = document.getElementById('avisoInatividade');
+            if (el) {
+                el.innerHTML = `<strong>⏱️ Sessão Expirada por Inatividade:</strong><br>${escaparHtml(msg)}`;
+                el.classList.remove('hidden');
+            } else {
+                alert(msg);
+            }
+        }
+
+        let ultimaInteracaoUsuario = Date.now();
+        function registrarInteracaoUsuario() {
+            ultimaInteracaoUsuario = Date.now();
+        }
+        window.addEventListener('keydown', registrarInteracaoUsuario);
+        window.addEventListener('click', registrarInteracaoUsuario);
+
+        // Verificação preventiva local de inatividade de 30 minutos
+        setInterval(() => {
+            if (currentUser && (Date.now() - ultimaInteracaoUsuario >= 30 * 60 * 1000)) {
+                processarMensagem({
+                    tipo: 'timeout_logoff',
+                    mensagem: 'Sua sessão foi encerrada por inatividade (30 minutos sem interação no chat). Digite seu e-mail para entrar novamente.'
+                });
+            }
+        }, 30000);
+
         function mostrarPainelPrincipal() {
+            const aviso = document.getElementById('avisoInatividade');
+            if (aviso) aviso.classList.add('hidden');
+            registrarInteracaoUsuario();
             document.getElementById('loginPanel').classList.add('hidden');
             document.getElementById('mainPanel').classList.remove('hidden');
             document.getElementById('userEmailDisplay').textContent = currentUser.email;
@@ -2298,6 +2453,15 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 if (ehDM) enviar({ tipo: 'mensagem_direta', paraEmail: destino.email, texto, criptografada: false, mencoes: [destino.nome] });
                 else enviar({ tipo: 'mensagem', texto, criptografada: false, mencoes, salaId: currentSala?.id, salaNome: currentSala?.nome });
             }
+            registrarInteracaoUsuario();
+            registrarAtividadeRelatorio({
+                tipo: ehDM ? 'Mensagem Direta (DM)' : 'Mensagem Pública na Sala',
+                algoritmo: (algoritmo || 'none').toUpperCase(),
+                chave: chave || null,
+                textoClaro: texto,
+                textoCifrado: algoritmo === 'none' ? texto : (algoritmo === 'e2e' ? '[RSA-2048 Cifrado E2E]' : (algoritmo === 'ecc' ? '[ECC P-256 Cifrado E2E]' : '[Simétrica Cifrada: ' + algoritmo + ']')),
+                admVisibilidade: (algoritmo === 'none') ? 'Texto Claro (Visível)' : ((algoritmo === 'e2e' || algoritmo === 'ecc') ? 'Bloqueado (Cifrado E2E)' : 'Interceptado (Chave viajou junto)')
+            });
             document.getElementById('messageInput').value = '';
         }
 
@@ -2874,6 +3038,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             intro.classList.toggle('hidden', !texto);
         }
         async function demoCriptografar() {
+            registrarInteracaoUsuario();
             const algo = document.getElementById('demoAlgo').value;
             const keyInput = document.getElementById('demoKey');
             const chave = keyInput.value;
@@ -2886,6 +3051,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     if (!minhaChavePrivada) await prepararChavesE2E();
                     const blocos = await criptografarE2E(texto, [currentUser.email]);
                     if (!blocos || !blocos[currentUser.email]) { mostrarErroDemo('Falha ao cifrar com E2E.'); return; }
+                    registrarAtividadeRelatorio({ tipo: 'Teste na Aba Demonstração', algoritmo: 'E2E (RSA-2048)', chave: 'Par Assimétrico', textoClaro: texto, textoCifrado: blocos[currentUser.email], admVisibilidade: 'Bloqueado (Cifrado E2E)' });
                     document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado (E2E — RSA-2048):</strong><br><code style="word-break:break-all;">${escaparHtml(blocos[currentUser.email])}</code><div class="message-note">🔒 Cifrado com a chave PÚBLICA. Só a chave PRIVADA deste navegador decifra — a Sala ADM vê apenas este ciphertext.</div></div>`;
                 } catch (e) { console.warn('[E2E] Falha na demo:', e); mostrarErroDemo('Falha ao cifrar com E2E.'); }
                 return;
@@ -2896,6 +3062,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 try {
                     if (!minhaChavePublicaECCB64) await prepararChavesECC();
                     const pacote = await cifrarECC(texto, minhaChavePublicaECCB64);
+                    registrarAtividadeRelatorio({ tipo: 'Teste na Aba Demonstração', algoritmo: 'ECC (P-256 + AES-GCM)', chave: 'Segredo ECDH Derivado', textoClaro: texto, textoCifrado: pacote, admVisibilidade: 'Bloqueado (Cifrado E2E)' });
                     document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado (ECC — ECDH P-256 + AES-256-GCM):</strong><br><code style="word-break:break-all;">${escaparHtml(pacote)}</code><div class="message-note">🔒 Chave efêmera + segredo ECDH + AES-256-GCM. Só a chave PRIVADA deste navegador decifra — a Sala ADM vê apenas este ciphertext.</div></div>`;
                 } catch (e) { console.warn('[ECC] Falha na demo:', e); mostrarErroDemo('Falha ao cifrar com ECC.'); }
                 return;
@@ -2907,6 +3074,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             }
             const resultado = await criptografar(texto, algo, chave);
             if (resultado === null) { mostrarErroDemo('Falha ao criptografar.'); return; }
+            registrarAtividadeRelatorio({ tipo: 'Teste na Aba Demonstração', algoritmo: algo.toUpperCase(), chave: chave, textoClaro: texto, textoCifrado: String(resultado), admVisibilidade: 'Interceptado (Chave enviada junto)' });
             document.getElementById('demoResultado').innerHTML = `<div style="background: rgba(245,87,108,0.1); padding:12px; border-radius:8px; border-left:3px solid #f5576c;"><strong style="color:#f5576c;">Texto Cifrado:</strong><br><code style="word-break:break-all;">${escaparHtml(String(resultado))}</code></div>`;
         }
         async function demoDescriptografar() {
@@ -2947,6 +3115,233 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         }
 
         // ============================================================
+        // FERRAMENTAS DIDÁTICAS DE CRIPTOANÁLISE & RELATÓRIO
+        // ============================================================
+        let historicoAtividades = [];
+
+        function registrarAtividadeRelatorio(item) {
+            historicoAtividades.push({
+                horario: new Date().toLocaleTimeString('pt-BR'),
+                ...item
+            });
+            if (historicoAtividades.length > 50) historicoAtividades.shift();
+        }
+
+        // Quebra da Cifra de César testando as 26 possibilidades em milissegundos
+        function demoQuebrarCesar() {
+            registrarInteracaoUsuario();
+            let texto = document.getElementById('demoTexto').value.trim();
+            if (!texto) {
+                const resEl = document.querySelector('#demoResultado code');
+                if (resEl) texto = resEl.textContent.trim();
+            }
+            if (!texto) {
+                mostrarErroDemo('Digite um texto cifrado com César no campo original ou execute uma criptografia primeiro.');
+                return;
+            }
+
+            let html = `<div style="background: rgba(var(--acento-rgb), 0.08); padding: 14px; border-radius: 8px; border: 1px solid var(--painel-borda); margin-top: 15px;">
+                <h4 style="color: var(--acento); margin-top: 0; margin-bottom: 8px;">💥 Ataque de Força Bruta: Quebra da Cifra de César (26 Chaves)</h4>
+                <p style="font-size: 13px; color: var(--texto-medio); margin-bottom: 12px;">
+                    A máquina testa todas as <strong>26 rotações possíveis</strong> em menos de 1 milissegundo.
+                    Observe como o texto original legível salta aos olhos em uma das linhas:
+                </p>
+                <div style="max-height: 260px; overflow-y: auto; background: var(--chat-fundo); border: 1px solid var(--painel-borda); border-radius: 6px; padding: 8px; font-family: monospace; font-size: 13px;">`;
+
+            for (let k = 0; k < 26; k++) {
+                const decifrado = cifraCesar(texto, -k);
+                html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <span><strong>Chave ${k.toString().padStart(2, '0')}:</strong> ${escaparHtml(decifrado)}</span>
+                    <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="document.getElementById('demoKey').value = '${k}'; document.getElementById('demoTexto').value = '${escaparHtml(decifrado).replace(/'/g, "\\'")}';">Usar</button>
+                </div>`;
+            }
+
+            html += `</div>
+                <p style="font-size: 12px; color: var(--texto-fraco); margin-top: 10px; margin-bottom: 0;">
+                    📚 <em>Lição didática:</em> Cifras com espaço pequeno de chaves (como as 26 rotações de César) não oferecem segurança contra máquinas. O AES-256 possui 2<sup>256</sup> combinações, tornando este ataque inviável com toda a computação do universo conhecido.
+                </p>
+            </div>`;
+
+            document.getElementById('demoResultado').innerHTML = html;
+        }
+
+        // Análise de frequência de letras em comparação com a língua portuguesa
+        function demoAnaliseFrequencia() {
+            registrarInteracaoUsuario();
+            let texto = document.getElementById('demoTexto').value.trim();
+            if (!texto) {
+                const resEl = document.querySelector('#demoResultado code');
+                if (resEl) texto = resEl.textContent.trim();
+            }
+            if (!texto) {
+                mostrarErroDemo('Digite ou cifre um texto para analisar a frequência de caracteres.');
+                return;
+            }
+
+            const letras = texto.toUpperCase().replace(/[^A-Z]/g, '');
+            if (!letras.length) {
+                mostrarErroDemo('O texto não contém letras suficientes para análise estatística.');
+                return;
+            }
+
+            const contagem = {};
+            for (const l of letras) contagem[l] = (contagem[l] || 0) + 1;
+            const ordenadas = Object.keys(contagem).sort((a, b) => contagem[b] - contagem[a]);
+
+            let html = `<div style="background: rgba(var(--acento-rgb), 0.08); padding: 14px; border-radius: 8px; border: 1px solid var(--painel-borda); margin-top: 15px;">
+                <h4 style="color: var(--acento); margin-top: 0; margin-bottom: 8px;">📊 Criptoanálise por Análise de Frequência</h4>
+                <p style="font-size: 13px; color: var(--texto-medio); margin-bottom: 10px;">
+                    Em Língua Portuguesa, as letras mais frequentes são: <strong>A (14.6%)</strong>, <strong>E (12.6%)</strong>, <strong>O (10.7%)</strong>, <strong>S (7.8%)</strong>, <strong>R (6.5%)</strong>.<br>
+                    Em substituições monoalfabéticas, o pico de frequência apenas muda de letra, revelando o padrão!
+                </p>
+                <div style="font-size: 13px; font-family: monospace; display: flex; flex-direction: column; gap: 4px;">`;
+
+            for (const l of ordenadas.slice(0, 10)) {
+                const pct = ((contagem[l] / letras.length) * 100).toFixed(1);
+                const barWidth = Math.min(100, Math.max(5, pct * 4));
+                html += `<div style="display: flex; align-items: center; gap: 8px;">
+                    <strong style="width: 20px;">${l}:</strong>
+                    <span style="font-size: 11px; width: 50px;">${contagem[l]}x (${pct}%)</span>
+                    <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 10px; overflow: hidden;">
+                        <div style="width: ${barWidth}%; background: var(--acento); height: 100%;"></div>
+                    </div>
+                </div>`;
+            }
+
+            html += `</div>
+                <p style="font-size: 12px; color: var(--texto-fraco); margin-top: 10px; margin-bottom: 0;">
+                    📚 <em>Lição didática:</em> Cifras polialfabéticas (Vigenère) e cifras em bloco com difusão (AES) foram criadas justamente para aplainar essa curva e não vazar estatísticas da linguagem.
+                </p>
+            </div>`;
+
+            document.getElementById('demoResultado').innerHTML = html;
+        }
+
+        // Teste de integridade com Hash SHA-256 e demonstração do Efeito Avalanche
+        async function demoHashSha256() {
+            registrarInteracaoUsuario();
+            const texto = document.getElementById('demoTexto').value;
+            if (!texto) {
+                mostrarErroDemo('Digite algum texto para calcular o Hash SHA-256.');
+                return;
+            }
+
+            const encoder = new TextEncoder();
+            const dados = encoder.encode(texto);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', dados);
+            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const alterado = texto + (texto.endsWith('.') ? '!' : '.');
+            const hashBufferAlt = await crypto.subtle.digest('SHA-256', encoder.encode(alterado));
+            const hashHexAlt = Array.from(new Uint8Array(hashBufferAlt)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            let html = `<div style="background: rgba(var(--acento-rgb), 0.08); padding: 14px; border-radius: 8px; border: 1px solid var(--painel-borda); margin-top: 15px;">
+                <h4 style="color: var(--acento); margin-top: 0; margin-bottom: 8px;">🛡️ Hash Criptográfico (SHA-256) &amp; Efeito Avalanche</h4>
+                <p style="font-size: 13px; color: var(--texto-medio); margin-bottom: 8px;">
+                    O Hash é uma <strong>função unidirecional</strong> de via única. Ele não cifra para recuperar: ele gera uma <strong>impressão digital imutável</strong> para garantir a <strong>Integridade</strong>.
+                </p>
+                <div style="font-family: monospace; font-size: 12px; background: var(--chat-fundo); padding: 10px; border-radius: 6px; word-break: break-all; margin-bottom: 10px;">
+                    <strong style="color: var(--verde-txt);">Texto original:</strong> "${escaparHtml(texto)}"<br>
+                    <strong>SHA-256 (64 hex / 256 bits):</strong><br>
+                    <span style="color: var(--acento);">${hashHex}</span>
+                </div>
+                <div style="font-family: monospace; font-size: 12px; background: var(--chat-fundo); padding: 10px; border-radius: 6px; word-break: break-all;">
+                    <strong style="color: var(--aviso);">Texto com apenas 1 caractere a mais:</strong> "${escaparHtml(alterado)}"<br>
+                    <strong>Novo SHA-256 (Efeito Avalanche):</strong><br>
+                    <span style="color: var(--vermelho-txt);">${hashHexAlt}</span>
+                </div>
+                <p style="font-size: 12px; color: var(--texto-fraco); margin-top: 10px; margin-bottom: 0;">
+                    📚 <em>Lição didática:</em> Alterar um único bit na entrada muda drasticamente mais de 50% dos bits do hash. É assim que o modo AES-GCM e assinaturas digitais detectam se alguém adulterou a mensagem em trânsito!
+                </p>
+            </div>`;
+
+            document.getElementById('demoResultado').innerHTML = html;
+        }
+
+        // Exportação do relatório de estudos e atividades práticas
+        function exportarRelatorioAtividade() {
+            registrarInteracaoUsuario();
+            const nome = currentUser?.nome || 'Aluno';
+            const email = currentUser?.email || 'N/A';
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            const horaAgora = new Date().toLocaleTimeString('pt-BR');
+
+            let relatorio = `======================================================================
+  RELATÓRIO DE ATIVIDADE PRÁTICA: CRIPTOGRAFIA EM PRÁTICA
+  cripto.chat — Objeto Educacional de Criptografia
+  Universidade Tecnológica Federal do Paraná (UTFPR) - Licenciatura em Computação
+======================================================================
+
+DADOS DO ALUNO:
+- Nome: ${nome}
+- E-mail: ${email}
+- Data da Sessão: ${dataHoje} às ${horaAgora}
+- Sala Atual: ${currentSala?.nome || 'Dashboard / Sandbox'}
+
+----------------------------------------------------------------------
+1. CONCEITOS E ALGORITMOS PRATICADOS
+----------------------------------------------------------------------
+Durante esta sessão foram demonstradas as duas grandes classes de criptografia:
+
+A) Criptografia Simétrica (Chave Secreta Compartilhada):
+   - Cifra de César (Deslocamento Monoalfabético, 26 chaves)
+   - Cifra de Vigenère (Substituição Polialfabética com Palavra-Chave)
+   - Cifra XOR (Operação bit a bit com chave simétrica)
+   - AES-256-GCM (Padrão mundial simétrico autenticado com PBKDF2, Salt e IV)
+   * Observação Pedagógica: Quando a chave simétrica viaja junto com a mensagem,
+     o observador (Sala ADM / Intermediário) consegue decifrá-la integralmente.
+
+B) Criptografia Assimétrica e Híbrida (Ponta a Ponta / E2E):
+   - RSA-2048 (Chave Pública cifra, Chave Privada no navegador decifra)
+   - ECC P-256 (Curvas Elípticas ECDH + Derivação HKDF + Cifragem AES-256-GCM)
+   * Observação Pedagógica: A chave privada nunca sai do dispositivo do usuário.
+     O servidor e a Sala ADM visualizam estritamente o ciphertext (texto cifrado),
+     sendo matematicamente incapazes de ler a conversa.
+
+----------------------------------------------------------------------
+2. REGISTRO DE MENSAGENS E TESTES EXECUTADOS
+----------------------------------------------------------------------
+`;
+
+            if (historicoAtividades.length === 0) {
+                relatorio += `Nenhum envio registrado ainda nesta sessão.\nExperimente enviar mensagens com diferentes cifras no chat ou testar na aba Demonstração.\n`;
+            } else {
+                historicoAtividades.forEach((act, i) => {
+                    relatorio += `[#${i + 1}] [${act.horario}] Tipo: ${act.tipo || 'Mensagem'}\n`;
+                    relatorio += `     Algoritmo: ${act.algoritmo || 'Nenhum (Texto Claro)'}\n`;
+                    if (act.chave) relatorio += `     Chave Utilizada: "${act.chave}"\n`;
+                    if (act.textoClaro) relatorio += `     Texto Original: "${act.textoClaro}"\n`;
+                    if (act.textoCifrado) relatorio += `     Texto Cifrado: "${act.textoCifrado.slice(0, 100)}${act.textoCifrado.length > 100 ? '...' : ''}"\n`;
+                    relatorio += `     Visibilidade na Sala ADM: ${act.admVisibilidade || 'Texto Claro'}\n\n`;
+                });
+            }
+
+            relatorio += `----------------------------------------------------------------------
+3. CONCLUSÃO DO ESTUDANTE / AUTOAVALIAÇÃO
+----------------------------------------------------------------------
+[Espaço reservado para o estudante descrever o que aprendeu sobre o problema
+da distribuição de chaves e a diferença entre cifras clássicas e ponta a ponta]
+
+______________________________________________________________________
+
+______________________________________________________________________
+
+Assinatura do Aluno: _________________________________________________
+======================================================================
+`;
+
+            const blob = new Blob([relatorio], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-criptografia-${nome.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
         // LOCALSTORAGE
         // ============================================================
         function salvarMensagemLocal(data) {
@@ -2975,17 +3370,16 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         function atualizarDicaCripto(algo) {
             const dica = document.getElementById('cryptoHint');
             if (!dica) return;
-            const simetricas = 'SIMÉTRICA: a mesma chave cifra e decifra → ela viaja JUNTO com a mensagem. A Sala ADM captura e descriptografa. ';
             const dicas = {
-                none: 'TEXTO CLARO: o servidor e a Sala ADM leem a mensagem como foi enviada.',
-                caesar: simetricas + 'César desloca cada letra N posições (rotação). Chave: SOMENTE NÚMEROS (ex.: 7). Fraca: 25 tentativas quebram.',
-                vigenere: simetricas + 'Vigenère repete uma palavra-chave para deslocar as letras. Chave: SOMENTE LETRAS E NÚMEROS (sem espaços ou símbolos). Fraca por ataques de frequência.',
-                xor: simetricas + 'XOR aplica operação binária com a chave. Chave: qualquer texto, não vazio. Fraca: reutilização da chave revela padrões.',
-                aes: simetricas + 'AES-256-GCM é forte (padrão mundial), mas como a chave viaja com a mensagem, quem a obtém lê tudo. Senha: qualquer texto, não vazio.',
-                e2e: 'PONTA A PONTA (RSA-2048): a mensagem é cifrada com a chave PÚBLICA de cada destinatário. A chave privada NUNCA sai do computador de quem recebe — nem o servidor consegue descriptografar. A Sala ADM vê apenas ciphertext.',
-                ecc: 'PONTA A PONTA (ECC P-256): o ECDH combina as chaves pública e privada para criar um segredo que só os dois lados conhecem; esse segredo vira uma chave AES-256-GCM que cifra a mensagem. Chaves automáticas, nada para digitar. A Sala ADM vê apenas ciphertext.'
+                none: '🟢 <strong>TEXTO CLARO:</strong> Sem proteção. Todos na sala e a Sala ADM (servidor) leem a mensagem original diretamente.',
+                caesar: '🟡 <strong>SIMÉTRICA (CÉSAR):</strong> Desloca cada letra N posições. Chave: SOMENTE NÚMEROS. A chave viaja no pacote → 🔓 <em>A Sala ADM captura e consegue descriptografar.</em>',
+                vigenere: '🟡 <strong>SIMÉTRICA (VIGENÈRE):</strong> Varia o deslocamento usando uma palavra-chave. A chave viaja no pacote → 🔓 <em>A Sala ADM captura e consegue descriptografar.</em>',
+                xor: '🟡 <strong>SIMÉTRICA (XOR):</strong> Operação bit a bit codificada em Base64. A chave viaja no pacote → 🔓 <em>A Sala ADM captura e consegue descriptografar.</em>',
+                aes: '🟡 <strong>SIMÉTRICA (AES-256-GCM):</strong> Algoritmo moderno robusto, mas como a chave simétrica viaja junto para os colegas lerem → 🔓 <em>A Sala ADM captura e consegue descriptografar.</em>',
+                e2e: '🟣 <strong>PONTA A PONTA (RSA-2048):</strong> Cifrada no navegador com a chave PÚBLICA de cada membro. A chave privada NUNCA sai do computador → ⛔ <em>A Sala ADM vê apenas ciphertext e NÃO pode ler.</em>',
+                ecc: '🟣 <strong>PONTA A PONTA (ECC P-256):</strong> Curvas Elípticas com segredo ECDH efêmero e AES-GCM. Chaves automáticas → ⛔ <em>A Sala ADM vê apenas ciphertext e NÃO pode ler.</em>'
             };
-            dica.textContent = dicas[algo] || '';
+            dica.innerHTML = dicas[algo] || '';
         }
         function handleKeyDown(e) {
             const popup = document.getElementById('mentionPopup');

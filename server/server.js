@@ -153,31 +153,56 @@ function removerConexao(email, ws) {
 }
 
 // ============================================================
-// SERVIDOR HTTP (arquivos estáticos)
+// SERVIDOR HTTP (arquivos estáticos servidos de public/)
 // ============================================================
 
 const MIME = {
-  '.html': 'text/html',
-  '.js':   'application/javascript',
-  '.css':  'text/css',
-  '.json': 'application/json',
+  '.html': 'text/html; charset=utf-8',
+  '.js':   'application/javascript; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
   '.png':  'image/png',
-  '.ico':  'image/x-icon'
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.txt':  'text/plain; charset=utf-8'
 };
 
+const PUBLIC_DIR = path.resolve(__dirname, 'public');
+
 const server = http.createServer((req, res) => {
+  // Trata apenas requisições GET e HEAD
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Método não permitido');
+    return;
+  }
+
   // Remove querystring antes de comparar ("/" e "/?adm=1" servem o index.html)
-  const urlPath = req.url.split('?')[0];
-  const filePath = path.join(__dirname, '..', urlPath === '/' ? 'index.html' : urlPath);
+  let urlPath = req.url.split('?')[0];
+  if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
   
+  // SEGURANÇA: Sanitiza contra Path Traversal
+  // Impede qualquer acesso fora da pasta public (ex: /../.env, /../server.js, etc.)
+  const safeRelativePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
+  const filePath = path.resolve(PUBLIC_DIR, '.' + safeRelativePath);
+  
+  if (!filePath.startsWith(PUBLIC_DIR)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Proibido: Acesso negado fora da pasta pública.');
+    return;
+  }
+
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.writeHead(404);
-      res.end('Não encontrado');
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('404 Não encontrado');
       return;
     }
-    const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' });
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'X-Content-Type-Options': 'nosniff'
+    });
     res.end(data);
   });
 });
@@ -296,20 +321,54 @@ function verificarOTP(email, codigo) {
 wss.on('connection', (ws) => {
   ws.isAdm = false;
   ws.email = null;
+  ws._missedPings = 0;
 
   ws.on('message', (raw) => {
-    const data = JSON.parse(raw);
+    // Proteção contra payloads excessivos (máximo 64 KB)
+    if (raw.length > 65536) {
+      ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Mensagem muito grande (máximo 64KB).' }));
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      return; // Ignora pacotes que não sejam JSON válido
+    }
     
+    // QUALQUER mensagem recebida confirma que o cliente está ativo
+    ws._missedPings = 0;
+
     // Ações permitidas ANTES do login (públicas). Todo o resto exige sessão
     // autenticada — evita "fantasmas" entrando em salas sem email.
-    const TIPOS_PUBLICOS = ['solicitar_otp', 'verificar_otp', 'restaurar_sessao',
-                            'verificar_demo', 'habilitar_demo', 'desabilitar_demo'];
+    const TIPOS_PUBLICOS = [
+      'solicitar_otp', 'verificar_otp', 'restaurar_sessao',
+      'verificar_demo', 'habilitar_demo', 'desabilitar_demo',
+      'heartbeat', 'heartbeat_ack', 'ping', 'pong'
+    ];
     if (!ws.email && !TIPOS_PUBLICOS.includes(data.tipo)) {
       ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Sessão não autenticada. Faça login novamente.' }));
       return;
     }
     
     switch (data.tipo) {
+
+      // --------------------------------------------------------
+      // HEARTBEAT / KEEP-ALIVE BIDIRECIONAL
+      // --------------------------------------------------------
+      case 'heartbeat':
+      case 'ping': {
+        ws._missedPings = 0;
+        ws.send(JSON.stringify({ tipo: 'heartbeat_ack', timestamp: Date.now() }));
+        break;
+      }
+
+      case 'heartbeat_ack':
+      case 'pong': {
+        ws._missedPings = 0;
+        break;
+      }
       
       // --------------------------------------------------------
       // MODO DEMO: Habilitar/Desabilitar com senha mestre
@@ -792,12 +851,11 @@ wss.on('connection', (ws) => {
 });
 
 // ============================================================
-// HEARTBEAT com payload real — mantém conexão viva no Render free tier
+// HEARTBEAT com payload real — mantém conexão viva (Render / Plesk / Nginx)
 // ============================================================
-// Render free tier: proxy fecha conexões WebSocket ociosas ~30-55s
-// Heartbeat com payload JSON real mantém proxy ativo
-const HEARTBEAT_INTERVAL = 10000;   // envia heartbeat a cada 10s
-const MAX_MISSED_PINGS = 5;         // tolera até 5 heartbeats perdidos (~50s)
+// Envia heartbeat a cada 15s; tolera até 4 sem resposta (~60s de silêncio absoluto)
+const HEARTBEAT_INTERVAL = 15000;   // envia heartbeat a cada 15s
+const MAX_MISSED_PINGS = 4;         // tolera até 4 heartbeats perdidos (~60s)
 
 function iniciarHeartbeat() {
   setInterval(() => {
@@ -806,12 +864,11 @@ function iniciarHeartbeat() {
       if (ws._missedPings === undefined) ws._missedPings = 0;
       ws._missedPings++;
       if (ws._missedPings > MAX_MISSED_PINGS) {
-        console.log(`[HEARTBEAT] Fechando conexão morta: ${ws.email || 'sem-email'} (missed=${ws._missedPings})`);
+        console.log(`[HEARTBEAT] Fechando conexão ociosa/morta: ${ws.email || 'sem-email'} (sem resposta por 60s)`);
         return ws.terminate();
       }
       try {
-        // Heartbeat com payload JSON real (não apenas ping vazio)
-        // Isso gera tráfego REAL que o proxy do Render detecta
+        // Heartbeat com payload JSON real (gera tráfego detectado por proxies reversos)
         ws.send(JSON.stringify({
           tipo: 'heartbeat',
           timestamp: Date.now(),
@@ -825,45 +882,53 @@ function iniciarHeartbeat() {
 iniciarHeartbeat();
 
 // ============================================================
-// TIMEOUT DE INATIVIDADE (30 min sem interação → sai da sala)
+// TIMEOUT DE INATIVIDADE (30 min sem interação → sai da sala E faz LOGOFF)
 // ============================================================
-const INATIVIDADE_MAX_MS = 30 * 60 * 1000; // 30 minutos
-const CHECK_INTERVAL_MS = 60 * 1000;       // verifica a cada 1 minuto
+const INATIVIDADE_MAX_MS = 30 * 60 * 1000; // 30 minutos sem interação
+const CHECK_INTERVAL_MS = 30 * 1000;       // verifica a cada 30 segundos
 
 function iniciarTimeoutInatividade() {
   setInterval(() => {
     const agora = Date.now();
     for (const [email, user] of usuarios.entries()) {
-      if (!user.salaAtual) continue; // não está em sala
       if (!user.lastActivity) continue; // sem registro de atividade
       
       const inativoHa = agora - new Date(user.lastActivity).getTime();
       if (inativoHa >= INATIVIDADE_MAX_MS) {
         const salaId = user.salaAtual;
-        const sala = salas.get(salaId);
-        const salaNome = sala?.nome || salaId;
+        const sala = salaId ? salas.get(salaId) : null;
+        const salaNome = sala?.nome || salaId || 'nenhuma';
         const entrouEm = user.entrouEmSalaEm ? new Date(user.entrouEmSalaEm).toISOString() : 'desconhecido';
         const ultimaAtividade = user.lastActivity ? new Date(user.lastActivity).toISOString() : 'desconhecida';
         
-        console.log(`[TIMEOUT] ${email} removido da sala "${sala.nome}" (${salaId}) por inatividade de ${Math.round(inativoHa / 60000)} min — entrou em ${entrouEm}, última atividade em ${ultimaAtividade}`);
+        console.log(`[TIMEOUT LOGOFF] ${email} desconectado por inatividade de ${Math.round(inativoHa / 60000)} min — última interação em ${ultimaAtividade}`);
         
-        removerUsuarioDaSala(salaId, email);
-        user.salaAtual = null;
-        user.entrouEmSalaEm = null;
-        
-        // Notificar conexões do usuário (outras abas) que saiu por timeout
+        // 1. Se estava em sala, remove da sala e avisa os demais participantes
+        if (salaId) {
+          removerUsuarioDaSala(salaId, email);
+          user.salaAtual = null;
+          user.entrouEmSalaEm = null;
+        }
+
+        // 2. Notifica todas as conexões/abas do usuário que ocorreu o logoff automático
         const conjunto = conexoes.get(email);
         if (conjunto) {
           for (const ws of conjunto) {
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({ 
-                tipo: 'timeout_sala', 
-                salaId, 
-                mensagem: 'Você foi removido da sala por inatividade (30 min sem interação).' 
+                tipo: 'timeout_logoff', 
+                email,
+                mensagem: 'Sua sessão foi encerrada por inatividade (30 minutos sem interação no chat). Digite seu e-mail para entrar novamente.' 
               }));
+              ws.email = null;
+              ws.entrouEmSala = false;
             }
           }
         }
+
+        // 3. Remove o usuário dos registros ativos do servidor (logoff completo)
+        usuarios.delete(email);
+        conexoes.delete(email);
       }
     }
   }, CHECK_INTERVAL_MS);

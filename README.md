@@ -83,9 +83,18 @@ Representa a visão do servidor:
 
 ```
 cripto.chat/
-├── index.html          # Interface completa (HTML+CSS+JS)
+├── index.html          # Interface completa para GitHub Pages (HTML+CSS+JS)
+├── manifest.json       # Manifesto PWA
+├── sw.js               # Service Worker para cache e uso offline
+├── icons/              # Ícones PWA
 ├── server/
-│   ├── server.js       # Servidor WebSocket + HTTP
+│   ├── public/         # Pasta estática servida em produção (Plesk/Node.js)
+│   │   ├── index.html
+│   │   ├── manifest.json
+│   │   ├── sw.js
+│   │   └── icons/
+│   ├── server.js       # Servidor WebSocket + HTTP (com proteção Path Traversal)
+│   ├── demo-config.json# Configuração do modo demonstração
 │   └── mail-config.js  # Config OTP por email (opcional)
 ├── start.bat           # Script de inicialização local
 ├── README.md           # Documentação completa

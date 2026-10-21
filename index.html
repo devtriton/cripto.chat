@@ -3144,12 +3144,22 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
     // PWA Install prompt handling
     let deferredPrompt = null;
-    const installBtn = document.createElement('button');
+    let installDismissed = localStorage.getItem('pwa_install_dismissed') === 'true';
+    const installBtn = document.createElement('div');
     installBtn.id = 'pwaInstallBtn';
-    installBtn.className = 'btn-secondary';
-    installBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;padding:10px 14px;border-radius:24px;box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:13px;display:none;align-items:center;gap:6px;';
-    installBtn.innerHTML = '📱 Instalar app';
-    installBtn.onclick = async () => {
+    installBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;display:none;';
+    installBtn.innerHTML = `
+        <button class="btn-secondary" id="pwaInstallAction" style="padding:10px 14px;border-radius:24px;box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:13px;display:flex;align-items:center;gap:6px;">
+            📱 Instalar app
+        </button>
+        <button id="pwaInstallClose" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background:var(--painel-bg);border:1px solid var(--painel-borda);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto-fraco);line-height:1;" title="Ocultar">✕</button>
+    `;
+    if (!installDismissed) {
+        document.body.appendChild(installBtn);
+    }
+    const installActionBtn = document.getElementById('pwaInstallAction');
+    const installCloseBtn = document.getElementById('pwaInstallClose');
+    installActionBtn.onclick = async () => {
         if (!deferredPrompt) return;
         installBtn.style.display = 'none';
         deferredPrompt.prompt();
@@ -3157,7 +3167,11 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         console.log('[PWA] Install outcome:', outcome);
         deferredPrompt = null;
     };
-    document.body.appendChild(installBtn);
+    installCloseBtn.onclick = () => {
+        installBtn.style.display = 'none';
+        localStorage.setItem('pwa_install_dismissed', 'true');
+        console.log('[PWA] Install prompt dismissed by user');
+    };
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();

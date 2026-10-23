@@ -1712,7 +1712,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ESTADO GLOBAL
         // ============================================================
         // Versão do app (atualizar a cada release)
-        const APP_VERSION = '2.2.0';
+        const APP_VERSION = '2.3.0';
         const APP_BUILD = '2026-10-23';
         const MODO = detectarModo();
         let canal = null;
@@ -2061,6 +2061,21 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     prepararChavesECC().catch(e => console.warn('[ECC] Falha ao preparar chaves:', e));
                     break;
 
+                case 'nome_alterado':
+                    // O servidor pode ajustar o nome para manter a unicidade (Maria → Maria2)
+                    if (data.email && currentUser && data.email === currentUser.email) {
+                        currentUser.nome = data.nome;
+                        try {
+                            localStorage.setItem('cripto_chat_sessao', JSON.stringify({ email: currentUser.email, nome: data.nome }));
+                        } catch (e) { console.warn('[Sessão] Falha ao salvar nome:', e); }
+                        const display = document.getElementById('userNameDisplay');
+                        if (display) display.textContent = data.nome;
+                        if (data.ajustado) {
+                            alert(`O nome escolhido já está em uso por outro aluno. Você ficou como "${data.nome}".`);
+                        }
+                    }
+                    break;
+
                 case 'chave_publica':
                     // O servidor distribuiu a chave pública de alguém (E2E)
                     if (data.email && data.chavePublica) chavesPublicasE2E[data.email] = data.chavePublica;
@@ -2272,6 +2287,12 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 case 'entrar_adm': break;
 
                 case 'erro':
+                    // E-mail já conectado: volta para o passo do e-mail
+                    if (data.codigo === 'EMAIL_EM_USO') {
+                        alert(data.mensagem || 'Este e-mail já está conectado em outra sessão.');
+                        voltarParaEmail();
+                        break;
+                    }
                     // Re-sincronização: se a sala foi apagada (servidor reiniciou / sem usuários),
                     // sai da sala "fantasma" e volta ao painel em vez de travar com alert repetido
                     if (data.mensagem === 'Sala não encontrada' && currentSala) {

@@ -151,6 +151,13 @@ Depois rode `npm run sync` (ou `npm start`, que já sincroniza).
 - **Sala vazia é excluída**: se o último participante sair, a sala deixa de existir
 - **30 minutos de inatividade**: o usuário é desconectado da sala e faz logoff
 - Salas públicas visíveis para todos os usuários autenticados
+- **Um e-mail por vez**: não é possível fazer login com um e-mail que já tenha
+  sessão ativa. A tentativa é recusada com aviso — feche a outra aba/aparelho e
+  tente de novo. *(Abas do mesmo usuário que restauram a sessão continuam
+  permitidas — necessário para refresh e para a Sala ADM.)*
+- **Nomes únicos**: se o nome derivado do e-mail já existir, o sistema acrescenta
+  numeração (`Maria`, `Maria2`, `Maria3`…). A mesma regra vale na troca de nome;
+  o servidor devolve o nome final e o app avisa quando houve ajuste.
 
 ### Mensagens
 - **Normal**: visível para todos na sala

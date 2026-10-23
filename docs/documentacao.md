@@ -44,6 +44,8 @@ Faça assim, nesta ordem:
 
 > 📱 **No celular:** o endereço pode mudar sozinho para começar com `https://` e aparecer um aviso de segurança. É normal. Toque em **Avançados** e depois em **Continuar**. Isso acontece só na primeira vez.
 
+> 🔒 **Cada e-mail entra uma vez só.** Se o seu e-mail já estiver conectado em outra aba ou em outro aparelho, o login é recusado. Feche a outra sessão e tente de novo.
+
 ---
 
 ## 4. De onde vem o código?
@@ -161,12 +163,14 @@ O botão **Sala ADM** (no topo) mostra **o que o servidor vê**:
 
 ---
 
-## 12. As 4 regras do chat
+## 12. As 6 regras do chat
 
 1. **Salas públicas:** todas as salas aparecem para todos os alunos logados.
 2. **Sala vazia some:** se o último participante sair, a sala é apagada.
 3. **30 minutos parado = sair:** quem fica **30 minutos sem interagir** é desconectado da sala e do chat.
-4. **Respeito:** trate bem os colegas. A sala é de todos.
+4. **Um e-mail por vez:** o mesmo e-mail não pode estar conectado em dois lugares ao mesmo tempo.
+5. **Nomes diferentes:** se outra pessoa já usa o mesmo nome, o sistema coloca um número no final (`Maria`, `Maria2`, `Maria3`…).
+6. **Respeito:** trate bem os colegas. A sala é de todos.
 
 > ⏱️ Para voltar depois dos 30 minutos, é só fazer login de novo — leva 10 segundos (passo 3).
 
@@ -185,6 +189,8 @@ O botão **Sala ADM** (no topo) mostra **o que o servidor vê**:
 - **Apareceu "Sua conexão não é particular":** é o certificado da rede local. Toque em **Avançados → Continuar** (só na primeira vez).
 - **O ícone do app ficou antigo:** desinstale o app, limpe o cache do navegador e instale de novo.
 - **O app não mostrou a versão nova:** toque no botão **🔄** no topo, ou feche e abra o app, ou puxe a tela para baixo no navegador.
+- **"Este e-mail já está conectado":** o mesmo e-mail está aberto em outra aba ou aparelho. Feche a outra sessão (ou aguarde a queda por inatividade) e tente de novo.
+- **Meu nome apareceu com um número (ex.: Maria2):** outra pessoa já estava usando "Maria". O número mantém os nomes diferentes. Você pode trocar o nome no painel principal.
 
 ---
 
@@ -311,6 +317,8 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 - A **lista de salas é enviada a todos** os usuários logados (atualização automática).
 - **30 minutos** de inatividade → logoff e saída da sala.
 - **Sala vazia** → apagada do servidor.
+- **E-mail único por sessão** → não permite login com e-mail já conectado (`EMAIL_EM_USO`).
+- **Nomes únicos** → sufixo numérico automático (`Maria`, `Maria2`, …), também na troca de nome.
 - OTP por e-mail **ou** exibido na tela no modo demo.
 
 ### Arquivos importantes

@@ -156,6 +156,37 @@ function removerConexao(email, ws) {
 }
 
 // ============================================================
+// NOMES DE EXIBIÇÃO ÚNICOS
+// Se o nome já estiver em uso por outro usuário ativo, acrescenta
+// numeração no final: "Maria", "Maria2", "Maria3"...
+// ============================================================
+
+function normalizarNome(nome) {
+  return String(nome || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+}
+
+function nomeUnico(nomeBase, emailIgnorar) {
+  const base = normalizarNome(nomeBase) || 'Usuario';
+  const usados = new Set();
+  for (const [email, u] of usuarios.entries()) {
+    if (email !== emailIgnorar && u.nome) {
+      usados.add(normalizarNome(u.nome).toLowerCase());
+    }
+  }
+  if (!usados.has(base.toLowerCase())) return base;
+
+  // Reserva espaço para o sufixo numérico (máximo 30 caracteres no total)
+  const raiz = base.length > 27 ? base.slice(0, 27).trim() : base;
+  let n = 2;
+  let candidato = `${raiz}${n}`;
+  while (usados.has(candidato.toLowerCase())) {
+    n++;
+    candidato = `${raiz}${n}`;
+  }
+  return candidato;
+}
+
+// ============================================================
 // SERVIDOR HTTP (arquivos estáticos servidos de public/)
 // ============================================================
 
@@ -581,6 +612,18 @@ function handleWsConnection(ws) {
       // --------------------------------------------------------
       case 'solicitar_otp': {
         const { email } = data;
+
+        // NÃO PERMITE LOGIN com e-mail que já possui sessão ativa.
+        // (Sessões restauradas/abas do mesmo usuário usam 'restaurar_sessao'.)
+        if (email && usuarios.has(email)) {
+          ws.send(JSON.stringify({
+            tipo: 'erro',
+            codigo: 'EMAIL_EM_USO',
+            mensagem: 'Este e-mail já está conectado. Feche a outra sessão (aba ou aparelho) e tente novamente.'
+          }));
+          break;
+        }
+
         const codigo = gerarOTP();
         const nome = email.split('@')[0].replace(/[._]/g, ' ').replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
         
@@ -640,29 +683,42 @@ function handleWsConnection(ws) {
           ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Código inválido ou expirado.' }));
           return;
         }
-        
-        // Registrar usuário (mantém as outras abas já conectadas com este email)
+
+        // NÃO PERMITE LOGIN com e-mail que já possui sessão ativa.
+        if (usuarios.has(email)) {
+          ws.send(JSON.stringify({
+            tipo: 'erro',
+            codigo: 'EMAIL_EM_USO',
+            mensagem: 'Este e-mail já está conectado. Feche a outra sessão (aba ou aparelho) e tente novamente.'
+          }));
+          return;
+        }
+
+        // Nome único: se já existir, recebe numeração (Maria, Maria2, ...)
+        const nomeFinal = nomeUnico(result.nome, email);
+
+        // Registrar usuário
         const usuarioLogin = usuarios.get(email);
         const agora = new Date();
         if (usuarioLogin) { 
             usuarioLogin.ws = ws; 
-            usuarioLogin.nome = result.nome; 
+            usuarioLogin.nome = nomeFinal; 
             usuarioLogin.lastActivity = agora;
-        } else usuarios.set(email, { ws, nome: result.nome, salaAtual: null, lastActivity: agora, entrouEmSalaEm: null });
+        } else usuarios.set(email, { ws, nome: nomeFinal, salaAtual: null, lastActivity: agora, entrouEmSalaEm: null });
         registrarConexao(email, ws);
         ws.email = email;
         
         ws.send(JSON.stringify({
           tipo: 'registrado',
           email,
-          nome: result.nome,
-          mensagem: `Bem-vindo, ${result.nome}!`
+          nome: nomeFinal,
+          mensagem: `Bem-vindo, ${nomeFinal}!`
         }));
         
         // Enviar chaves públicas E2E já conhecidas (para poder cifrar mensagens ponta a ponta)
         enviarChavesPublicas(ws);
         
-        console.log(`[LOGIN] ${result.nome} (${email}) autenticou via OTP`);
+        console.log(`[LOGIN] ${nomeFinal} (${email}) autenticou via OTP`);
         break;
       }
       
@@ -672,14 +728,18 @@ function handleWsConnection(ws) {
       case 'restaurar_sessao': {
         const { email, nome } = data;
         if (!email) break;
-        const nomeUser = nome || email.split('@')[0];
         // Re-registrar usuário com a nova conexão ws.
         // IMPORTANTE: não zera a sala atual nem apaga as outras abas conectadas.
         const usuarioExistente = usuarios.get(email);
         const agora = new Date();
+
+        // Nome único também na restauração (exclui o próprio e-mail da checagem)
+        const nomeBase = normalizarNome(nome) || normalizarNome(usuarioExistente?.nome) || email.split('@')[0];
+        const nomeUser = nomeUnico(nomeBase, email);
+
         if (usuarioExistente) {
           usuarioExistente.ws = ws;
-          if (nome) usuarioExistente.nome = nome;
+          usuarioExistente.nome = nomeUser;
           usuarioExistente.lastActivity = agora;
         } else {
           usuarios.set(email, { ws, nome: nomeUser, salaAtual: null, lastActivity: agora, entrouEmSalaEm: null });
@@ -690,7 +750,7 @@ function handleWsConnection(ws) {
           tipo: 'registrado',
           email,
           nome: nomeUser,
-          mensagem: `Bem-vindo de volta, ${nome || email}!`
+          mensagem: `Bem-vindo de volta, ${nomeUser}!`
         }));
         // Enviar chaves públicas E2E já conhecidas
         enviarChavesPublicas(ws);
@@ -730,13 +790,24 @@ function handleWsConnection(ws) {
       // ALTERAR NOME DE USUÁRIO (email permanece o mesmo)
       // --------------------------------------------------------
       case 'alterar_nome': {
-        const { email, nome } = data;
-        if (!email || !nome) break;
+        const { email } = data;
+        const nomePedido = normalizarNome(data.nome);
+        if (!email || !nomePedido) break;
         const user = usuarios.get(email);
         if (user) {
-          user.nome = nome;
-          ws.send(JSON.stringify({ tipo: 'nome_alterado', email, nome }));
-          console.log(`[USUÁRIO] ${email} agora se chama "${nome}"`);
+          // Nome único: se já existir, acrescenta numeração (Maria, Maria2, ...)
+          const nomeFinal = nomeUnico(nomePedido, email);
+          user.nome = nomeFinal;
+          // Mantém o nome exibido nas chaves públicas E2E
+          if (chavesPublicas.has(email)) chavesPublicas.get(email).nome = nomeFinal;
+          if (chavesPublicasECC.has(email)) chavesPublicasECC.get(email).nome = nomeFinal;
+          ws.send(JSON.stringify({
+            tipo: 'nome_alterado',
+            email,
+            nome: nomeFinal,
+            ajustado: nomeFinal !== nomePedido
+          }));
+          console.log(`[USUÁRIO] ${email} agora se chama "${nomeFinal}"${nomeFinal !== nomePedido ? ` (pedido "${nomePedido}" já estava em uso)` : ''}`);
         }
         break;
       }

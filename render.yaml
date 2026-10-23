@@ -3,16 +3,21 @@ services:
     name: cripto-chat
     runtime: node
     plan: free
-    buildCommand: cd server && npm ci
-    startCommand: cd server && node server.js
+    # A raiz do projeto contém o package.json (dependências) — por isso
+    # o build e o start rodam na RAIZ, e não dentro de server/.
+    buildCommand: npm ci
+    startCommand: node server/server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
       - key: NODE_VERSION
         value: 20.x
+      # NÃO defina PORT: o Render injeta a porta automaticamente.
+      # TLS é terminado pelo proxy do Render, então desativamos o HTTPS
+      # local (porta 3443), que só existe para a rede local/Escola.
+      - key: HTTPS_PORT
+        value: "0"
     # Configure estas variáveis no dashboard do Render (Environment Variables):
     # SMTP_HOST=smtp.gmail.com
     # SMTP_PORT=587

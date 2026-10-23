@@ -1,0 +1,5 @@
+{
+  "senhaHash": "87e415918dd9ffda454cd5398c9ba6c69fb5a44a3865caceb5e75d8ace34e9aa",
+  "modoDemo": true,
+  "descricao": "Modo demo = codigo OTP exibido na tela (sem envio por email). senhaHash = SHA-256 da senha mestre. A senha padrao esta documentada no README.md (secao MODO DEMO)."
+}

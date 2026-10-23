@@ -265,19 +265,21 @@
         }
         .fonte-btn:hover:not(:disabled) { border-color: var(--acento); }
         .fonte-btn:disabled { opacity: 0.35; cursor: default; }
-        .fonte-info { font-size: 10px; color: var(--texto-suave); min-width: 32px; text-align: center; }
+        .fonte-info { font-size: 11px; color: var(--texto-forte); min-width: 32px; text-align: center; font-weight: bold; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         /* Espaço entre parágrafos — o reset acima zera as margens padrão,
            e sem isso os textos do Guia ficam colados (melhora a leitura) */
         p { margin-bottom: 16px; }
-        body {
+        html { min-height: 100vh; }
+body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
             min-height: 100vh; color: var(--texto);
-            padding-bottom: 64px; /* espaço para o rodapé fixo */
+            padding: 60px 0 64px 0; /* topo: espaço para o topbar fixo; base: espaço para o rodapé fixo */
+            display: flex; flex-direction: column;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 100%; display: flex; flex-direction: column; }
         h1 { text-align: center; color: var(--acento); margin-bottom: 10px; text-shadow: 0 0 20px rgba(var(--acento-rgb), 0.5); }
         h2 { color: var(--acento); margin-bottom: 15px; }
         h3 { color: var(--acento); margin: 15px 0 10px; }
@@ -288,6 +290,18 @@
             border-radius: 12px; padding: 20px; margin-bottom: 20px;
             backdrop-filter: blur(10px);
         }
+        /* Login e painel principal preenchem a altura restante da tela */
+        #loginPanel, #mainPanel {
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 0;
+        }
+        /* Formulário de criação de sala: label + input na mesma linha; botão ao lado */
+        .criar-sala-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
+        .criar-sala-campos { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; }
+        .criar-sala-campos label { margin: 0; white-space: nowrap; }
+        .criar-sala-campos input { flex: 1; min-width: 120px; margin: 0; }
+        .criar-sala-btn { margin: 0 0 0 auto; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--texto-forte); font-size: 14px; }
         input, select, textarea {
@@ -329,7 +343,7 @@
            via visualViewport, então o teclado do celular não esconde o chat) */
         .chat-layout {
             display: grid; grid-template-columns: 1fr;
-            gap: 20px; height: calc(var(--app-height, 100vh) - 120px);
+            gap: 20px; height: var(--chat-height, calc(100vh - 199px));
         }
         .chat-main {
             display: flex; flex-direction: column;
@@ -338,9 +352,9 @@
             border-radius: 12px; overflow: hidden;
         }
         .chat-header {
-            padding: 15px 20px; background: rgba(var(--acento-rgb), 0.1);
+            padding: 6px 20px; background: rgba(var(--acento-rgb), 0.1);
             border-bottom: 1px solid var(--painel-borda);
-            display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+            display: flex; flex-direction: column; align-items: stretch; gap: 4px;
         }
         .chat-header-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
         .chat-header-esq { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -499,8 +513,8 @@
             background: var(--painel-bg); cursor: pointer; transition: background 0.2s;
         }
         .user-list-item:hover { background: rgba(var(--acento-rgb), 0.2); }
-        .crypto-select { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .crypto-select select { flex: 1; }
+        .crypto-select { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; justify-content: center; }
+        .crypto-select select { flex: 0 1 auto; min-width: 200px; width: auto; }
         .adm-container {
             background: var(--adm-bg); border: 2px solid #f5576c;
             border-radius: 12px; padding: 20px; margin-top: 20px;
@@ -522,12 +536,17 @@
             white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere;
         }
         .adm-message.plaintext { border-left-color: var(--verde-txt); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
         .tab {
             padding: 10px 20px; border-radius: 8px; cursor: pointer;
             background: var(--painel-bg); border: 1px solid var(--painel-borda); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            min-height: 60px;
         }
         .tab.active { background: rgba(var(--acento-rgb), 0.2); border-color: var(--acento); }
+        .tab-full { display: inline; }
+        .tab-short { display: none; }
+        .tab-icon { margin-right: 4px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .room-list-item {
@@ -557,9 +576,8 @@
 
         /* ===== BARRA SUPERIOR (sempre visível) ===== */
         .topbar {
-            position: sticky; top: 0; z-index: 2000;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
             background: var(--barra-bg);
-            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--barra-borda);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             padding: 10px 20px;
@@ -570,9 +588,36 @@
             flex-wrap: wrap; gap: 8px;
         }
         .topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .topbar-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+        .topbar-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; position: relative; }
         .topbar-right button { margin: 0; }
-        .topbar-logo { font-size: 18px; font-weight: bold; color: var(--acento); text-shadow: 0 0 12px rgba(var(--acento-rgb), 0.5); }
+        /* Menu suspenso (mobile): agrupa fonte, Doc e Sala ADM */
+        .topbar-hamburger {
+            display: none;
+            align-items: center; justify-content: center;
+            background: none; border: 1px solid var(--barra-borda);
+            color: var(--texto); font-size: 18px; line-height: 1;
+            padding: 4px 10px; border-radius: 6px; cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .topbar-hamburger:hover { background: var(--painel-bg); }
+        .topbar-menu { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .topbar-logo {
+            font-size: 18px; font-weight: bold; color: var(--acento);
+            text-shadow: 0 0 12px rgba(var(--acento-rgb), 0.5);
+            border: 2px solid #ff4d4d; border-radius: 8px;
+            padding: 2px 8px; margin-right: 4px;
+            box-shadow: 0 0 8px #ff4d4d;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .topbar-logo.logo-online {
+            border-color: var(--verde-txt);
+            box-shadow: 0 0 10px var(--verde-txt);
+        }
+        .topbar-logo.logo-offline {
+            border-color: #ff4d4d;
+            box-shadow: 0 0 8px #ff4d4d;
+            animation: offlinePulse 1.2s ease-in-out infinite;
+        }
         .mode-indicator {
             padding: 3px 10px; border-radius: 20px;
             font-size: 10px; font-weight: bold; letter-spacing: 0.5px;
@@ -580,7 +625,7 @@
             transition: all 0.2s ease;
         }
         .mode-indicator:hover { transform: scale(1.05); filter: brightness(1.2); }
-        .mode-login { background: rgba(var(--acento-rgb), 0.18); color: var(--acento); border: 1px solid rgba(var(--acento-rgb), 0.45); }
+        .mode-login { background: rgba(255, 140, 66, 0.18); color: #ff8c42; border: 1px solid rgba(255, 140, 66, 0.45); }
         .mode-demo { background: rgba(67, 233, 123, 0.18); color: var(--verde-txt); border: 1px solid rgba(67, 233, 123, 0.45); }
         .topbar-email {
             color: var(--texto-forte); font-size: 13px; padding: 4px 12px;
@@ -610,6 +655,10 @@
         @keyframes demoPulse {
             0%, 100% { box-shadow: 0 0 0 rgba(67, 233, 123, 0); }
             50% { box-shadow: 0 0 14px rgba(67, 233, 123, 0.85); }
+        }
+        @keyframes offlinePulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(255, 77, 77, 0); }
+            50% { box-shadow: 0 0 14px rgba(255, 77, 77, 0.85); }
         }
         .topbar-pass {
             max-width: 1200px; margin: 10px auto 0;
@@ -660,15 +709,15 @@
             flex-shrink: 0; cursor: default;
         }
         .conn-online { background: var(--verde-txt); box-shadow: 0 0 8px var(--verde-txt); }
-        .conn-offline { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: demoPulse 1.2s ease-in-out infinite; }
+        .conn-offline { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: offlinePulse 1.2s ease-in-out infinite; }
         .fb-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
         .fb-right { display: flex; align-items: center; margin-left: auto; }
         .tu-btn { padding: 5px 12px; font-size: 12px; margin: 0; border-radius: 6px; }
 
         /* ===== RESPONSIVO (dispositivos móveis) ===== */
         @media (max-width: 768px) {
-            .container { padding: 12px; }
-            body { padding-bottom: 50px; } /* espaço exato para o rodapé de uma linha */
+            .container { padding: 0 12px; }
+            body { padding-top: 44px; padding-bottom: 50px; } /* espaço para topbar e rodapé no mobile */
             /* TOPO: tudo em uma única linha */
             .topbar { padding: 6px 10px; }
             .topbar-main { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
@@ -680,7 +729,6 @@
             .tema-select { font-size: 10px; padding: 2px 3px; max-width: 88px; }
             .tema-ico { font-size: 12px; }
             .fonte-btn { font-size: 10px; padding: 2px 4px; }
-            .fonte-info { display: none; } /* economiza espaço no celular */
             .tu-btn { padding: 4px 8px; font-size: 11px; }
             .topbar-pass { flex-direction: column; align-items: stretch; }
             .topbar-pass input { width: 100%; }
@@ -692,25 +740,58 @@
             h1 { font-size: 24px; }
             .flex-row { flex-direction: column; }
             .flex-row > * { flex: auto; }
-            .tabs { flex-wrap: wrap; }
-            .tab { flex: 1 1 45%; text-align: center; font-size: 13px; padding: 12px 8px; }
+            .tabs { flex-wrap: nowrap; gap: 6px; }
+            .tab { flex: 1 1 0; text-align: center; font-size: 12px; padding: 8px 4px; min-height: 44px; }
+            .tab-full { display: none; }
+            .tab-short { display: inline; }
             /* CHAT no celular: altura EXATA da viewport (--app-height acompanha o teclado),
                cabeçalho da sala fixo e as últimas mensagens sempre visíveis */
             .chat-layout {
                 grid-template-columns: 1fr; gap: 0;
-                height: calc(var(--app-height, 100vh) - 116px);
+                height: var(--chat-height, calc(100vh - 175px));
                 min-height: 0;
             }
-            .chat-header { position: sticky; top: 0; z-index: 30; padding: 10px 12px; }
+            .chat-header { position: sticky; top: 0; z-index: 30; padding: 3px 5px; }
             .chat-messages { padding: 12px; }
             .chat-input-area { padding: 10px; }
             .chat-input-area textarea { font-size: 16px; } /* 16px: evita o zoom automático do iOS */
-            .crypto-select { flex-wrap: wrap; }
-            .crypto-select select { flex: 1 1 100%; }
-            .crypto-select button { margin: 0; flex: 1 1 100%; }
+            .crypto-select { flex-wrap: nowrap; justify-content: center; }
+            .crypto-select select { flex: 0 1 auto; min-width: 150px; width: auto; }
+            .crypto-select button { margin: 0; flex: 0 1 auto; width: auto; }
             .crypto-hint { display: none; } /* economiza altura da tela no celular */
             .otp-input { font-size: 22px; letter-spacing: 8px; }
             button { width: auto; }
+        }
+        @media (max-width: 640px) {
+            /* Topo: itens de fonte/Doc/Sala ADM viram menu suspenso (hambúrguer) */
+            .topbar-hamburger { display: inline-flex; }
+            .topbar-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                background: var(--barra-bg);
+                border: 1px solid var(--barra-borda);
+                border-radius: 8px;
+                padding: 10px;
+                margin-top: 6px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+                z-index: 100;
+                min-width: 210px;
+            }
+            .topbar-menu.open { display: flex; }
+            .topbar-menu .fonte-wrap { justify-content: center; }
+            .topbar-menu .tema-wrap { width: 100%; justify-content: center; }
+            .topbar-menu .tema-select { max-width: 100%; width: 100%; }
+            .topbar-menu .btn-secondary,
+            .topbar-menu .btn-adm { width: 100%; text-align: center; }
+            /* Criar sala: label+input na 1a linha, botão pequeno à direita na 2a */
+            .criar-sala-form { flex-direction: column; align-items: stretch; }
+            .criar-sala-campos { width: 100%; }
+            .criar-sala-btn { align-self: flex-end; margin: 0; padding: 6px 12px; font-size: 12px; }
         }
         @media (max-width: 480px) {
             /* TOPO ainda mais compacto, mantendo uma linha */
@@ -722,11 +803,126 @@
             .topbar-main { gap: 6px; }
             .tu-btn { padding: 4px 7px; font-size: 10px; }
             .tema-select { max-width: 76px; font-size: 9px; padding: 2px 2px; }
-            .tema-ico { display: none; } /* esconde o emoji para caber em uma linha */
             /* RODAPÉ ainda mais compacto, mantendo uma linha */
             .fb-name { max-width: 40%; font-size: 11px; }
             .tu-email { font-size: 10px; }
             .fb-input { min-width: 120px; max-width: 160px; font-size: 12px; }
+        }
+
+        /* ==============================================================
+           PÁGINA "DOCUMENTAÇÃO" — exibe o arquivo docs/documentacao.md
+           ============================================================== */
+        .doc-panel { max-width: 940px; margin: 0 auto; padding: 4px 0 30px; }
+        .doc-toolbar {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .doc-toolbar h1 { margin: 0; font-size: 22px; color: var(--texto-destaque); }
+        .doc-conteudo {
+            background: var(--painel-bg); border: 1px solid var(--painel-borda);
+            border-radius: 12px; padding: 22px 26px;
+            line-height: 1.7; font-size: 15.5px; color: var(--texto);
+            text-align: left;
+        }
+        .doc-conteudo h1 { font-size: 26px; color: var(--acento); margin: 4px 0 14px; line-height: 1.3; }
+        .doc-conteudo h2 { font-size: 21px; color: var(--texto-destaque); margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--painel-borda); }
+        .doc-conteudo h3 { font-size: 17px; color: var(--verde-txt); margin: 20px 0 8px; }
+        .doc-conteudo h4 { font-size: 15.5px; color: var(--aviso); margin: 16px 0 6px; }
+        .doc-conteudo p { margin: 10px 0; }
+        .doc-conteudo ul, .doc-conteudo ol { margin: 10px 0; padding-left: 26px; }
+        .doc-conteudo li { margin: 7px 0; }
+        .doc-conteudo li::marker { color: var(--acento); }
+        .doc-conteudo strong { color: var(--texto-forte); }
+        .doc-conteudo em { color: var(--texto-suave); }
+        .doc-conteudo code {
+            background: var(--campo-bg); border: 1px solid var(--campo-borda);
+            padding: 1px 6px; border-radius: 5px; font-size: 0.93em;
+        }
+        .doc-conteudo pre {
+            background: var(--adm-bg, rgba(0,0,0,.35)); border: 1px solid var(--painel-borda);
+            padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 12px 0;
+        }
+        .doc-conteudo pre code { background: none; border: 0; padding: 0; }
+        .doc-conteudo blockquote {
+            margin: 16px 0; padding: 10px 14px;
+            border-left: 4px solid var(--aviso);
+            background: rgba(245, 166, 35, 0.10);
+            border-radius: 0 8px 8px 0; color: var(--texto-forte);
+        }
+        .doc-conteudo blockquote p { margin: 0; }
+        .doc-conteudo hr { border: 0; border-top: 1px dashed var(--painel-borda); margin: 24px 0; }
+        .doc-conteudo a { color: var(--acento); font-weight: 600; text-decoration: none; }
+        .doc-conteudo a:hover { text-decoration: underline; }
+        .doc-loading { padding: 30px 10px; text-align: center; color: var(--texto-fraco); }
+        .doc-erro { padding: 24px 10px; text-align: center; color: var(--vermelho-txt); line-height: 1.7; }
+        @media (max-width: 600px) {
+            .doc-conteudo { padding: 15px; font-size: 15px; }
+            .doc-conteudo h1 { font-size: 22px; }
+            .doc-conteudo h2 { font-size: 19px; }
+            .doc-toolbar h1 { font-size: 18px; }
+        }
+
+        /* Botão flutuante para gerar PDF da documentação */
+        .doc-pdf-fab {
+            position: fixed;
+            top: 78px;
+            right: 22px;
+            z-index: 60;
+            padding: 10px 16px;
+            border-radius: 24px;
+            border: 1px solid var(--painel-borda);
+            background: var(--btn-primario);
+            color: var(--acento-texto, #fff);
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .doc-pdf-fab:hover { transform: translateY(-2px); filter: brightness(1.15); }
+        @media (max-width: 600px) {
+            .doc-pdf-fab { top: auto; bottom: 18px; right: 16px; padding: 10px 14px; font-size: 12px; }
+        }
+
+        /* Rodapé de impressão (copyright em todas as páginas do PDF) */
+        .doc-print-footer { display: none; }
+
+        @media print {
+            @page {
+                margin: 1.5cm 1.5cm 2.2cm 1.5cm;
+                @bottom-left {
+                    content: "© 2026 cripto.chat — Projeto educacional de criptografia\A Licenciatura em Computação | UTFPR — Universidade Tecnológica Federal do Paraná\A Desenvolvido por: Marlon Antonio Stoeberl — Rio Negro, Paraná";
+                    white-space: pre-line;
+                    width: 80%;
+                    font-size: 8pt;
+                    color: #555;
+                }
+                @bottom-right {
+                    content: "Página " counter(page) " de " counter(pages);
+                    width: 20%;
+                    text-align: right;
+                    font-size: 8pt;
+                    color: #555;
+                }
+
+            }
+            body { background: #fff !important; color: #000 !important; }
+            .topbar, .footer-bar, 
+            .container { max-width: 100% !important; padding: 0 !important; }
+            #docPanel { display: block !important; max-width: 100% !important; padding: 0 !important; }
+            .doc-toolbar { display: none !important; }
+            .doc-pdf-fab { display: none !important; }
+            .doc-print-footer { display: none !important; }
+            .doc-conteudo { border: none !important; box-shadow: none !important; background: #fff !important; color: #000 !important; padding: 0 !important; font-size: 11pt; line-height: 1.5; }
+            .doc-conteudo h1 { color: #000 !important; font-size: 18pt; page-break-before: auto; }
+            .doc-conteudo h2 { color: #000 !important; font-size: 14pt; page-break-after: avoid; margin-top: 16pt; }
+            .doc-conteudo h3, .doc-conteudo h4 { color: #000 !important; page-break-after: avoid; }
+            .doc-conteudo p, .doc-conteudo li, .doc-conteudo blockquote { page-break-inside: avoid; }
+            .doc-conteudo a { color: #000 !important; text-decoration: none; }
+            .doc-conteudo code { background: #f2f2f2 !important; border: 1px solid #ddd !important; }
+            .doc-conteudo pre { background: #f2f2f2 !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+            .doc-conteudo blockquote { background: #fafafa !important; border-left: 3px solid #999 !important; }
+            .doc-conteudo hr { border-top: 1px solid #999 !important; }
         }
     </style>
     <script>
@@ -752,19 +948,23 @@
         <!-- LINHA 1: Identidade + modo + ações -->
         <div class="topbar-main">
             <div class="topbar-left">
-                <span class="topbar-logo">🔐 cripto.chat</span>
-                <span id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
-                      title="Modo demo desativado — clique para abrir/ativar"><span class="modo-longo">MODO </span>DEMO <span class="demo-open">＋</span></span>
+                <span class="topbar-logo logo-offline">🔐 cripto.chat</span>
+                <div id="pwaInstallBtn" style="display:none;align-items:center;gap:4px;">
+                    <button class="btn-secondary tu-btn" id="pwaInstallAction" onclick="instalarOuAbrirPwa()" title="Instalar app" style="padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px;">
+                        📱 Instalar
+                    </button>
+                    <button id="pwaInstallClose" onclick="fecharInstallBtn()" title="Ocultar por esta sessão" style="width:20px;height:20px;border-radius:50%;background:var(--painel-bg);border:1px solid var(--painel-borda);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto-fraco);line-height:1;padding:0;">✕</button>
+                </div>
+                <div id="pwaUpdateBtn" style="display:none;align-items:center;gap:4px;">
+                    <button class="btn-success tu-btn" id="pwaUpdateAction" onclick="atualizarApp()" title="Atualizar para nova versão" style="padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px;">
+                        🔄 Atualizar
+                    </button>
+                </div>
             </div>
             <div id="topbarActions" class="topbar-right">
-                <!-- Tamanho da fonte -->
-                <span class="fonte-wrap" title="Tamanho da fonte">
-                    <button id="btnFonteMenos" class="fonte-btn" onclick="mudarFonte(-1)"
-                            aria-label="Diminuir fonte"><span class="fonte-letra">A</span>−</button>
-                    <span id="fonteInfo" class="fonte-info">100%</span>
-                    <button id="btnFonteMais" class="fonte-btn" onclick="mudarFonte(1)"
-                            aria-label="Aumentar fonte"><span class="fonte-letra">A</span>+</button>
-                </span>
+                <!-- Menu suspenso (mobile): agrupa fonte, Doc e Sala ADM -->
+                <button class="topbar-hamburger" onclick="toggleTopbarMenu()" aria-label="Menu" title="Menu">☰</button>
+                <div class="topbar-menu" id="topbarMenu">
                 <!-- Combo de tema de cores (sempre visível) -->
                 <span class="tema-wrap" title="Escolher tema de cores">
                     <span class="tema-ico">🎨</span>
@@ -789,18 +989,22 @@
                         <option value="menta">Menta</option>
                     </select>
                 </span>
-                <!-- Sala ADM: aparece só após o login -->
-                <button id="btnSalaADM" class="btn-adm tu-btn hidden" onclick="abrirSalaADM()">Sala ADM</button>
-            </div>
-        </div>
-        <!-- LINHA 2 (usuário) movida para o rodapé fixo -->
-        <!-- Input da senha mestre (aparece ao clicar no indicador) -->
-        <div id="demoPasswordInput" class="topbar-pass hidden">
-            <input type="password" id="demoPassword" placeholder="Senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
-            <button class="btn-success" onclick="toggleDemo()">Confirmar</button>
-            <button class="btn-secondary" onclick="fecharSenhaDemo()">Cancelar</button>
-        </div>
-    </div>
+
+                    <!-- Tamanho da fonte -->
+                    <span class="fonte-wrap" title="Tamanho da fonte">
+                        <button id="btnFonteMenos" class="fonte-btn" onclick="mudarFonte(-1)"
+                                aria-label="Diminuir fonte"><span class="fonte-letra">A</span>−</button>
+                        <span id="fonteInfo" class="fonte-info">100%</span>
+                        <button id="btnFonteMais" class="fonte-btn" onclick="mudarFonte(1)"
+                                aria-label="Aumentar fonte"><span class="fonte-letra">A</span>+</button>
+                    </span>
+                    <!-- Documentação: sempre visível (antes e depois do login) -->
+                    <button id="btnDocumentacao" class="btn-secondary tu-btn" onclick="abrirDocumentacao()"
+                            title="Como usar o chat — página Documentação">📖 Doc</button>
+                    <!-- Sala ADM: aparece só após o login -->
+                    <button id="btnSalaADM" class="btn-adm tu-btn hidden" onclick="abrirSalaADM()">Sala ADM</button>
+                </div>
+            </div>    </div>    </div>
 
     <div class="container">
         <div id="pageHeader">
@@ -823,8 +1027,17 @@
                     <label for="loginEmail">Email:</label>
                     <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter') solicitarOTP()">
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: center;">
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
+                </div>
+                <div style="margin-top: 14px; text-align: center;">
+                    <button id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
+                            title="Modo demo desativado — clique para abrir/ativar">MODO DEMO OFF</button>
+                </div>
+                <div id="demoPasswordInput" class="topbar-pass hidden" style="justify-content: center; margin-top: 8px;">
+                    <input type="password" id="demoPassword" placeholder="Senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
+                    <button class="btn-success" onclick="toggleDemo()">Confirmar</button>
+                    <button class="btn-secondary" onclick="fecharSenhaDemo()">Cancelar</button>
                 </div>
             </div>
 
@@ -847,29 +1060,36 @@
         </div>
 
         <!-- ========== PAINEL PRINCIPAL ========== -->
-        <div id="mainPanel" class="hidden">
+        <div id="mainPanel" class="panel hidden">
             <div id="tabsBar" class="tabs">
-                <div class="tab active" onclick="switchTab('salas')" data-tab="salas">Salas de Bate-Papo</div>
-                <div class="tab" onclick="switchTab('demo')" data-tab="demo">Demonstração Criptografia</div>
-                <div class="tab" onclick="switchTab('educacional')" data-tab="educacional">Guia Educacional</div>
+                <div class="tab active" onclick="switchTab('salas')" data-tab="salas" title="Salas de Bate-Papo">
+                    <span class="tab-icon">💬</span><span class="tab-full">Salas de Bate-Papo</span><span class="tab-short">Salas</span>
+                </div>
+                <div class="tab" onclick="switchTab('demo')" data-tab="demo" title="Demonstração Criptografia">
+                    <span class="tab-icon">🔐</span><span class="tab-full">Demonstração Criptografia</span><span class="tab-short">Demo</span>
+                </div>
+                <div class="tab" onclick="switchTab('educacional')" data-tab="educacional" title="Guia Educacional">
+                    <span class="tab-icon">📖</span><span class="tab-full">Guia Educacional</span><span class="tab-short">Guia</span>
+                </div>
             </div>
 
             <!-- TAB: SALAS -->
             <div id="tabSalas" class="tab-content active">
                 <div id="dashboardArea">
-                <div class="flex-row">
-                    <div class="panel" style="flex: 1;">
-                        <h2>Criar Nova Sala</h2>
-                        <div class="form-group">
+                <div class="panel">
+                    <h2>Criar Nova Sala</h2>
+                    <div class="criar-sala-form">
+                        <div class="criar-sala-campos">
                             <label for="novaSalaNome">Nome da Sala:</label>
-                            <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024" onkeydown="if(event.key==='Enter') criarSala()">
+                            <input type="text" id="novaSalaNome" placeholder="Ex: Turma Cripto 2024"
+                                   onkeydown="if(event.key==='Enter') criarSala()">
                         </div>
-                        <button class="btn-success" onclick="criarSala()">Criar Sala</button>
+                        <button class="btn-success criar-sala-btn" onclick="criarSala()">Criar Sala</button>
                     </div>
-                    <div class="panel" style="flex: 1;">
-                        <h2>Salas Disponíveis</h2>
-                        <div id="listaSalas"></div>
-                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Salas Disponíveis</h2>
+                    <div id="listaSalas"></div>
                 </div>
                 </div><!-- /dashboardArea -->
 
@@ -893,7 +1113,7 @@
                                                     title="Ver usuários na sala">👥 <span id="presencaCount">0</span></button>
                                             <div id="presencaPopup" class="presenca-popup hidden"></div>
                                         </div>
-                                        <button class="btn-secondary" onclick="exportarRelatorioAtividade()" title="Exportar Relatório de Atividade Pedagógica" style="padding: 4px 10px; font-size: 12px; margin-left: 6px;">📄 Relatório</button>
+                                        <button onclick="exportarRelatorioAtividade()" title="Exportar Relatório de Atividade Pedagógica" style="padding: 2px 6px; font-size: 14px; margin: 0; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--texto);">🖨️</button>
                                     </div>
                                 </div>
                             </div>
@@ -901,10 +1121,10 @@
                             <div class="chat-input-area">
                                 <div class="mention-wrap">
                                     <div id="mentionPopup" class="mention-popup hidden"></div>
-                                    <textarea id="messageInput" rows="3" placeholder="Digite sua mensagem... Use @usuario para DM e #usuario para mencionar"
+                                    <textarea id="messageInput" rows="2" placeholder="Digite sua mensagem... Use @usuario para DM e #usuario para mencionar"
                                               onkeydown="handleKeyDown(event)" oninput="verificarMention()" onblur="fecharMentionSoon()"></textarea>
                                 </div>
-                                <div class="crypto-select" style="margin-bottom: 0; margin-top: 10px;">
+                                <div class="crypto-select" style="margin-bottom: 0; margin-top: 8px; justify-content: center;">
                                     <select id="cryptoSelect" onchange="toggleKeyInput()">
                                         <option value="none">Sem criptografia (texto claro)</option>
                                         <option value="caesar">Cifra de César (Rot-N)</option>
@@ -929,7 +1149,6 @@
             <div id="tabDemo" class="tab-content">
                 <div class="panel">
                     <h2>Demonstração de Criptografia</h2>
-                    <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
                     <p style="margin-bottom: 15px;">Use esta ferramenta para testar os algoritmos antes de enviar mensagens:</p>
                     <div class="crypto-demo">
                         <h3>Testar Algoritmo</h3>
@@ -970,13 +1189,11 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
 
             <!-- TAB: EDUCACIONAL -->
             <div id="tabEducacional" class="tab-content">
                 <div class="panel">
                     <h2>Guia Educacional: Fundamentos da Criptografia</h2>
-                    <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
                     <h3>1. O que é Criptografia e a Tríade CIA</h3>
                     <p>A <strong>Criptografia</strong> (do grego <em>kryptós</em>, "escondido", e <em>gráphein</em>, "escrita") é a ciência e a arte de transformar dados legíveis (<strong>texto claro / plaintext</strong>) em uma forma incompreensível (<strong>texto cifrado / ciphertext</strong>), de modo que apenas pessoas autorizadas consigam recuperar o conteúdo original.</p>
                     <p>Na Segurança da Informação, a criptografia é o pilar que sustenta a chamada <strong>Tríade CIA</strong>:</p>
@@ -1441,7 +1658,25 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     </ul>
                 </div>
             </div>
-            <div class="tab-footer-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
+            
+        </div>
+
+        <!-- ========== PÁGINA: DOCUMENTAÇÃO ========== -->
+        <div id="docPanel" class="doc-panel hidden">
+            <div class="doc-toolbar">
+                <button class="btn-secondary" onclick="fecharDocumentacao()">← Voltar</button>
+                <h1>📖 Documentação</h1>
+            </div>
+            <button class="doc-pdf-fab" onclick="gerarPdfDocumentacao()" title="Gerar PDF da documentação" aria-label="Gerar PDF da documentação">📄 Gerar PDF</button>
+            <div id="docConteudo" class="doc-conteudo">
+                <div class="doc-loading">⏳ Carregando a documentação…</div>
+            </div>
+            <div class="doc-print-footer">
+                © 2026 cripto.chat — Projeto educacional de criptografia<br>
+                Licenciatura em Computação<br>
+                UTFPR — Universidade Tecnológica Federal do Paraná<br>
+                Marlon Antonio Stoeberl — Rio Negro, Paraná
+            </div>
         </div>
 
         <!-- ADM MODAL -->
@@ -1476,6 +1711,9 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ============================================================
         // ESTADO GLOBAL
         // ============================================================
+        // Versão do app (atualizar a cada release)
+        const APP_VERSION = '2.2.0';
+        const APP_BUILD = '2026-10-23';
         const MODO = detectarModo();
         let canal = null;
         let currentUser = null;
@@ -1562,15 +1800,42 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
         if (MODO !== 'pages') {
             window.addEventListener('load', () => {
-                console.log('%c🔐 cripto.chat v2026', 'font-size:14px;font-weight:bold;color:#c4a35a');
+                console.log('%c🔐 cripto.chat v' + APP_VERSION + ' (build ' + APP_BUILD + ')', 'font-size:14px;font-weight:bold;color:#c4a35a');
                 console.log('%c© 2026 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
                 console.log('%cLicenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)', 'font-size:10px;color:#888');
                 console.log('%cMarlon Antonio Stoeberl — Rio Negro, Paraná', 'font-size:10px;color:#888');
                 console.log('[cripto.chat] Inicializando conexão...');
+                // Verificar versão do app
+                verificarVersaoApp();
                 restaurarSessaoSalva();
                 tentativasWs = 0;
                 conectarWebSocket();
             });
+        }
+
+        // ============================================================
+        // CONTROLE DE VERSÃO
+        // ============================================================
+        async function verificarVersaoApp() {
+            try {
+                const resp = await fetch('version.json', { cache: 'no-cache' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data.version && data.version !== APP_VERSION) {
+                    console.log('[Versão] Nova versão disponível:', data.version, '(atual:', APP_VERSION + ')');
+                    // Mostrar notificação de atualização
+                    const updateBtn = document.getElementById('pwaUpdateBtn');
+                    if (updateBtn) {
+                        updateBtn.style.display = 'flex';
+                        const btn = document.getElementById('pwaUpdateAction');
+                        if (btn) btn.textContent = '🔄 Atualizar para v' + data.version;
+                    }
+                } else {
+                    console.log('[Versão] App atualizado (v' + APP_VERSION + ')');
+                }
+            } catch (e) {
+                console.warn('[Versão] Falha ao verificar versão:', e);
+            }
         }
 
         // ============================================================
@@ -1635,6 +1900,17 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
         function conectarAoSistema(email, nome) {
             currentUser = { email, nome };
+
+            // Reset PWA install button state on login (allows it to appear again after logout)
+            if (typeof window.resetPwaInstallBtn === 'function') {
+                window.resetPwaInstallBtn();
+            }
+            // If we have a deferred prompt and it wasn't dismissed, show the button
+            if (typeof window.showPwaInstallBtn === 'function') {
+                setTimeout(() => {
+                    window.showPwaInstallBtn();
+                }, 3000);
+            }
 
             if (MODO === 'pages') {
                 conectarBroadcastChannel();
@@ -1991,17 +2267,11 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
                 case 'demo_status':
                     atualizarDemoStatus(data.ativo);
-                    // Só alerta quando o usuário acabou de alternar o modo
-                    if (data.mensagem && aguardandoToggleDemo) {
-                        aguardandoToggleDemo = false;
-                        alert(data.mensagem);
-                    }
                     break;
 
                 case 'entrar_adm': break;
 
                 case 'erro':
-                    aguardandoToggleDemo = false;
                     // Re-sincronização: se a sala foi apagada (servidor reiniciou / sem usuários),
                     // sai da sala "fantasma" e volta ao painel em vez de travar com alert repetido
                     if (data.mensagem === 'Sala não encontrada' && currentSala) {
@@ -2034,6 +2304,24 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         }
         window.addEventListener('keydown', registrarInteracaoUsuario);
         window.addEventListener('click', registrarInteracaoUsuario);
+        // Solicitar confirmação antes de sair/recarregar
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            return 'Você tem certeza que deseja sair da página?';
+        });
+        // Impedir recarregamento com F5
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' || e.key === '123') {
+                e.preventDefault();
+                console.log('[crypto.chat] Pressionamento de F5 bloqueado');
+            }
+        });
+        // Bloquear Fe5 adicional: F11 também pode entrar em modo de tela cheia
+        document.addEventListener('keydown', function(e) {
+            if ((e.key === 'F11' || (e.ctrlKey && e.key === 'F')) && !document.fullscreenElement) {
+                e.preventDefault();
+            }
+        });
 
         // Verificação preventiva local de inatividade de 30 minutos
         setInterval(() => {
@@ -2113,26 +2401,64 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         }
 
         function desconectar() {
-            if (canal) canal.close();
-            currentUser = null;
-            currentSala = null;
-            admIniciada = false; // ao logar de novo na aba ADM, entra na ADM novamente
-            otpAtual = null;
-            emailParaVerificar = null;
-            try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
-            document.getElementById('loginPanel').classList.remove('hidden');
-            document.getElementById('mainPanel').classList.add('hidden');
-            document.getElementById('chatArea').classList.add('hidden');
-            document.getElementById('dashboardArea').classList.remove('hidden');
-            document.getElementById('tabsBar').classList.remove('hidden');
-            document.getElementById('pageHeader').classList.remove('hidden');
-            document.getElementById('loginStep2').classList.add('hidden');
-            document.getElementById('loginStep1').classList.remove('hidden');
-            document.getElementById('otpCode').value = '';
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('topbarUserRow').classList.add('hidden');
-            document.getElementById('btnSalaADM').classList.add('hidden');
-            document.getElementById('modeIndicator').classList.remove('hidden');
+            // Verificar se usuário está em sala de chat
+            if (currentSala && canal) {
+                // Se está em sala, pedir confirmação antes de sair
+                if (!confirm('Você está em uma sala de chat. Deseja realmente sair?')) {
+                    return; // Usuário cancelou, não sai
+                }
+                // Usuário confirmou - desconectar
+                if (canal) canal.close();
+                currentUser = null;
+                currentSala = null;
+                admIniciada = false;
+                otpAtual = null;
+                emailParaVerificar = null;
+                try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
+                document.getElementById('loginPanel').classList.remove('hidden');
+                document.getElementById('mainPanel').classList.add('hidden');
+                document.getElementById('chatArea').classList.add('hidden');
+                document.getElementById('dashboardArea').classList.remove('hidden');
+                document.getElementById('tabsBar').classList.remove('hidden');
+                document.getElementById('pageHeader').classList.remove('hidden');
+                document.getElementById('loginStep2').classList.add('hidden');
+                document.getElementById('loginStep1').classList.remove('hidden');
+                document.getElementById('otpCode').value = '';
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('topbarUserRow').classList.add('hidden');
+                document.getElementById('btnSalaADM').classList.add('hidden');
+                document.getElementById('modeIndicator').classList.remove('hidden');
+            // Reset PWA install button state on logout
+            if (typeof window.resetPwaInstallBtn === 'function') {
+                window.resetPwaInstallBtn();
+            }
+            } else {
+                // Se não está em sala, desconectar normalmente
+                if (canal) canal.close();
+                currentUser = null;
+                currentSala = null;
+                admIniciada = false; // ao logar de novo na aba ADM, entra na ADM novamente
+                otpAtual = null;
+                emailParaVerificar = null;
+                try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
+                document.getElementById('loginPanel').classList.remove('hidden');
+                document.getElementById('mainPanel').classList.add('hidden');
+                document.getElementById('chatArea').classList.add('hidden');
+                document.getElementById('dashboardArea').classList.remove('hidden');
+                document.getElementById('tabsBar').classList.remove('hidden');
+                document.getElementById('pageHeader').classList.remove('hidden');
+                document.getElementById('loginStep2').classList.add('hidden');
+                document.getElementById('loginStep1').classList.remove('hidden');
+                document.getElementById('otpCode').value = '';
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('topbarUserRow').classList.add('hidden');
+                document.getElementById('btnSalaADM').classList.add('hidden');
+                document.getElementById('modeIndicator').classList.remove('hidden');
+            // Reset PWA install button state on logout
+            if (typeof window.resetPwaInstallBtn === 'function') {
+                window.resetPwaInstallBtn();
+            }
+            }
         }
 
         // ============================================================
@@ -2188,7 +2514,6 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // MODO DEMO: Botão ao lado de Enviar Código
         // ============================================================
         let demoAtivo = false;
-        let aguardandoToggleDemo = false;
 
         function mostrarSenhaDemo() {
             console.log('[mostrarSenhaDemo] Exibindo input de senha');
@@ -2218,7 +2543,6 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             }
             const tipo = demoAtivo ? 'desabilitar_demo' : 'habilitar_demo';
             console.log('[toggleDemo] Enviando:', tipo);
-            aguardandoToggleDemo = true;
             enviar({ tipo, senha });
             fecharSenhaDemo();
         }
@@ -2228,11 +2552,11 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             const indicator = document.getElementById('modeIndicator');
             if (!indicator) return;
             if (ativo) {
-                indicator.innerHTML = '<span class="modo-longo">MODO </span>DEMO <span class="demo-x">✗</span>';
+                indicator.textContent = 'MODO DEMO ON';
                 indicator.className = 'mode-indicator mode-demo demo-on';
                 indicator.title = 'Modo demo ATIVO — clique para desativar';
             } else {
-                indicator.innerHTML = '<span class="modo-longo">MODO </span>DEMO <span class="demo-open">＋</span>';
+                indicator.textContent = 'MODO DEMO OFF';
                 indicator.className = 'mode-indicator mode-login';
                 indicator.title = 'Modo demo desativado — clique para abrir/ativar';
             }
@@ -2243,6 +2567,201 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+        }
+
+        // ============================================================
+        // MENU SUSPENSO DO TOPO (mobile): agrupa fonte, Doc e Sala ADM
+        // ============================================================
+        function toggleTopbarMenu(forceClose) {
+            const menu = document.getElementById('topbarMenu');
+            if (!menu) return;
+            if (forceClose) { menu.classList.remove('open'); return; }
+            menu.classList.toggle('open');
+        }
+        // Fecha o menu ao clicar fora dele
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('topbarMenu');
+            const btn = document.querySelector('.topbar-hamburger');
+            if (!menu) return;
+            if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+            menu.classList.remove('open');
+        });
+        // Fecha o menu após clicar em um item interno
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('topbarMenu');
+            if (menu) {
+                menu.addEventListener('click', function (e) {
+                    // Não fecha o menu ao interagir com o seletor de tema ou com a fonte
+                    if (e.target.closest('.tema-wrap') || e.target.closest('.fonte-wrap')) return;
+                    setTimeout(function () { menu.classList.remove('open'); }, 0);
+                });
+            }
+        });
+
+        // ============================================================
+        // PÁGINA "DOCUMENTAÇÃO"
+        // Exibe o arquivo docs/documentacao.md (guia de uso pedagógico).
+        // A página fica por cima do login/painel e o botão "← Voltar"
+        // devolve a tela que o usuário estava vendo.
+        // ============================================================
+        let documentacaoCarregada = false;
+        let estadoAntesDaDoc = null;
+
+        function esconderSeVisivel(el) {
+            if (!el) return false;
+            const estavaVisivel = !el.classList.contains('hidden');
+            el.classList.add('hidden');
+            return estavaVisivel;
+        }
+
+        function abrirDocumentacao() {
+            // Já aberta? Não sobrescreve o estado original (senão o
+            // "← Voltar" não teria mais para onde voltar).
+            if (estadoAntesDaDoc) {
+                document.getElementById('docPanel').classList.remove('hidden');
+                carregarDocumentacao();
+                return;
+            }
+            estadoAntesDaDoc = {
+                login: esconderSeVisivel(document.getElementById('loginPanel')),
+                main: esconderSeVisivel(document.getElementById('mainPanel')),
+                header: esconderSeVisivel(document.getElementById('pageHeader')),
+                adm: esconderSeVisivel(document.getElementById('admPanel'))
+            };
+            document.getElementById('docPanel').classList.remove('hidden');
+            carregarDocumentacao();
+            try { window.scrollTo(0, 0); } catch (e) {}
+        }
+
+        function fecharDocumentacao() {
+            document.getElementById('docPanel').classList.add('hidden');
+            const antes = estadoAntesDaDoc || { login: true, main: false, header: true, adm: false };
+            const restaurar = (id, visivel) => {
+                const el = document.getElementById(id);
+                if (el && visivel) el.classList.remove('hidden');
+            };
+            restaurar('loginPanel', antes.login);
+            restaurar('mainPanel', antes.main);
+            restaurar('pageHeader', antes.header);
+            restaurar('admPanel', antes.adm);
+            estadoAntesDaDoc = null;
+            try { window.scrollTo(0, 0); } catch (e) {}
+        }
+
+        // Busca o documento uma única vez (depois fica em cache na aba)
+        async function carregarDocumentacao() {
+            const alvo = document.getElementById('docConteudo');
+            if (documentacaoCarregada && alvo && alvo.innerHTML.trim()) return;
+            if (alvo) alvo.innerHTML = '<div class="doc-loading">⏳ Carregando a documentação…</div>';
+            try {
+                // Caminho RELATIVO: funciona na raiz (servidor) e em subpasta (GitHub Pages)
+                const resp = await fetch('docs/documentacao.md', { cache: 'no-cache' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const md = await resp.text();
+                if (alvo) alvo.innerHTML = renderizarMarkdown(md);
+                documentacaoCarregada = true;
+            } catch (e) {
+                if (alvo) {
+                    alvo.innerHTML = '<div class="doc-erro">😕 Não consegui abrir <code>docs/documentacao.md</code> (' +
+                        escaparHtml(e.message) + ').<br>Verifique se o arquivo existe na pasta <code>docs/</code> ' +
+                        'e se o servidor está rodando.</div>';
+                }
+            }
+        }
+
+        // Gera um PDF da documentação usando a impressão do navegador
+        // (o usuário escolhe "Salvar como PDF" na caixa de impressão).
+        function gerarPdfDocumentacao() {
+            // Garante que a documentação esteja carregada
+            if (!documentacaoCarregada) {
+                carregarDocumentacao();
+            }
+            // Pequeno atraso para o conteúdo renderizar antes de imprimir
+            setTimeout(function () { window.print(); }, 300);
+        }
+        // títulos #, ##, ###, #### • listas - e 1. • negrito ** • itálico *
+        // `código` • blocos ``` • citação > • separador --- • links [texto](url)
+        function renderizarMarkdown(md) {
+            const escapar = (t) => escaparHtml(t);
+
+            const inline = (texto) => {
+                let t = escapar(String(texto).trim());
+                t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+                t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+                return t;
+            };
+
+            const linhas = String(md).replace(/\r\n/g, '\n').split('\n');
+            const html = [];
+            let i = 0;
+
+            const ehTitulo   = (l) => /^#{1,6}\s+/.test(l);
+            const ehLista    = (l) => /^\s*([-*+]|\d+\.)\s+/.test(l);
+            const ehCitacao = (l) => /^\s*>/.test(l);
+            const ehSeparador = (l) => /^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(l);
+            const ehFimDeBloco = (l) => /^\s*$/.test(l) || ehTitulo(l) || ehLista(l) || ehCitacao(l) || ehSeparador(l) || /^\s*```/.test(l);
+
+            while (i < linhas.length) {
+                const linha = linhas[i];
+
+                // Bloco de código ```
+                if (/^\s*```/.test(linha)) {
+                    const corpo = [];
+                    i++;
+                    while (i < linhas.length && !/^\s*```/.test(linhas[i])) { corpo.push(linhas[i]); i++; }
+                    i++;
+                    html.push('<pre><code>' + escapar(corpo.join('\n')) + '</code></pre>');
+                    continue;
+                }
+
+                // Linha vazia
+                if (/^\s*$/.test(linha)) { i++; continue; }
+
+                // Título
+                const titulo = linha.match(/^(#{1,6})\s+(.*)$/);
+                if (titulo) {
+                    const nivel = Math.min(titulo[1].length, 4);
+                    html.push(`<h${nivel}>${inline(titulo[2])}</h${nivel}>`);
+                    i++;
+                    continue;
+                }
+
+                // Separador horizontal
+                if (ehSeparador(linha)) { html.push('<hr>'); i++; continue; }
+
+                // Citação (várias linhas seguidas viram um bloco só)
+                if (ehCitacao(linha)) {
+                    const corpo = [];
+                    while (i < linhas.length && ehCitacao(linhas[i])) {
+                        corpo.push(linhas[i].replace(/^\s*>\s?/, ''));
+                        i++;
+                    }
+                    html.push('<blockquote><p>' + corpo.map(inline).join(' ') + '</p></blockquote>');
+                    continue;
+                }
+
+                // Lista (não aninhada)
+                if (ehLista(linha)) {
+                    const ordenada = /^\s*\d+\./.test(linha);
+                    const itens = [];
+                    while (i < linhas.length && ehLista(linhas[i])) {
+                        itens.push(linhas[i].replace(/^\s*([-*+]|\d+\.)\s+/, ''));
+                        i++;
+                    }
+                    const tag = ordenada ? 'ol' : 'ul';
+                    html.push(`<${tag}>` + itens.map(x => `<li>${inline(x)}</li>`).join('') + `</${tag}>`);
+                    continue;
+                }
+
+                // Parágrafo (linhas seguidas até o próximo bloco)
+                const buf = [];
+                while (i < linhas.length && !ehFimDeBloco(linhas[i])) { buf.push(linhas[i]); i++; }
+                if (buf.length) html.push('<p>' + buf.map(inline).join('<br>') + '</p>');
+            }
+
+            return html.join('\n');
         }
 
         // ============================================================
@@ -3459,10 +3978,17 @@ Assinatura do Aluno: _________________________________________________
         }
         function atualizarStatusConexao(online) {
             const icon = document.getElementById('connIcon');
-            if (!icon) return;
-            const tipo = MODO === 'pages' ? 'GitHub Pages' : 'Local (WebSocket)';
-            icon.className = 'conn-icon ' + (online ? 'conn-online' : 'conn-offline');
-            icon.title = online ? `Conectado — ${tipo}` : 'Sem conexão com o servidor';
+            if (icon) {
+                const tipo = MODO === 'pages' ? 'GitHub Pages' : 'Local (WebSocket)';
+                icon.className = 'conn-icon ' + (online ? 'conn-online' : 'conn-offline');
+                icon.title = online ? ('Conectado - ' + tipo) : 'Sem conexao com o servidor';
+            }
+            const logo = document.querySelector('.topbar-logo');
+            if (logo) {
+                logo.classList.toggle('logo-online', !!online);
+                logo.classList.toggle('logo-offline', !online);
+                logo.title = online ? 'Servidor: ON (conectado)' : 'Servidor: OFF (sem conexao)';
+            }
         }
         function atualizarInfoSala() {
             if (currentSala) {
@@ -3529,6 +4055,15 @@ Assinatura do Aluno: _________________________________________________
         function ajustarAlturaApp() {
             const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
             document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
+            // Calcular altura do chat: altura da janela - topo - rodapé - padding do container
+            const topbar = document.querySelector('.topbar');
+            const footer = document.querySelector('.footer-bar');
+            const container = document.querySelector('.container');
+            const topbarH = topbar ? topbar.offsetHeight : 60;
+            const footerH = footer ? footer.offsetHeight : 64;
+            const containerPadding = container ? (parseFloat(getComputedStyle(container).paddingTop) + parseFloat(getComputedStyle(container).paddingBottom)) : 0;
+            const chatH = Math.round(h) - topbarH - footerH - containerPadding - 55;
+            document.documentElement.style.setProperty('--chat-height', chatH + 'px');
             const div = document.getElementById('chatMessages');
             const area = document.getElementById('chatArea');
             if (div && area && !area.classList.contains('hidden')) {
@@ -3561,47 +4096,225 @@ Assinatura do Aluno: _________________________________________________
 
     // PWA Install prompt handling
     let deferredPrompt = null;
-    // Dismissed apenas para a sessão atual (limpa no logout/login)
+    // Dismissed state - stored in a variable that can be reset on logout/login
     let installDismissed = sessionStorage.getItem('pwa_install_dismissed') === 'true';
-    const installBtn = document.createElement('div');
-    installBtn.id = 'pwaInstallBtn';
-    installBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;display:none;';
-    installBtn.innerHTML = `
-        <button class="btn-secondary" id="pwaInstallAction" style="padding:10px 14px;border-radius:24px;box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:13px;display:flex;align-items:center;gap:6px;">
-            📱 Instalar app
-        </button>
-        <button id="pwaInstallClose" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background:var(--painel-bg);border:1px solid var(--painel-borda);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto-fraco);line-height:1;" title="Ocultar por esta sessão">✕</button>
-    `;
-    if (!installDismissed) {
-        document.body.appendChild(installBtn);
-    }
-    const installActionBtn = document.getElementById('pwaInstallAction');
-    const installCloseBtn = document.getElementById('pwaInstallClose');
-    installActionBtn.onclick = async () => {
-        if (!deferredPrompt) return;
-        installBtn.style.display = 'none';
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log('[PWA] Install outcome:', outcome);
-        deferredPrompt = null;
+    // Track if app is installed
+    let appInstalled = localStorage.getItem('pwa_installed') === 'true';
+
+    // Check if running in standalone mode (already installed app)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // Detecta se é iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Detecta se é Android
+    const isAndroid = /Android/.test(navigator.userAgent);
+
+    // Função para instalar ou abrir o PWA
+    window.instalarOuAbrirPwa = async function() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+
+        // Já instalado e está no navegador: tenta abrir o app em modo standalone
+        if (appInstalled && !isStandalone) {
+            // Ao navegar ao start_url com o app instalado, o Android Chrome
+            // mostra o infobar "Abrir no app". No desktop, o usuário usa o atalho.
+            console.log('[PWA] Abrindo app instalado...');
+            window.location.href = window.location.origin;
+            return;
+        }
+
+        // iOS: não existe prompt nativo de instalação (antes de emitir, mostra instruções)
+        if (isIOS) {
+            alert('Para instalar o app no iPhone/iPad:\n\n1. Toque no botão de compartilhar (□↑) na barra inferior\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar" no canto superior direito\n\nO app aparecerá na sua tela inicial, como um app.');
+            return;
+        }
+
+        // Prompt nativo disponível (HTTPS/localhost): instala direto pelo botão
+        if (deferredPrompt) {
+            if (installBtn) installBtn.style.display = 'none';
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('[PWA] Install outcome:', outcome);
+            if (outcome === 'accepted') {
+                appInstalled = true;
+                localStorage.setItem('pwa_installed', 'true');
+            }
+            deferredPrompt = null;
+            if (installBtn) {
+                installBtn.style.display = 'flex';
+                window.updatePwaBtnText();
+            }
+            return;
+        }
+
+        // Sem prompt nativo (ex.: Android acessando via HTTP): instruções manuais
+        if (isAndroid) {
+            alert('Instalar o app pelo menu do navegador:\n\n1. Toque no menu do Chrome (⋮) no canto superior direito\n2. Toque em "Instalar app" ou "Adicionar à Tela de Início"\n3. Confirme a instalação\n\nO app aparecerá na tela inicial, com ícone próprio.');
+        } else {
+            alert('Instalar o app:\n\n1. Clique no ícone de instalação na barra de endereço\n   ou no menu do navegador (⋮)\n2. Selecione "Instalar cripto.chat"\n3. Confirme a instalação');
+        }
     };
-    installCloseBtn.onclick = () => {
-        installBtn.style.display = 'none';
+
+    // Função para fechar o botão de instalar
+    window.fecharInstallBtn = function() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) installBtn.style.display = 'none';
+        installDismissed = true;
         sessionStorage.setItem('pwa_install_dismissed', 'true');
         console.log('[PWA] Install prompt dismissed for this session');
     };
 
+    // Função para atualizar o texto do botão baseado no estado de instalação
+    window.updatePwaBtnText = function() {
+        const actionBtn = document.getElementById('pwaInstallAction');
+        if (!actionBtn) return;
+        if (isStandalone) {
+            // Já está no app - não deve mostrar botão
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) installBtn.style.display = 'none';
+        } else if (appInstalled) {
+            actionBtn.innerHTML = '📱 Abrir app';
+            actionBtn.title = 'Abrir app instalado';
+        } else if (isIOS) {
+            actionBtn.innerHTML = '📱 Instalar';
+            actionBtn.title = 'Instruções para instalar no iOS';
+        } else {
+            actionBtn.innerHTML = '📱 Instalar';
+            actionBtn.title = 'Instalar app';
+        }
+    };
+
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('[PWA] beforeinstallprompt capturado - instalação nativa disponível');
         e.preventDefault();
         deferredPrompt = e;
-        // Mostra o botão após um pequeno delay (para não competir com banner nativo)
-        setTimeout(() => { installBtn.style.display = 'flex'; }, 3000);
+        // Mostra o botão assim que o prompt nativo estiver disponível
+        if (typeof window.showPwaInstallBtn === 'function') {
+            window.showPwaInstallBtn();
+        }
     });
 
     window.addEventListener('appinstalled', () => {
         console.log('[PWA] App instalado');
-        installBtn.style.display = 'none';
+        appInstalled = true;
+        localStorage.setItem('pwa_installed', 'true');
+        // Se não está no app, mostra "Abrir app"
+        if (!isStandalone) {
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) {
+                installBtn.style.display = 'flex';
+                window.updatePwaBtnText();
+            }
+        }
         deferredPrompt = null;
+    });
+
+    // Função para resetar o estado do botão de instalação (chamada no logout)
+    window.resetPwaInstallBtn = function() {
+        installDismissed = false;
+        sessionStorage.removeItem('pwa_install_dismissed');
+        // NÃO limpa deferredPrompt - pode ser usado novamente
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) installBtn.style.display = 'none';
+        window.updatePwaBtnText();
+        console.log('[PWA] Install button state reset');
+    };
+
+    // Função para mostrar o botão de instalação se disponível
+    window.showPwaInstallBtn = function() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (!installBtn) return;
+        // Dentro do app (standalone): nunca mostra
+        if (isStandalone) {
+            installBtn.style.display = 'none';
+            return;
+        }
+        // Dispensado nesta sessão (✕ clicado): não mostra
+        if (installDismissed || sessionStorage.getItem('pwa_install_dismissed') === 'true') return;
+        // No navegador (http ou https): mostra com o estado atual
+        installBtn.style.display = 'flex';
+        window.updatePwaBtnText();
+    };
+
+    // Em navegador (não standalone): mostra o botão ao lado da logo, com estado atual
+    // Em app (standalone): marca como instalado e esconde o botão
+    if (isStandalone) {
+        // Já está no app - marca como instalado e esconde o botão
+        appInstalled = true;
+        localStorage.setItem('pwa_installed', 'true');
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) installBtn.style.display = 'none';
+        console.log('[PWA] Rodando como app instalado (standalone)');
+    } else {
+        // No navegador (http ou https): mostra "Instalar" ou "Abrir app" conforme o estado
+        setTimeout(() => {
+            window.showPwaInstallBtn();
+            console.log('[PWA] Botão PWA exibido no navegador');
+        }, 1500);
+    }
+
+    // ========================================
+    // PWA UPDATE - Detecta nova versão disponível
+    // ========================================
+    let updateAvailable = false;
+    let newWorker = null;
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('[PWA] Service Worker atualizado - recarregando página');
+            window.location.reload();
+        });
+
+        navigator.serviceWorker.ready.then((reg) => {
+            // Verifica se há uma atualização disponível
+            reg.addEventListener('updatefound', () => {
+                newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Nova versão disponível - atualiza automaticamente
+                        console.log('[PWA] Nova versão disponível - atualizando automaticamente');
+                        updateAvailable = true;
+                        // Envia skipWaiting automaticamente
+                        newWorker.postMessage({ type: 'skipWaiting' });
+                    }
+                });
+            });
+        });
+    }
+
+    // Função para atualizar o app manualmente
+    window.atualizarApp = function() {
+        if (newWorker) {
+            newWorker.postMessage({ type: 'skipWaiting' });
+        } else {
+            // Se não tem worker, força reload
+            window.location.reload();
+        }
+    };
+
+    // Verifica atualizações quando a página volta ao foco (mobile: pull-to-refresh, tab switch)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) {
+                    reg.update().then(() => {
+                        console.log('[PWA] Verificando atualizações...');
+                    }).catch((e) => {
+                        console.warn('[PWA] Falha ao verificar atualizações:', e);
+                    });
+                }
+            });
+        }
+    });
+
+    // Também verifica ao voltar ao foco da janela
+    window.addEventListener('focus', () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) {
+                    reg.update().catch(() => {});
+                }
+            });
+        }
     });
     // ========================================
     </script>

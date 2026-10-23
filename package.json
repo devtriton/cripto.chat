@@ -5,7 +5,11 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "sync": "node scripts/sync-public.js",
+    "prestart": "node scripts/sync-public.js",
+    "predev": "node scripts/sync-public.js",
+    "postinstall": "node scripts/sync-public.js"
   },
   "dependencies": {
     "dotenv": "^18.0.8",

@@ -1,10 +1,14 @@
 // sw.js — Service Worker para cripto.chat (cache offline)
 // Versão: incrementar ao mudar arquivos estáticos
-const CACHE_NAME = 'cripto-chat-v1';
+const CACHE_NAME = 'cripto-chat-v4';
+// Versão do app (deve corresponder ao APP_VERSION no index.html)
+const APP_VERSION = '2.2.0';
+// Pré-cache apenas dos assets fixos. O HTML NÃO entra aqui de propósito:
+// index.html e / usam network-first (abaixo), para o aluno sempre receber
+// a versão mais nova do app sem precisar limpar o cache do navegador.
 const ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
+  '/version.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -62,4 +66,16 @@ self.addEventListener('fetch', (event) => {
 // Mensagem do cliente para forçar atualização
 self.addEventListener('message', (event) => {
   if (event.data === 'skipWaiting') self.skipWaiting();
+});
+
+// Verifica atualizações periodicamente (a cada 60s quando ativo)
+self.addEventListener('activate', (event) => {
+  // Notifica todos os clientes que uma nova versão está disponível
+  event.waitUntil(
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({ type: 'sw-activated', version: CACHE_NAME });
+      });
+    })
+  );
 });

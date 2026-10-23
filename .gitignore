@@ -1,6 +1,8 @@
 node_modules/
 server/node_modules/
 server/.env
+# Certificado autoassinado local — nunca versionar a chave privada
+server/ssl/
 .DS_Store
 Thumbs.db
 *.log

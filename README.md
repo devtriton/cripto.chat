@@ -210,8 +210,13 @@ Representa a visão do servidor:
   (tela apagada ou segundo plano), a conexão cai e o servidor remove o usuário
   da sala — se for o último, a sala é apagada. É esperado.
 - **Recuperação automática**: ao voltar ao app, o cliente testa o WebSocket
-  (ping/pong), reconecta se necessário e reentra na sala. Se a sala foi apagada,
-  volta ao painel principal; se a sessão foi perdida, volta ao login.
+  (ping/pong), reconecta se necessário e reentra na mesma sala sozinho. Se a
+  sala foi apagada, volta ao painel principal; se a sessão foi perdida, volta
+  ao login.
+- **O que se perde na suspensão**: apenas as mensagens trocadas durante o
+  intervalo em que o aparelho esteve suspenso. O histórico que já estava na
+  tela continua visível, e o envio/recebimento volta assim que reconecta —
+  não há banco de dados nem histórico no servidor para reenviar o intervalo.
 
 ### Interface
 - Altura do chat calculada dinamicamente (janela − topo − rodapé − padding)

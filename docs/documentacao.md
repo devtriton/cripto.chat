@@ -183,15 +183,29 @@ Para o servidor, a conexão foi encerrada. Por isso:
 
 - você **sai da sala** automaticamente;
 - se era a **última pessoa**, a sala é **apagada**;
-- as mensagens enviadas enquanto você estava fora **não chegam** ao seu aparelho.
+- as mensagens trocadas enquanto você estava fora **não chegam** ao seu aparelho.
 
 Ao voltar, **o app verifica a conexão e se recupera sozinho**:
 
-- se a sala ainda existir, você **volta para ela automaticamente** e continua a conversa;
+- se a sala ainda existir, você **entra nela de novo automaticamente** — sem clicar em nada;
 - se você era o último e a sala foi apagada, o app **volta ao painel principal** e avisa;
 - se a sessão tiver sido encerrada, o app **volta para a tela de login**.
 
 Em nenhum caso o chat fica “parado”: se a reconexão não der certo, o app volta para o painel ou para o login.
+
+#### O que se mantém e o que se perde
+
+Testado em aparelho real: a reentrada é automática e a conversa continua de onde parou. **A única perda é o intervalo em que o aparelho ficou suspenso.**
+
+| Item | Depois de voltar |
+|---|---|
+| Sala (nome e participantes) | ✅ mantida — você volta para a **mesma sala** |
+| Mensagens que já estavam na tela | ✅ continuam visíveis (nada é apagado) |
+| Conversa durante a suspensão | ❌ **perdida** — o servidor não guarda histórico |
+| Sua sessão (e-mail) | ✅ mantida — só cai com 30 min sem interagir |
+| Enviar e receber mensagens | ✅ volta a funcionar assim que reconecta |
+
+> 💡 **Por que as mensagens do intervalo não voltam?** O cripto.chat não tem banco de dados nem histórico: as mensagens existem apenas enquanto são entregues, em tempo real. Quem estava fora no momento do envio não as recebe depois. Se precisar do conteúdo, peça ao colega para reenviar.
 
 > ⚠️ **Não é um bug** e não tem relação com os 30 minutos de inatividade: a suspensão pode acontecer em segundos. Durante a aula, mantenha a tela ligada e o cripto.chat em primeiro plano. O app instalado também está sujeito à suspensão do sistema.
 
@@ -204,7 +218,7 @@ Em nenhum caso o chat fica “parado”: se a reconexão não der certo, o app v
 - **O código não entra:** ele tem **6 números**. Veja se digitou todos.
 - **A sala sumiu da lista:** ficou vazia e foi apagada. Crie uma sala nova.
 - **Fui desconectado sozinho:** foram os 30 minutos de inatividade. Entre novamente.
-- **Saí da sala quando a tela do celular apagou:** é normal — o sistema suspendeu o app e o servidor entendeu como desconexão. Volte, entre na sala de novo e, se ela foi apagada, crie outra.
+- **Saí da sala quando a tela do celular apagou:** é normal — o sistema suspendeu o app e o servidor entendeu como desconexão. Ao voltar, o app **reentra sozinho** na mesma sala e você continua a conversa; só as mensagens trocadas durante a suspensão se perdem. Se você era o último, a sala foi apagada e o app volta ao painel principal.
 - **A logo está vermelha e piscando:** o servidor está **desconectado** (OFF). Peça ao professor para verificar se o servidor está ligado e confira sua conexão com a internet. Quando conectar, a borda fica **verde** (ON).
 - **O botão 📱 Instalar só mostra instruções:** o site foi aberto em `http://`. Use o endereço com `https://` (ou deixe o redirecionamento automático acontecer).
 - **O Chrome diz que não é possível instalar:** falta o endereço seguro (HTTPS). Peça ao professor o endereço `https://IP-DO-PC:3443`.
@@ -353,7 +367,7 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 - Somente **salas públicas** (não há salas privadas).
 - A **lista de salas é enviada a todos** os usuários logados (atualização automática).
 - **30 minutos** de inatividade → logoff e saída da sala.
-- **Celular suspenso** (tela apagada/segundo plano) → a conexão cai e o usuário sai da sala; se for o último, a sala é apagada.
+- **Celular suspenso** (tela apagada/segundo plano) → a conexão cai e o usuário sai da sala; se for o último, a sala é apagada. Ao voltar, ele **reentra sozinho** na mesma sala — perde apenas as mensagens trocadas durante a suspensão.
 - **Recuperação ao voltar** → o app testa a conexão (ping/pong), reconecta e reentra na sala automaticamente; se a sala não existir mais, volta ao painel; se a sessão foi perdida, volta ao login.
 - **Sala vazia** → apagada do servidor.
 - **E-mail único por sessão** → não permite login com e-mail já conectado (`EMAIL_EM_USO`).

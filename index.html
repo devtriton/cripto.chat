@@ -1712,7 +1712,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ESTADO GLOBAL
         // ============================================================
         // Versão do app (atualizar a cada release)
-        const APP_VERSION = '2.3.0';
+        const APP_VERSION = '2.3.1';
         const APP_BUILD = '2026-10-23';
         const MODO = detectarModo();
         let canal = null;
@@ -4130,16 +4130,78 @@ Assinatura do Aluno: _________________________________________________
     // Detecta se é Android
     const isAndroid = /Android/.test(navigator.userAgent);
 
+    // ===== ABRIR O APP INSTALADO =====
+    // O navegador não expõe uma API para iniciar um PWA instalado nem para
+    // fechar a aba. Melhor esforço:
+    //  - Android: intent HTTPS — o WebAPK registra o próprio escopo, então o
+    //    Android abre o app instalado (com fallback para o navegador);
+    //  - iOS/desktop: instruções + botão "Fechar esta aba".
+    window.mostrarOverlayAbrirApp = function(mensagem) {
+        const antigo = document.getElementById('pwaAbrirOverlay');
+        if (antigo) antigo.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'pwaAbrirOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(10,12,20,.92);display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+            <div style="max-width:400px;width:100%;background:linear-gradient(135deg,#1c1f2e,#24243e);border:1px solid rgba(196,163,90,.45);border-radius:16px;padding:24px;text-align:center;color:#f5f0e8;">
+                <div style="font-size:42px;line-height:1;margin-bottom:10px;">🔐</div>
+                <h3 style="margin:0 0 10px;font-size:18px;">Abrindo o cripto.chat...</h3>
+                <p style="margin:0 0 18px;font-size:14px;color:#c9c3b4;line-height:1.5;">
+                    ${mensagem || 'O app instalado vai abrir em tela cheia. Esta aba do navegador pode ser fechada.'}
+                </p>
+                <button id="pwaFecharAba" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#c4a35a,#a8863f);color:#1a1a1a;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px;">Fechar esta aba</button>
+                <button id="pwaContinuarNavegador" style="width:100%;padding:10px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:transparent;color:#d9d3c5;font-size:13px;cursor:pointer;">Continuar no navegador</button>
+                <div id="pwaAbrirStatus" style="margin-top:12px;font-size:12px;color:#8d8779;min-height:16px;"></div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const status = overlay.querySelector('#pwaAbrirStatus');
+        overlay.querySelector('#pwaFecharAba').addEventListener('click', () => {
+            window.close();
+            setTimeout(() => {
+                if (document.getElementById('pwaAbrirOverlay')) {
+                    status.textContent = 'Não foi possível fechar automaticamente. Feche pela X da aba.';
+                }
+            }, 400);
+        });
+        overlay.querySelector('#pwaContinuarNavegador').addEventListener('click', () => overlay.remove());
+        return overlay;
+    };
+
+    window.abrirAppInstalado = function() {
+        const falhou = new URLSearchParams(location.search).get('falhou') === '1';
+        const urlFallback = location.origin + '/?abrir=app&falhou=1';
+
+        if (isAndroid) {
+            window.mostrarOverlayAbrirApp(falhou
+                ? 'O app não abriu automaticamente. Abra pelo ícone <strong>cripto.chat</strong> na tela inicial do celular.'
+                : 'Abrindo o app instalado em tela cheia. Esta aba do navegador pode ser fechada.');
+
+            if (!falhou) {
+                // Intent: o WebAPK instalado registra o escopo https do sistema
+                const intent = 'intent://' + location.host + '/?abrir=app#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=' + encodeURIComponent(urlFallback) + ';end';
+                setTimeout(() => { window.location.href = intent; }, 150);
+            }
+        } else if (isIOS) {
+            window.mostrarOverlayAbrirApp('No iPhone/iPad, o app abre pelo ícone <strong>cripto.chat</strong> na tela inicial. Esta aba pode ser fechada.');
+        } else {
+            window.mostrarOverlayAbrirApp('Use o botão <strong>Abrir no app</strong> da barra de endereço — ou o atalho do cripto.chat instalado no computador.');
+        }
+
+        // Tenta fechar a aba (navegadores só permitem para abas abertas por script)
+        setTimeout(() => {
+            try { window.close(); } catch (e) { /* bloqueado pelo navegador */ }
+        }, 1200);
+    };
+
     // Função para instalar ou abrir o PWA
     window.instalarOuAbrirPwa = async function() {
         const installBtn = document.getElementById('pwaInstallBtn');
 
-        // Já instalado e está no navegador: tenta abrir o app em modo standalone
+        // Já instalado e está no navegador: abre o app instalado e tenta fechar a aba
         if (appInstalled && !isStandalone) {
-            // Ao navegar ao start_url com o app instalado, o Android Chrome
-            // mostra o infobar "Abrir no app". No desktop, o usuário usa o atalho.
             console.log('[PWA] Abrindo app instalado...');
-            window.location.href = window.location.origin;
+            window.abrirAppInstalado();
             return;
         }
 
@@ -4272,6 +4334,28 @@ Assinatura do Aluno: _________________________________________________
             console.log('[PWA] Botão PWA exibido no navegador');
         }, 1500);
     }
+
+    // ===== RETORNO DO "ABRIR APP" =====
+    // ?abrir=app  → carregado DENTRO do app instalado (só limpa a URL)
+    // ?falhou=1   → o intent não encontrou o app: mostra instruções no navegador
+    (function tratarRetornoAbrirApp() {
+        const params = new URLSearchParams(location.search);
+        const pediuAbrir = params.get('abrir') === 'app';
+        const falhouAbrir = params.get('falhou') === '1';
+        if (!pediuAbrir && !falhouAbrir) return;
+
+        if (isStandalone) {
+            // Já estamos no app: tira os parâmetros da barra de endereço
+            try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignora */ }
+            console.log('[PWA] App instalado aberto por link direto');
+            return;
+        }
+
+        if (falhouAbrir && appInstalled) {
+            console.log('[PWA] Fallback do intent: app não abriu');
+            setTimeout(() => window.abrirAppInstalado(), 400);
+        }
+    })();
 
     // ========================================
     // PWA UPDATE - Detecta nova versão disponível

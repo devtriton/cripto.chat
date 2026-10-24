@@ -208,6 +208,19 @@ O botão fica **no topo, ao lado da logo**:
 
 > 💡 O botão aparece só no navegador. Dentro do app ele não existe.
 
+### O que acontece ao tocar em "Abrir app"
+
+- **Android:** o app instalado abre em tela cheia. Se ele não abrir, aparece um
+  aviso com o caminho mais seguro: tocar no ícone **cripto.chat** da tela inicial.
+- **iPhone/iPad:** o Safari não abre o app por link, então aparece um aviso curto
+  lembrando de usar o ícone da tela inicial.
+- **Computador:** aparece a dica de usar **Abrir no app** na barra de endereço ou
+  o atalho instalado no sistema.
+
+> 🧹 A aba do navegador **pode ser fechada** depois que o app abre. Por segurança,
+> os navegadores só fecham sozinhos abas abertas por um link — nas outras, feche
+> pela **✕** da aba. Seus dados e sua sessão continuam no app.
+
 ### No Android (Chrome)
 
 1. Abra o endereço do chat. Se ele começar com `https://`, ótimo — é o endereço seguro.

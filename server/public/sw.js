@@ -1,8 +1,8 @@
 // sw.js — Service Worker para cripto.chat (cache offline)
 // Versão: incrementar ao mudar arquivos estáticos
-const CACHE_NAME = 'cripto-chat-v5';
+const CACHE_NAME = 'cripto-chat-v6';
 // Versão do app (deve corresponder ao APP_VERSION no index.html)
-const APP_VERSION = '2.3.0';
+const APP_VERSION = '2.3.1';
 // Pré-cache apenas dos assets fixos. O HTML NÃO entra aqui de propósito:
 // index.html e / usam network-first (abaixo), para o aluno sempre receber
 // a versão mais nova do app sem precisar limpar o cache do navegador.

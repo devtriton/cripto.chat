@@ -96,9 +96,29 @@ O botão fica **ao lado da logo**, no topo, e aparece **somente no navegador**
 | Estado detectado | Botão | Ação |
 |---|---|---|
 | App não instalado | **📱 Instalar** | Instala (prompt nativo do Chrome/Edge) |
-| App já instalado, aberto no navegador | **📱 Abrir app** | Abre a versão instalada |
+| App já instalado, aberto no navegador | **📱 Abrir app** | Abre a versão instalada e tenta fechar a aba |
 | Dentro do app (standalone) | *oculto* | — |
 | Usuário clicou no **✕** | *oculto na sessão* | Volta após logout/login |
+
+### Como o "Abrir app" funciona
+
+O navegador **não oferece API** para iniciar um PWA instalado nem para fechar uma
+aba que não foi aberta por script. A implementação usa o melhor caminho por
+plataforma:
+
+- **Android (Chrome/Edge, HTTPS):** `intent://` apontando para o escopo do WebAPK.
+  O Android entrega o link ao app instalado; se o app não responder, o
+  `browser_fallback_url` devolve `?abrir=app&falhou=1` e o app mostra as
+  instruções ("abra pelo ícone na tela inicial").
+- **iPhone/iPad:** overlay com instruções (o Safari não permite iniciar o PWA
+  por link) e botão **Fechar esta aba**.
+- **Desktop:** overlay sugerindo **Abrir no app** da barra de endereço ou o
+  atalho instalado no sistema.
+
+Sempre que possível o código chama `window.close()`. Ele **só funciona** em abas
+abertas por script; nas demais o overlay informa que é preciso fechar pela **✕**
+da aba. Ao carregar `?abrir=app` dentro do app instalado, a URL é limpa com
+`history.replaceState` para não deixar parâmetros visíveis.
 
 ### Android (Chrome)
 

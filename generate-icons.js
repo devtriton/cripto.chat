@@ -2,7 +2,7 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const ICONS_DIR = 'C:\\laragon\\www\\cripto.chat\\icons';
+const ICONS_DIR = path.join(__dirname, 'icons');
 const svgPath = path.join(ICONS_DIR, 'icon.svg');
 const svgBuffer = fs.readFileSync(svgPath);
 

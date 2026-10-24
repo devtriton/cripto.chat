@@ -8,6 +8,12 @@ uma alternativa à Play Store: o app é instalado direto do navegador, sem loja.
 
 ## 🚀 Início rápido (professores)
 
+### Pré-requisitos
+
+- **Node.js 18 ou superior** (já inclui o `npm`) — [nodejs.org](https://nodejs.org)
+- **Windows:** o `iniciar.bat` cuida do resto
+- **Opcional:** Git for Windows (fornece o `openssl.exe` usado no certificado HTTPS)
+
 ### Windows — 1 clique
 
 Dê **duplo clique em `iniciar.bat`**. Ele:
@@ -44,6 +50,43 @@ O `npm start` executa automaticamente o `scripts/sync-public.js` (copia `index.h
 > 🔒 O certificado é **autoassinado e gerado automaticamente** na primeira execução.
 > No celular, o Chrome mostra um aviso uma única vez:
 > **Avançados → Continuar para o endereço**. Depois disso o acesso é direto.
+
+### Configuração (opcional)
+
+O servidor sobe **sem nenhuma configuração**. O **modo demo já vem ligado** no
+repositório (`server/demo-config.json`), então o código de acesso aparece na tela.
+
+Para enviar o código por e-mail de verdade:
+
+1. Copie `server/.env.example` para `server/.env`.
+2. Preencha `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`.
+   - No Gmail, use uma **senha de app** de 16 caracteres (não a senha da conta).
+3. Reinicie o servidor.
+
+> 📧 Sem SMTP configurado o envio por e-mail é recusado com a mensagem
+> *"Serviço de email não configurado"* — nesse caso use o **MODO DEMO**.
+
+> 🔐 O `server/.env` está no `.gitignore` e **nunca** é versionado.
+
+#### Senha mestre do MODO DEMO
+
+A senha padrão é `cripto2024`. Para trocar, gere o hash SHA-256 e grave em
+`server/demo-config.json` no campo `senhaHash`:
+
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('NOVA_SENHA').digest('hex'))"
+```
+
+O campo `modoDemo` do mesmo arquivo guarda o estado do botão (ligado/desligado).
+
+### Scripts npm
+
+| Comando | O que faz |
+|---|---|
+| `npm start` | Sincroniza `server/public` e sobe o servidor (HTTP 3000 + HTTPS 3443) |
+| `npm run dev` | Igual ao `npm start` (sem watch) |
+| `npm run sync` | Copia a raiz para `server/public` |
+| `node generate-icons.js` | Regenera os PNGs a partir de `icons/icon.svg` |
 
 ---
 
@@ -152,6 +195,26 @@ Depois rode `npm run sync` (ou `npm start`, que já sincroniza).
 
 ---
 
+## 🧑‍🎓 Como usar (aluno)
+
+1. **Abra o cripto.chat** no endereço informado pelo professor (ou pelo ícone do app,
+   se já instalou).
+2. **Digite seu e-mail** e toque em **Enviar código**.
+3. **Pegue o código de 6 dígitos**: ele chega por e-mail ou aparece na tela quando o
+   professor está com o **MODO DEMO** ligado. Vale por 5 minutos.
+4. **Entre em uma sala**: crie uma sala nova ou toque em uma da lista.
+5. **Converse**: escolha o algoritmo no combo, digite a chave (quando houver) e envie.
+
+Dicas rápidas:
+
+- Use `@nome` para mensagem direta e `#nome` para mencionar alguém em público.
+- **30 minutos sem interagir** = logout automático.
+- Se o celular apagar a tela, você sai da sala e **volta sozinho** ao reabrir —
+  perde apenas as mensagens do intervalo.
+- Se todos saírem, a sala é apagada.
+
+---
+
 ## ✨ Funcionalidades
 
 ### Autenticação
@@ -166,7 +229,8 @@ Depois rode `npm run sync` (ou `npm start`, que já sincroniza).
 ### Salas de Bate-Papo
 - **Somente salas públicas**: não existem salas privadas nem salas com senha
 - A lista de salas é enviada a todos os usuários logados
-- Cada usuário guarda suas mensagens no localStorage (sem banco de dados central)
+- As mensagens são entregues **em tempo real**; o servidor não guarda banco de dados
+  nem histórico. O navegador mantém apenas uma cópia local (últimas 200) para o relatório
 
 ### Regras do chat
 - **Sala vazia é excluída**: se o último participante sair, a sala deixa de existir
@@ -276,8 +340,8 @@ Representa a visão do servidor:
 Existe um guia de uso escrito com palavras simples, para alunos **a partir de 5 anos**:
 
 - **Arquivo:** `docs/documentacao.md` (fonte única do texto)
-- **Página no app:** clique em **📖 Doc** (barra superior), no botão **📖 Documentação**
-  da tela de login ou na aba **Documentação** do painel.
+- **Página no app:** clique em **📖 Doc** no topo — o botão aparece antes e depois do
+  login. A página também tem um botão flutuante **Gerar PDF**.
 - A página busca o arquivo e o renderiza como texto formatado (títulos, listas, citações).
 
 Para alterar o guia, edite apenas `docs/documentacao.md` e rode `npm run sync`.
@@ -321,7 +385,7 @@ cripto.chat/
 
 ### GitHub Pages (modo BroadcastChannel)
 
-O projeto está disponível em: **https://devtriton.github.io/cripto/**
+O projeto está disponível em: **https://devtriton.github.io/cripto.chat/**
 
 No GitHub Pages não há servidor: as abas conversam via `BroadcastChannel`.
 - Abra a página em **múltiplas abas ou janelas**
@@ -331,7 +395,7 @@ No GitHub Pages não há servidor: as abas conversam via `BroadcastChannel`.
 ```bash
 git add .
 git commit -m "descricao das mudancas"
-git push origin main
+git push origin master
 ```
 
 O GitHub Pages atualiza automaticamente em ~1 minuto após o push.

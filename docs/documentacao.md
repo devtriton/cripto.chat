@@ -57,15 +57,16 @@ Existem **duas formas** de receber o código. A escolhida depende do **MODO DEMO
 
 ### Como saber se o MODO DEMO está ligado?
 
-Na **tela de login** existe um botão:
+Na **tela de login** existe um botão — ele só aparece quando o servidor está conectado:
 
-- **MODO DEMO ON** (verde) → o modo demo está **ligado**: o código aparece na tela.
-- **MODO DEMO OFF** (laranja) → o modo demo está **desligado**: o código vai por e-mail.
+- **MODO DEMO LIGADO** (verde) → o modo demo está **ligado**: o código aparece na tela.
+- **MODO DEMO DESLIGADO** (laranja) → o modo demo está **desligado**: o código vai por e-mail.
 
 Ao ligar ou desligar, **o botão muda sozinho** — não aparece nenhuma mensagem de alerta.
 
 > 👩‍🏫 Só o professor pode ligar e desligar o MODO DEMO, com a **senha mestre**.
-> Ele clica no botão **MODO DEMO OFF** (na tela de login) e digita a senha.
+> Ele clica no botão **MODO DEMO DESLIGADO** (na tela de login) e digita a senha.
+> Se o servidor estiver desligado, o botão **não aparece**: sem conexão não é possível alterar o modo demo.
 
 ---
 
@@ -174,6 +175,26 @@ O botão **Sala ADM** (no topo) mostra **o que o servidor vê**:
 
 > ⏱️ Para voltar depois dos 30 minutos, é só fazer login de novo — leva 10 segundos (passo 3).
 
+### 📱 O celular suspendeu: por que saí da sala?
+
+Quando a tela do celular apaga ou o cripto.chat fica em segundo plano, o Android ou o iPhone pode **suspender o navegador/app** para economizar bateria. Isso é normal e acontece com qualquer site ou aplicativo.
+
+Para o servidor, a conexão foi encerrada. Por isso:
+
+- você **sai da sala** automaticamente;
+- se era a **última pessoa**, a sala é **apagada**;
+- as mensagens enviadas enquanto você estava fora **não chegam** ao seu aparelho.
+
+Ao voltar, **o app verifica a conexão e se recupera sozinho**:
+
+- se a sala ainda existir, você **volta para ela automaticamente** e continua a conversa;
+- se você era o último e a sala foi apagada, o app **volta ao painel principal** e avisa;
+- se a sessão tiver sido encerrada, o app **volta para a tela de login**.
+
+Em nenhum caso o chat fica “parado”: se a reconexão não der certo, o app volta para o painel ou para o login.
+
+> ⚠️ **Não é um bug** e não tem relação com os 30 minutos de inatividade: a suspensão pode acontecer em segundos. Durante a aula, mantenha a tela ligada e o cripto.chat em primeiro plano. O app instalado também está sujeito à suspensão do sistema.
+
 ---
 
 ## 13. Probleminhas comuns (e como resolver)
@@ -183,6 +204,7 @@ O botão **Sala ADM** (no topo) mostra **o que o servidor vê**:
 - **O código não entra:** ele tem **6 números**. Veja se digitou todos.
 - **A sala sumiu da lista:** ficou vazia e foi apagada. Crie uma sala nova.
 - **Fui desconectado sozinho:** foram os 30 minutos de inatividade. Entre novamente.
+- **Saí da sala quando a tela do celular apagou:** é normal — o sistema suspendeu o app e o servidor entendeu como desconexão. Volte, entre na sala de novo e, se ela foi apagada, crie outra.
 - **A logo está vermelha e piscando:** o servidor está **desconectado** (OFF). Peça ao professor para verificar se o servidor está ligado e confira sua conexão com a internet. Quando conectar, a borda fica **verde** (ON).
 - **O botão 📱 Instalar só mostra instruções:** o site foi aberto em `http://`. Use o endereço com `https://` (ou deixe o redirecionamento automático acontecer).
 - **O Chrome diz que não é possível instalar:** falta o endereço seguro (HTTPS). Peça ao professor o endereço `https://IP-DO-PC:3443`.
@@ -246,6 +268,8 @@ Quando o professor publica uma versão nova:
 - ou **feche e abra** o app;
 - no navegador, **puxe a tela para baixo** para atualizar.
 
+> 📵 **Tela apagada:** o app instalado não impede a suspensão do celular. Se a tela apagar ou você trocar de app, a conexão pode cair e você sair da sala (veja a seção 12).
+
 ---
 
 ## 15. Para o professor
@@ -288,7 +312,7 @@ dependências na primeira vez, sincroniza os arquivos, liga o servidor e abre o 
 ### Entrega de código OTP
 
 - **Por e-mail (padrão):** configure no arquivo `server/.env` as variáveis `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`.
-- **Modo demo (opcional):** o código aparece na tela, sem envio. Ligue pelo botão **MODO DEMO** na tela de login, com a **senha mestre** (padrão: `cripto2024` — troque-a em `server/demo-config.json`, campo `senhaHash`, que é o hash SHA-256 da senha).
+- **Modo demo (opcional):** o código aparece na tela, sem envio. Ligue pelo botão **MODO DEMO DESLIGADO** na tela de login (ele só aparece com o servidor conectado), com a **senha mestre** (padrão: `cripto2024` — troque-a em `server/demo-config.json`, campo `senhaHash`, que é o hash SHA-256 da senha).
 
 ### Instalação do app pelos alunos (PWA)
 
@@ -329,6 +353,8 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 - Somente **salas públicas** (não há salas privadas).
 - A **lista de salas é enviada a todos** os usuários logados (atualização automática).
 - **30 minutos** de inatividade → logoff e saída da sala.
+- **Celular suspenso** (tela apagada/segundo plano) → a conexão cai e o usuário sai da sala; se for o último, a sala é apagada.
+- **Recuperação ao voltar** → o app testa a conexão (ping/pong), reconecta e reentra na sala automaticamente; se a sala não existir mais, volta ao painel; se a sessão foi perdida, volta ao login.
 - **Sala vazia** → apagada do servidor.
 - **E-mail único por sessão** → não permite login com e-mail já conectado (`EMAIL_EM_USO`).
 - **Nomes únicos** → sufixo numérico automático (`Maria`, `Maria2`, …), também na troca de nome.

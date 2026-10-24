@@ -1030,9 +1030,9 @@ body {
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn-primary" onclick="solicitarOTP()">Enviar Código</button>
                 </div>
-                <div style="margin-top: 14px; text-align: center;">
+                <div id="demoModeWrap" class="hidden" style="margin-top: 14px; text-align: center;">
                     <button id="modeIndicator" class="mode-indicator mode-login" onclick="mostrarSenhaDemo()"
-                            title="Modo demo desativado — clique para abrir/ativar">MODO DEMO OFF</button>
+                            title="Modo demo desligado — clique para ligar">MODO DEMO DESLIGADO</button>
                 </div>
                 <div id="demoPasswordInput" class="topbar-pass hidden" style="justify-content: center; margin-top: 8px;">
                     <input type="password" id="demoPassword" placeholder="Senha mestre" onkeydown="if(event.key==='Enter') toggleDemo()">
@@ -1712,8 +1712,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ESTADO GLOBAL
         // ============================================================
         // Versão do app (atualizar a cada release)
-        const APP_VERSION = '2.3.1';
-        const APP_BUILD = '2026-10-23';
+        const APP_VERSION = '2.3.5';
+        const APP_BUILD = '2026-10-24';
         const MODO = detectarModo();
         let canal = null;
         let currentUser = null;
@@ -1781,6 +1781,13 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         let desistiuWs = false;
         let reconectandoAgendado = false;
 
+        // Recuperação após suspensão do celular (tela apagada / segundo plano).
+        // O socket pode continuar marcado como OPEN mesmo com a conexão já morta.
+        let ultimoRecebidoEm = Date.now();   // última mensagem recebida do servidor
+        let pingAoVoltarPendente = null;     // timer do teste ping/pong ao voltar
+        let ultimoCheckConexao = 0;          // evita checagens duplicadas (focus + visibility)
+        let reentradaTimer = null;           // watchdog da reentrada na sala
+
         function agendarReconexao() {
             if (desistiuWs || reconectandoAgendado) return;
             reconectandoAgendado = true;
@@ -1795,6 +1802,103 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     conectarWebSocket();
                 }
             }, espera);
+        }
+
+        // ============================================================
+        // RECUPERAÇÃO DE CONEXÃO (celular voltou da suspensão)
+        // ============================================================
+        // Fecha o socket atual sem agendar outra reconexão e conecta novamente.
+        function reconectarAgora(motivo) {
+            if (MODO === 'pages') return;
+            console.log('[WebSocket] Reconectando agora:', motivo);
+            tentativasWs = 0;
+            reconectandoAgendado = false;
+            if (pingAoVoltarPendente) { clearTimeout(pingAoVoltarPendente); pingAoVoltarPendente = null; }
+            const antigo = canal && canal._ws;
+            canal = null;
+            if (antigo) {
+                try {
+                    // Evita que o socket antigo dispare onclose/onmessage e derrube o novo
+                    antigo.onclose = null;
+                    antigo.onerror = null;
+                    antigo.onmessage = null;
+                    antigo.close();
+                } catch (e) {}
+            }
+            atualizarStatusConexao(false);
+            conectarWebSocket();
+        }
+
+        // Ao voltar ao app, verifica se a conexão está realmente viva.
+        // Se o socket estiver morto (meio-aberto), força a reconexão.
+        function verificarConexaoAoVoltar() {
+            if (MODO === 'pages') return;
+            const agora = Date.now();
+            if (agora - ultimoCheckConexao < 1500) return; // focus + visibility disparam juntos
+            ultimoCheckConexao = agora;
+
+            const ws = canal && canal._ws;
+            if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+                reconectarAgora('socket fechado');
+                return;
+            }
+            if (ws.readyState === WebSocket.CONNECTING) {
+                // Conexão travada em CONNECTING (comum após a suspensão): recomeça
+                if (!canal._conectandoDesde || agora - canal._conectandoDesde > 8000) {
+                    reconectarAgora('conexão travada');
+                }
+                return;
+            }
+            if (ws.readyState !== WebSocket.OPEN) {
+                reconectarAgora('socket indisponível');
+                return;
+            }
+
+            // O navegador diz OPEN, mas a rede pode ter caído. Confirma com ping/pong.
+            const marca = Date.now();
+            try {
+                ws.send(JSON.stringify({ tipo: 'ping', timestamp: marca }));
+            } catch (e) {
+                reconectarAgora('falha ao enviar ping');
+                return;
+            }
+            if (pingAoVoltarPendente) clearTimeout(pingAoVoltarPendente);
+            pingAoVoltarPendente = setTimeout(() => {
+                pingAoVoltarPendente = null;
+                if (ultimoRecebidoEm < marca) {
+                    reconectarAgora('sem resposta do servidor');
+                }
+            }, 3500);
+        }
+
+        // Watchdog: depois de reconectar, o servidor precisa confirmar a reentrada
+        // na sala. Se não confirmar, o usuário não fica preso na tela do chat.
+        let reentradaToken = 0;
+
+        function aguardarConfirmacaoSala(salaId) {
+            if (reentradaTimer) clearTimeout(reentradaTimer);
+            const token = ++reentradaToken;
+            reentradaTimer = setTimeout(() => {
+                reentradaTimer = null;
+                if (token !== reentradaToken) return; // já confirmou ou foi substituído
+                // Pedido de entrada feito a partir do painel: a sala ainda não abriu
+                if (!currentSala) {
+                    console.warn('[Sala] Servidor não respondeu ao pedido de entrada');
+                    removerDaFila('entrar_sala'); // não entrar depois, sem o usuário pedir
+                    reconectarAgora('sala não respondeu');
+                    alert('Não foi possível entrar na sala. Verifique a conexão e tente novamente.');
+                    return;
+                }
+                if (currentSala.id !== salaId) return;
+                console.warn('[Sala] Servidor não confirmou a reentrada; voltando ao painel');
+                sairDaSala();
+                alert('Não foi possível voltar à sala. Você voltou ao painel principal.');
+            }, 7000);
+        }
+
+        function cancelarWatchdogSala() {
+            reentradaToken++; // invalida qualquer watchdog pendente
+            if (reentradaTimer) { clearTimeout(reentradaTimer); reentradaTimer = null; }
         }
 
         // Conectar WebSocket automaticamente ao carregar (para o botão Modo Demo)
@@ -1936,28 +2040,36 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 send: (data) => enviarViaWebSocket(data),
                 close: () => ws.close(),
                 readyState: WebSocket.CONNECTING,
-                _ws: ws
+                _ws: ws,
+                _conectandoDesde: Date.now()
             };
             ws.onopen = () => {
+                if (canal && canal._ws !== ws) return; // socket antigo/substituído
                 console.log('[WebSocket] Conectado!');
-                if (canal) canal.readyState = WebSocket.OPEN;
+                if (canal) { canal.readyState = WebSocket.OPEN; canal._conectandoDesde = 0; }
+                ultimoRecebidoEm = Date.now();
                 tentativasWs = 0; // sucesso: zera o backoff para a próxima eventual queda
                 atualizarStatusConexao(true);
-                // Enviar mensagens enfileiradas
+                // 1) Restaurar a sessão ANTES de qualquer ação que exija login
+                //    (entrar_sala, por exemplo, é recusado sem sessão autenticada).
+                if (currentUser) {
+                    ws.send(JSON.stringify({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome }));
+                }
+                // 2) Enviar mensagens enfileiradas
                 while (filaEnvio.length > 0) {
                     const pendente = filaEnvio.shift();
                     console.log('[WebSocket] Enviando pendente:', pendente.tipo);
                     ws.send(JSON.stringify(pendente));
                 }
-                // RE-SINCRONIZAR após (re)conexão: o servidor guarda salas/usuários em MEMÓRIA.
+                // 3) RE-SINCRONIZAR após (re)conexão: o servidor guarda salas/usuários em MEMÓRIA.
                 // Se a conexão cair/reiniciar (ex.: Render em sono), o servidor esquece quem
                 // estava em qual sala — sem reenviar, "usuário entrou" nunca chega aos outros.
-                if (currentUser) {
-                    ws.send(JSON.stringify({ tipo: 'restaurar_sessao', email: currentUser.email, nome: currentUser.nome }));
-                    if (currentSala) {
-                        ws.send(JSON.stringify({ tipo: 'entrar_sala', salaId: currentSala.id }));
-                        console.log('[WebSocket] Re-sincronizando sala:', currentSala.id);
-                    }
+                if (currentUser && currentSala) {
+                    ws.send(JSON.stringify({ tipo: 'entrar_sala', salaId: currentSala.id }));
+                    console.log('[WebSocket] Re-sincronizando sala:', currentSala.id);
+                    // Se o servidor não confirmar (sala apagada ou socket morto),
+                    // volta ao painel em vez de ficar preso no chat.
+                    aguardarConfirmacaoSala(currentSala.id);
                 }
                 // Consultar status do demo ao conectar
                 ws.send(JSON.stringify({ tipo: 'verificar_demo' }));
@@ -1974,16 +2086,44 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 } else { clearInterval(ws._keepAliveInterval); }
             }, 20000);
             // Ao FECHAR (queda, reinício do servidor etc.): agenda reconexão automática
-            ws.onclose = () => { if (ws._pingInterval) clearInterval(ws._pingInterval); if (ws._keepAliveInterval) clearInterval(ws._keepAliveInterval); if (canal) canal.readyState = WebSocket.CLOSED; atualizarStatusConexao(false); canal = null; agendarReconexao(); };
+            ws.onclose = () => {
+                if (ws._pingInterval) clearInterval(ws._pingInterval);
+                if (ws._keepAliveInterval) clearInterval(ws._keepAliveInterval);
+                if (!canal || canal._ws !== ws) return; // socket antigo: ignora
+                canal.readyState = WebSocket.CLOSED;
+                atualizarStatusConexao(false);
+                canal = null;
+                agendarReconexao();
+            };
             // ERRO: NÃO zera "canal" — o mesmo socket ainda pode estar vivo.
             // Zerar aqui fazia o cliente abrir um SEGUNDO socket (duplicado) que
             // roubava a sessão do primeiro e gerava um loop de reconexão.
             ws.onerror = () => { console.warn('[WebSocket] Erro na conexão (aguardando onclose)'); };
-            ws.onmessage = (e) => processarMensagem(JSON.parse(e.data));
+            ws.onmessage = (e) => {
+                ultimoRecebidoEm = Date.now();
+                processarMensagem(JSON.parse(e.data));
+            };
+        }
+
+        // Ao voltar da suspensão (celular), do segundo plano ou da rede:
+        // confirma se o socket está vivo e força reconexão quando necessário.
+        if (MODO !== 'pages') {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') verificarConexaoAoVoltar();
+            });
+            window.addEventListener('pageshow', (e) => {
+                if (e.persisted) verificarConexaoAoVoltar();
+            });
+            window.addEventListener('online', () => verificarConexaoAoVoltar());
+            window.addEventListener('focus', () => verificarConexaoAoVoltar());
         }
 
         // Fila de mensagens enviadas antes de a conexão abrir
         let filaEnvio = [];
+
+        function removerDaFila(tipo) {
+            filaEnvio = filaEnvio.filter((m) => m.tipo !== tipo);
+        }
 
         function enviarViaWebSocket(dados) {
             const wsAberto = canal && canal._ws && canal._ws.readyState === WebSocket.OPEN;
@@ -2100,6 +2240,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
                 case 'sala_criada':
                     if (MODO !== 'pages') {
+                        cancelarWatchdogSala();
                         currentSala = { id: data.salaId, nome: data.nome, usuarios: [currentUser] };
                         salasLocais[data.salaId] = currentSala;
                         atualizarInfoSala();
@@ -2113,6 +2254,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
                 case 'sala_info': {
                     if (MODO !== 'pages') {
+                        cancelarWatchdogSala(); // servidor confirmou a reentrada
                         // Só avisa "você entrou" na primeira abertura da sala
                         // (após uma reconexão o servidor reenvia sala_info — evita duplicar)
                         const primeiraVez = !currentSala || currentSala.id !== data.salaId;
@@ -2211,7 +2353,9 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     break;
 
                 case 'heartbeat_ack':
-                    // Confirmação de recebimento do servidor
+                    // Confirmação de recebimento do servidor (também responde ao ping
+                    // de verificação feito quando o celular volta da suspensão)
+                    if (pingAoVoltarPendente) { clearTimeout(pingAoVoltarPendente); pingAoVoltarPendente = null; }
                     break;
 
                 case 'timeout_logoff': {
@@ -2293,12 +2437,26 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                         voltarParaEmail();
                         break;
                     }
+                    // Sessão perdida no servidor (ex.: logoff por inatividade,
+                    // reinício sem sessão): volta para a tela de login.
+                    if (data.mensagem && data.mensagem.indexOf('Sessão não autenticada') !== -1) {
+                        cancelarWatchdogSala();
+                        voltarParaLogin('Sua sessão foi encerrada. Digite seu e-mail para entrar novamente.');
+                        break;
+                    }
                     // Re-sincronização: se a sala foi apagada (servidor reiniciou / sem usuários),
                     // sai da sala "fantasma" e volta ao painel em vez de travar com alert repetido
-                    if (data.mensagem === 'Sala não encontrada' && currentSala) {
-                        const nomeSalaPerdida = currentSala.nome;
-                        sairDaSala();
-                        alert(`A sala "${nomeSalaPerdida}" foi encerrada (sem usuários online).`);
+                    if (data.mensagem === 'Sala não encontrada') {
+                        cancelarWatchdogSala();
+                        if (currentSala) {
+                            const nomeSalaPerdida = currentSala.nome;
+                            sairDaSala();
+                            alert(`A sala "${nomeSalaPerdida}" foi encerrada (sem usuários online).`);
+                        } else {
+                            // Tentativa de entrar em uma sala que não existe mais
+                            alert('Esta sala não existe mais. Escolha outra na lista.');
+                            listarSalas();
+                        }
                         break;
                     }
                     alert(data.mensagem);
@@ -2364,7 +2522,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             fecharEdicaoNome();
             document.getElementById('topbarUserRow').classList.remove('hidden');
             document.getElementById('btnSalaADM').classList.remove('hidden');   // Sala ADM: só logado
-            document.getElementById('modeIndicator').classList.add('hidden');   // MODO DEMO: só no login
+            document.getElementById('demoModeWrap').classList.add('hidden');   // MODO DEMO: só no login
             // Atualiza o ícone de conexão no rodapé
             const online = MODO === 'pages' || (canal && canal.readyState === WebSocket.OPEN);
             atualizarStatusConexao(!!online);
@@ -2421,6 +2579,32 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             btn.title = sim ? 'Disponível apenas no painel principal (fora de salas)' : 'Editar nome de usuário';
         }
 
+        // Volta para a tela de login sem pedir confirmação (sessão perdida no servidor)
+        function voltarParaLogin(motivo) {
+            cancelarWatchdogSala();
+            currentSala = null;
+            currentUser = null;
+            admIniciada = false;
+            otpAtual = null;
+            emailParaVerificar = null;
+            try { localStorage.removeItem('cripto_chat_sessao'); } catch (e) {}
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('mainPanel').classList.add('hidden');
+            document.getElementById('dashboardArea').classList.remove('hidden');
+            document.getElementById('tabsBar').classList.remove('hidden');
+            document.getElementById('pageHeader').classList.remove('hidden');
+            document.getElementById('topbarUserRow').classList.add('hidden');
+            document.getElementById('btnSalaADM').classList.add('hidden');
+            document.getElementById('loginPanel').classList.remove('hidden');
+            document.getElementById('loginStep1').classList.remove('hidden');
+            document.getElementById('loginStep2').classList.add('hidden');
+            const aviso = document.getElementById('avisoInatividade');
+            if (aviso && motivo) {
+                aviso.innerHTML = `<strong>⚠️ Sessão encerrada:</strong><br>${escaparHtml(motivo)}`;
+                aviso.classList.remove('hidden');
+            }
+        }
+
         function desconectar() {
             // Verificar se usuário está em sala de chat
             if (currentSala && canal) {
@@ -2448,7 +2632,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 document.getElementById('loginEmail').value = '';
                 document.getElementById('topbarUserRow').classList.add('hidden');
                 document.getElementById('btnSalaADM').classList.add('hidden');
-                document.getElementById('modeIndicator').classList.remove('hidden');
+                // O botão do MODO DEMO volta a aparecer quando a conexão for restabelecida
+                // (atualizarStatusConexao controla a visibilidade).
             // Reset PWA install button state on logout
             if (typeof window.resetPwaInstallBtn === 'function') {
                 window.resetPwaInstallBtn();
@@ -2474,7 +2659,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 document.getElementById('loginEmail').value = '';
                 document.getElementById('topbarUserRow').classList.add('hidden');
                 document.getElementById('btnSalaADM').classList.add('hidden');
-                document.getElementById('modeIndicator').classList.remove('hidden');
+                // O botão do MODO DEMO volta a aparecer quando a conexão for restabelecida
+                // (atualizarStatusConexao controla a visibilidade).
             // Reset PWA install button state on logout
             if (typeof window.resetPwaInstallBtn === 'function') {
                 window.resetPwaInstallBtn();
@@ -2573,13 +2759,13 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             const indicator = document.getElementById('modeIndicator');
             if (!indicator) return;
             if (ativo) {
-                indicator.textContent = 'MODO DEMO ON';
+                indicator.textContent = 'MODO DEMO LIGADO';
                 indicator.className = 'mode-indicator mode-demo demo-on';
-                indicator.title = 'Modo demo ATIVO — clique para desativar';
+                indicator.title = 'Modo demo ligado — clique para desligar';
             } else {
-                indicator.textContent = 'MODO DEMO OFF';
+                indicator.textContent = 'MODO DEMO DESLIGADO';
                 indicator.className = 'mode-indicator mode-login';
-                indicator.title = 'Modo demo desativado — clique para abrir/ativar';
+                indicator.title = 'Modo demo desligado — clique para ligar';
             }
         }
 
@@ -2819,6 +3005,9 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 exibirMensagemSistema(`👥 Você entrou na sala <strong>${escaparHtml(nome || salaId)}</strong>`);
             } else {
                 enviar({ tipo: 'entrar_sala', salaId });
+                // Se o servidor não responder (socket morto), reconecta e avisa
+                // em vez de deixar o clique sem efeito.
+                aguardarConfirmacaoSala(salaId);
             }
         }
 
@@ -2835,6 +3024,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
 
         // Sai da sala e retorna para o dashboard
         function sairDaSala() {
+            cancelarWatchdogSala();
             if (currentSala) {
                 enviar({ tipo: 'sair_sala', salaId: currentSala.id });
                 console.log('[Sala] Usuário saiu da sala:', currentSala.id);
@@ -4009,6 +4199,15 @@ Assinatura do Aluno: _________________________________________________
                 logo.classList.toggle('logo-online', !!online);
                 logo.classList.toggle('logo-offline', !online);
                 logo.title = online ? 'Servidor: ON (conectado)' : 'Servidor: OFF (sem conexao)';
+            }
+            // MODO DEMO: só aparece na tela de login e com o servidor conectado.
+            // No modo GitHub Pages (BroadcastChannel) não existe servidor: fica oculto.
+            const servidorConectado = MODO !== 'pages' && !!online;
+            const demoWrap = document.getElementById('demoModeWrap');
+            if (demoWrap) {
+                const mostrarDemo = servidorConectado && !currentUser;
+                demoWrap.classList.toggle('hidden', !mostrarDemo);
+                if (!mostrarDemo) fecharSenhaDemo();
             }
         }
         function atualizarInfoSala() {

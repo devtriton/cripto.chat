@@ -158,7 +158,8 @@ Depois rode `npm run sync` (ou `npm start`, que já sincroniza).
 - Login com email + código OTP de 6 dígitos (validade de 5 minutos)
 - **Padrão:** o código é enviado por email (SMTP)
 - **Opcional (MODO DEMO):** o código é exibido na própria tela, sem envio de email
-  - Ative pelo botão **MODO DEMO** no topo da tela, com a senha mestre
+  - Ative pelo botão **MODO DEMO DESLIGADO** na tela de login, com a senha mestre
+  - O botão só aparece quando o servidor está conectado
   - Senha padrão: `cripto2024` (hash SHA-256 em `server/demo-config.json`)
 - Variáveis SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 
@@ -205,6 +206,12 @@ Representa a visão do servidor:
   mostra o diálogo nativo de confirmação (exigência de segurança do navegador)
 - **Logout** somente pelo botão **Sair** — e, dentro de uma sala, com confirmação
 - **30 minutos** sem interação → logoff automático
+- **Suspensão do celular**: quando o Android/iOS suspende o navegador/app
+  (tela apagada ou segundo plano), a conexão cai e o servidor remove o usuário
+  da sala — se for o último, a sala é apagada. É esperado.
+- **Recuperação automática**: ao voltar ao app, o cliente testa o WebSocket
+  (ping/pong), reconecta se necessário e reentra na sala. Se a sala foi apagada,
+  volta ao painel principal; se a sessão foi perdida, volta ao login.
 
 ### Interface
 - Altura do chat calculada dinamicamente (janela − topo − rodapé − padding)
@@ -240,7 +247,7 @@ Representa a visão do servidor:
 4. Se todos saírem, a sala desaparece da lista (sala vazia = excluída)
 
 ### Cenário 4: MODO DEMO (OTP na tela)
-1. Clique em MODO DEMO (topo) e digite a senha mestre
+1. Clique em **MODO DEMO DESLIGADO** (na tela de login) e digite a senha mestre
 2. Faça logout e digite um email
 3. O código de 6 dígitos aparece na tela (não vai por email)
 4. Digite o código e entre

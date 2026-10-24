@@ -666,7 +666,7 @@ function handleWsConnection(ws) {
             // PRODUÇÃO: rejeitar se SMTP não configurado
             ws.send(JSON.stringify({
               tipo: 'erro',
-              mensagem: 'Serviço de email não configurado. Ative o MODO DEMO (botão MODO DEMO no topo da tela) para ver o código na tela, ou configure o SMTP (SMTP_USER e SMTP_PASS).'
+              mensagem: 'Serviço de email não configurado. Ative o MODO DEMO (botão MODO DEMO DESLIGADO na tela de login, com o servidor conectado) para ver o código na tela, ou configure o SMTP (SMTP_USER e SMTP_PASS).'
             }));
           });
         break;
@@ -831,6 +831,7 @@ function handleWsConnection(ws) {
             user.entrouEmSalaEm = new Date();
         }
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
+        ws.salaAtual = salaId;
         
         const agoraCriacao = new Date().toISOString();
         ws.send(JSON.stringify({
@@ -852,25 +853,41 @@ function handleWsConnection(ws) {
       // --------------------------------------------------------
       case 'entrar_sala': {
         const { salaId } = data;
+        const user = usuarios.get(ws.email);
         const sala = salas.get(salaId);
         
         if (!sala) {
+          // Sala apagada (sem usuários). Se era a sala "atual" do usuário,
+          // limpa a referência para não deixá-lo preso a uma sala fantasma.
+          if (user && user.salaAtual === salaId) {
+            user.salaAtual = null;
+            user.entrouEmSalaEm = null;
+          }
+          if (ws.salaAtual === salaId) {
+            ws.salaAtual = null;
+            ws.entrouEmSala = false;
+          }
           ws.send(JSON.stringify({ tipo: 'erro', mensagem: 'Sala não encontrada' }));
           return;
         }
-        
+
+        // Se o usuário JÁ estava nesta mesma sala (reconexão após suspensão do
+        // celular), NÃO removê-lo antes de reentrar: sendo o único participante,
+        // a remoção apagaria a sala e ele ficaria em uma sala "fantasma".
+        const jaEstavaNaSala = !!(user && user.salaAtual === salaId);
+
         // Remover do usuário de sala anterior (apaga a sala se ficar vazia)
-        const user = usuarios.get(ws.email);
-        if (user && user.salaAtual) {
+        if (user && user.salaAtual && !jaEstavaNaSala) {
           removerUsuarioDaSala(user.salaAtual, ws.email);
         }
         
         sala.usuarios.add(ws.email);
         if (user) { 
             user.salaAtual = salaId; 
-            user.entrouEmSalaEm = new Date();
+            if (!jaEstavaNaSala) user.entrouEmSalaEm = new Date();
         }
         ws.entrouEmSala = true; // esta conexão está dentro de uma sala
+        ws.salaAtual = salaId;  // usado para não expulsar o usuário quando outra aba fecha
         
         // Notificar todos da sala
         const agora = new Date().toISOString();
@@ -1039,6 +1056,7 @@ function handleWsConnection(ws) {
           user.entrouEmSalaEm = null;
         }
         ws.entrouEmSala = false;
+        ws.salaAtual = null;
         break;
       }
     }
@@ -1059,20 +1077,22 @@ function handleWsConnection(ws) {
       }
       // Se ESTA aba era a que estava numa sala, só remove da sala se NENHUMA
       // outra conexão do MESMO usuário estiver nessa sala.
-      // Isso evita o bug onde uma aba caindo expulsa o usuário mesmo com outras abas na sala.
-      if (user && user.salaAtual && ws.entrouEmSala) {
+      // Isso evita o bug onde uma aba caindo expulsa o usuário mesmo com outras abas na sala
+      // (inclusive a conexão nova criada após a suspensão do celular).
+      const salaDaConexao = ws.salaAtual || (user && user.salaAtual);
+      if (user && salaDaConexao && ws.entrouEmSala) {
         const conjunto = conexoes.get(ws.email);
         let outraNaSala = false;
         if (conjunto) {
           for (const c of conjunto) {
-            if (c !== ws && c.entrouEmSala && c.salaAtual === user.salaAtual) {
+            if (c !== ws && c.entrouEmSala && c.salaAtual === salaDaConexao) {
               outraNaSala = true;
               break;
             }
           }
         }
         if (!outraNaSala) {
-          removerUsuarioDaSala(user.salaAtual, ws.email);
+          removerUsuarioDaSala(salaDaConexao, ws.email);
           user.salaAtual = null;
         }
       }
@@ -1082,7 +1102,8 @@ function handleWsConnection(ws) {
 
     // Última conexão do usuário → sai da sala e é apagado
     if (user) {
-      if (user.salaAtual) removerUsuarioDaSala(user.salaAtual, ws.email);
+      const salaFinal = ws.salaAtual || user.salaAtual;
+      if (salaFinal) removerUsuarioDaSala(salaFinal, ws.email);
       usuarios.delete(ws.email);
     }
     console.log(`[LOGOUT] ${ws.email} desconectou`);

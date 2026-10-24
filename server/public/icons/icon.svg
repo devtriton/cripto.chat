@@ -1,19 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Background gradient -->
+  <!-- Ícone do app: fundo transparente, sem texto -->
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f0c29;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#302b63;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#24243e;stop-opacity:1" />
+    <linearGradient id="corpo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD95A" />
+      <stop offset="55%" stop-color="#FFB52E" />
+      <stop offset="100%" stop-color="#FF9416" />
     </linearGradient>
+    <linearGradient id="arco" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#DCD6E4" />
+      <stop offset="100%" stop-color="#B7AFC5" />
+    </linearGradient>
+    <linearGradient id="chave" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1EDF7" />
+      <stop offset="55%" stop-color="#DED8E9" />
+      <stop offset="100%" stop-color="#C9C1D8" />
+    </linearGradient>
+    <mask id="furoChave">
+      <rect width="512" height="512" fill="#FFFFFF" />
+      <circle cx="400" cy="190" r="18" fill="#000000" />
+    </mask>
   </defs>
-  
-  <!-- Background -->
-  <rect width="512" height="512" fill="url(#bg)" rx="64" />
-  
-  <!-- Lock emoji (🔐) -->
-  <text x="256" y="200" font-size="120" text-anchor="middle" dominant-baseline="middle">🔐</text>
-  
-  <!-- Text "cripto.chat" -->
-  <text x="256" y="340" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#00d4ff">cripto.chat</text>
+
+  <!-- Arco do cadeado -->
+  <path d="M156 192 V133 a70 70 0 0 1 140 0 V192"
+        fill="none" stroke="url(#arco)" stroke-width="38" stroke-linecap="round" />
+
+  <!-- Corpo do cadeado -->
+  <rect x="92" y="180" width="268" height="264" rx="52"
+        fill="url(#corpo)" stroke="#F08A00" stroke-width="3" />
+
+  <!-- Brilho superior do corpo -->
+  <rect x="112" y="198" width="228" height="48" rx="24" fill="#FFFFFF" opacity="0.28" />
+
+  <!-- Fechadura -->
+  <circle cx="226" cy="300" r="36" fill="#3B2E4B" />
+  <path d="M206 324 h40 l-12 56 h-16 z" fill="#3B2E4B" />
+
+  <!-- Chave clara à direita, encaixada no cadeado -->
+  <g mask="url(#furoChave)">
+    <!-- haste -->
+    <rect x="378" y="190" width="44" height="240" rx="15"
+          fill="url(#chave)" stroke="#B8B0C8" stroke-width="3" />
+    <!-- dentes (lado esquerdo) -->
+    <rect x="348" y="316" width="30" height="18" rx="5"
+          fill="url(#chave)" stroke="#B8B0C8" stroke-width="3" />
+    <rect x="348" y="344" width="30" height="18" rx="5"
+          fill="url(#chave)" stroke="#B8B0C8" stroke-width="3" />
+    <rect x="348" y="372" width="30" height="18" rx="5"
+          fill="url(#chave)" stroke="#B8B0C8" stroke-width="3" />
+    <!-- cabeça da chave -->
+    <circle cx="400" cy="190" r="54"
+            fill="url(#chave)" stroke="#B8B0C8" stroke-width="3" />
+    <!-- brilho na haste -->
+    <rect x="406" y="200" width="6" height="216" rx="3" fill="#FFFFFF" opacity="0.55" />
+  </g>
 </svg>

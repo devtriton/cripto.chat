@@ -389,6 +389,8 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 
 Esta parte é importante para os adultos — mas também vale a pena as crianças saberem: **o cripto.chat não guarda as conversas no servidor**.
 
+> **Quem é o controlador?** O cripto.chat é software de código aberto: **quem instala esta cópia é o controlador dos dados** (escola, professor ou administrador do servidor). O autor do software não tem acesso a essa instalação. Por isso não existe um e-mail de privacidade fixo no documento: o contato é o divulgado por quem instalou. Quem instala deve manter visível o **crédito de autoria** ao desenvolvedor.
+
 ### 16.1 O aviso que aparece antes de entrar
 
 Na primeira vez que você abre o chat, aparece uma janela com três escolhas:
@@ -451,7 +453,9 @@ O botão **🔒 Privacidade** (no rodapé, depois do login) mostra:
 - o aviso de que não há cookies nem conversas guardadas;
 - **Rever consentimento** — volta à janela de aceite;
 - **Documento completo** — abre `privacidade.html`;
-- **Pedir exclusão no servidor** — abre um e-mail para `privacidade@cripto.chat` e registra o pedido;
+- **Pedir exclusão no servidor** — registra o pedido e mostra o contato de quem instalou esta cópia do chat
+  (professor, escola ou administrador do servidor). Não existe um e-mail fixo do autor: cada instalação tem o seu
+  próprio controlador;
 - **Apagar dados deste navegador** — remove sessão, consentimento, idade, preferências e chaves, e recarrega a página.
 
 ### 16.7 Registro no servidor e exclusão

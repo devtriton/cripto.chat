@@ -371,6 +371,24 @@ O cripto.chat foi pensado para uso escolar e segue, de forma proporcional ao pro
 - **Registro de auditoria:** o servidor grava `server/consentimentos.jsonl` (uma linha por
   aceite/recusa/idade), com retenção de **6 meses**, acesso restrito e exclusão sob solicitação.
 
+### Quem é o controlador (importante para quem instala)
+
+O cripto.chat é **software de código aberto**. O autor **não é controlador** dos dados das
+instalações feitas por terceiros e **não tem acesso** a elas.
+
+**Quem instala e mantém uma cópia é o controlador dos dados** perante a LGPD (art. 5º, VI) —
+em geral a escola, a instituição, o professor ou a pessoa que disponibilizou o endereço. Essa
+pessoa ou instituição deve:
+
+1. **divulgar um canal de contato** para pedidos de privacidade (o documento e o app não trazem
+   um e-mail fixo justamente porque cada instalação é autônoma);
+2. **manter visível o crédito de autoria** ao desenvolvedor, como consta no rodapé e na tela de
+   login: *“Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná”*;
+3. responder aos pedidos de titulares e responsáveis e aplicar a exclusão dos registros.
+
+O crédito de autoria não transfere ao autor a responsabilidade pelo tratamento de dados nem a
+condição de controlador.
+
 ### Documento completo
 
 O texto jurídico (Termos de Uso, Política de Privacidade, Cookies, ECA Digital, Marco Civil,

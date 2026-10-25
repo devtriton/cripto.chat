@@ -1347,7 +1347,7 @@ body {
                 <button class="btn-success" onclick="verificarOTP()">Verificar e Entrar</button>
                 <button class="btn-secondary" onclick="voltarParaEmail()">Voltar</button>
             </div>
-            <div class="login-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
+            <div class="login-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
             <div class="login-legal">
                 <a href="privacidade.html#termos" target="_blank" rel="noopener">Termos de Uso</a><span>·</span>
                 <a href="privacidade.html#privacidade" target="_blank" rel="noopener">Privacidade</a><span>·</span>
@@ -2138,7 +2138,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 © 2026 cripto.chat — Projeto educacional de criptografia<br>
                 Licenciatura em Computação<br>
                 UTFPR — Universidade Tecnológica Federal do Paraná<br>
-                Marlon Antonio Stoeberl — Rio Negro, Paraná
+                Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná
             </div>
         </div>
 
@@ -2216,7 +2216,9 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 </div>
                 <p class="consent-rodape">
                     Você pode rever ou revogar esta escolha a qualquer momento em
-                    <strong>🔒 Privacidade</strong>.
+                    <strong>🔒 Privacidade</strong>.<br>
+                    Quem instalou esta cópia do chat (escola, professor ou administrador do servidor) é o
+                    <strong>controlador dos dados</strong>; o autor do software não tem acesso a esta instalação.
                 </p>
             </div>
 
@@ -2345,6 +2347,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             <p class="consent-texto">
                 Aqui você vê o que está guardado e pode mudar de ideia quando quiser.
             </p>
+            <div class="priv-linha"><strong>Controlador dos dados</strong><span>Quem instalou esta cópia do chat</span></div>
             <div class="priv-linha"><strong>Termos aceitos</strong><span id="privConsent">—</span></div>
             <div class="priv-linha"><strong>Idade declarada</strong><span id="privIdade">—</span></div>
             <div class="priv-linha"><strong>Cookies</strong><span>Nenhum (o site não usa cookies)</span></div>
@@ -2359,6 +2362,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             <p class="consent-rodape">
                 A exclusão no navegador remove sessão, consentimento, idade, preferências e chaves. É imediata e não pode ser desfeita.
             </p>
+            <div id="privExclusaoInfo" class="consent-nota hidden"></div>
             <div class="consent-acoes">
                 <button class="btn-link" onclick="fecharPrivacidade()">Fechar</button>
             </div>
@@ -2582,7 +2586,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 console.log('%c🔐 cripto.chat v' + APP_VERSION + ' (build ' + APP_BUILD + ')', 'font-size:14px;font-weight:bold;color:#c4a35a');
                 console.log('%c© 2026 cripto.chat — Projeto educacional de criptografia', 'font-size:11px;color:#888');
                 console.log('%cLicenciatura em Computação — UTFPR (Universidade Tecnológica Federal do Paraná)', 'font-size:10px;color:#888');
-                console.log('%cMarlon Antonio Stoeberl — Rio Negro, Paraná', 'font-size:10px;color:#888');
+                console.log('%cDesenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná', 'font-size:10px;color:#888');
                 console.log('[cripto.chat] Inicializando conexão...');
                 // Verificar versão do app
                 verificarVersaoApp();
@@ -5741,6 +5745,13 @@ Assinatura do Aluno: _________________________________________________
             }
         }
 
+        // O aviso de exclusão é gerado sob demanda; começa sempre oculto.
+        const infoExclusao = document.getElementById('privExclusaoInfo');
+        if (infoExclusao) {
+            infoExclusao.classList.add('hidden');
+            infoExclusao.textContent = '';
+        }
+
         const overlay = document.getElementById('privacidadeOverlay');
         if (overlay) overlay.classList.remove('hidden');
     }
@@ -5770,15 +5781,17 @@ Assinatura do Aluno: _________________________________________________
         const email = (currentUser && currentUser.email) || '';
         registrarConsentimentoServidor('exclusao_solicitada', { email: email });
 
-        const assunto = encodeURIComponent('LGPD — Exclusão dos meus registros (cripto.chat)');
-        const corpo = encodeURIComponent(
-            'Olá,\n\n' +
-            'Solicito a exclusão dos meus registros de consentimento do cripto.chat.\n\n' +
-            'E-mail usado no chat: ' + (email || '(não informado)') + '\n' +
-            'Data do pedido: ' + new Date().toLocaleString('pt-BR') + '\n\n' +
-            'Obrigado(a).'
-        );
-        window.location.href = 'mailto:privacidade@cripto.chat?subject=' + assunto + '&body=' + corpo;
+        // Não há um e-mail fixo de contato: cada instalação tem o seu controlador.
+        const info = document.getElementById('privExclusaoInfo');
+        if (!info) return;
+        info.textContent =
+            'Pedido registrado nesta instalação. O cripto.chat é software de código aberto: ' +
+            'quem instalou esta cópia é o controlador dos dados, e o autor do software não tem acesso a este servidor. ' +
+            'Procure quem forneceu o endereço deste chat (professor, escola ou administrador do servidor) e informe o e-mail ' +
+            (email || '(não informado)') + '. ' +
+            'Se você administra esta instalação, apague o registro com: ' +
+            'node scripts/limpar-consentimentos.js --email=' + (email || 'seu@email.com');
+        info.classList.remove('hidden');
     }
 
     // ------------------------------------------------------------

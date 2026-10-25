@@ -112,7 +112,7 @@
 <header class="topo">
     <a class="voltar" href="index.html">← Voltar para o chat</a>
     <span class="marca">🔐 cripto.chat</span>
-    <span class="versao">Documento v1.0 — 25/10/2026</span>
+    <span class="versao">Documento v1.1 — 25/10/2026</span>
 </header>
 
 <main>
@@ -222,14 +222,42 @@
             no chat ou de cópias feitas por outros participantes.</li>
     </ul>
 
+    <h3>1.5 Autoria e crédito</h3>
+    <p>
+        O cripto.chat é <strong>software de código aberto</strong> e pode ser instalado, copiado e adaptado por qualquer
+        pessoa ou instituição, desde que observada a licença do projeto. A única exigência do autor em relação ao uso
+        por terceiros é a <strong>manutenção do crédito de autoria</strong>.
+    </p>
+    <p>
+        Quem instalar ou publicar uma cópia deve <strong>manter visível a menção ao desenvolvedor</strong> — no rodapé,
+        na tela de login ou nos créditos do sistema —, nos termos em que consta no próprio software:
+        <em>“Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná”</em>, vinculado ao projeto educacional
+        cripto.chat (Licenciatura em Computação — UTFPR).
+    </p>
+    <p>
+        O crédito de autoria <strong>não transfere</strong> ao autor a responsabilidade pelo tratamento de dados nem a
+        condição de controlador das instalações de terceiros, descrita na seção 2.1.
+    </p>
+
     <!-- ============================================================ -->
     <h2 id="privacidade">2. Política de Privacidade (LGPD — Lei 13.709/2018)</h2>
 
     <h3>2.1 Quem é o controlador</h3>
     <p>
-        <strong>Controlador:</strong> Marlon Antonio Stoeberl — projeto educacional cripto.chat, Rio Negro/PR.<br>
-        <strong>Contato para privacidade:</strong> <a href="mailto:privacidade@cripto.chat">privacidade@cripto.chat</a>
-        <span style="font-size:12.5px;color:var(--texto-fraco)">(canal a ser mantido ativo pelo responsável do projeto)</span>
+        O cripto.chat é um <strong>projeto educacional de código aberto</strong>. Cada instalação é autônoma e
+        independente: <strong>quem instala e mantém esta cópia é o controlador dos dados pessoais</strong> perante a
+        LGPD (art. 5º, VI). Normalmente esse papel é exercido pela escola, pela instituição de ensino, pelo professor
+        ou pela pessoa que disponibilizou o endereço que você está usando.
+    </p>
+    <p>
+        <strong>Controlador desta instalação:</strong> o responsável pela instalação, conforme identificado no canal de
+        contato divulgado pela escola ou pelo administrador do sistema.<br>
+        <strong>Contato para privacidade:</strong> o canal indicado por esse responsável (por exemplo, a coordenação da
+        escola, o professor da turma ou o administrador do servidor).
+    </p>
+    <p>
+        O <strong>autor do software não é controlador</strong> dos dados das instalações feitas por terceiros e
+        <strong>não tem acesso</strong> a elas, às conversas ou aos registros gravados nesses servidores.
     </p>
     <p>
         O projeto não é uma empresa e não tem fins econômicos. Ainda assim, tratamos dados pessoais e por isso seguimos
@@ -319,8 +347,8 @@
 
     <h3>2.3 Compartilhamento com terceiros</h3>
     <ul>
-        <li><strong>Provedor de hospedagem</strong> (ex.: Render, Plesk ou o computador da escola): processa as conexões e o
-            tráfego necessário para o site funcionar.</li>
+        <li><strong>Provedor de hospedagem</strong> (ex.: um servidor web contratado ou o computador da escola): processa as
+            conexões e o tráfego necessário para o site funcionar. Quem instala escolhe esse provedor e responde por ele.</li>
         <li><strong>Provedor de e-mail (SMTP)</strong>, quando configurado: recebe o seu e-mail apenas para enviar o código de acesso.
             No <strong>MODO DEMO</strong> nenhum e-mail é enviado — o código aparece na própria tela.</li>
         <li><strong>Nenhum outro compartilhamento</strong>. Não há transferência para fins comerciais.</li>
@@ -335,7 +363,7 @@
         <li>Conexões por <strong>HTTPS/WSS</strong> quando disponíveis (o app também gera certificado local).</li>
         <li>A senha do MODO DEMO é guardada como <strong>hash SHA-256</strong>, nunca em texto puro.</li>
         <li>As <strong>chaves privadas</strong> de E2E nunca saem do navegador do usuário.</li>
-        <li>Acesso ao servidor e ao arquivo de consentimentos restrito ao responsável pelo projeto.</li>
+        <li>Acesso ao servidor e ao arquivo de consentimentos restrito ao responsável pela instalação.</li>
         <li>Não há garantia absoluta de segurança: nenhum sistema é 100% invulnerável.</li>
     </ul>
 
@@ -404,8 +432,8 @@
             </tr>
             <tr>
                 <td><strong>Canal de denúncia</strong></td>
-                <td>O professor da turma e o e-mail de privacidade. O botão <strong>Sair</strong> e o fechamento da sala
-                    encerram a sessão imediatamente.</td>
+                <td>O professor da turma e o canal de contato divulgado pelo responsável pela instalação. O botão
+                    <strong>Sair</strong> e o fechamento da sala encerram a sessão imediatamente.</td>
             </tr>
             <tr>
                 <td><strong>Proibição de publicidade, apostas e caixas de recompensa</strong></td>
@@ -466,13 +494,15 @@
     <ul>
         <li><strong>No próprio app:</strong> menu <strong>🔒 Privacidade</strong> → revisar consentimento, apagar dados do navegador
             ou solicitar exclusão dos registros do servidor.</li>
-        <li><strong>Por e-mail:</strong> <a href="mailto:privacidade@cripto.chat">privacidade@cripto.chat</a> — respondemos em até
-            15 dias.</li>
-        <li><strong>Registros do servidor:</strong> podem ser apagados pelo responsável com o comando
+        <li><strong>Pelo canal da instalação:</strong> procure o responsável por esta cópia do cripto.chat — em geral a
+            escola, o professor da turma ou o administrador do servidor. O contato é o divulgado por eles, não pelo autor
+            do software.</li>
+        <li><strong>Registros do servidor:</strong> podem ser apagados pelo responsável pela instalação com o comando
             <code>node scripts/limpar-consentimentos.js --email=seu@email.com</code>.</li>
     </ul>
     <p>
-        Se você não ficar satisfeito, pode reclamar à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) —
+        O prazo de resposta segue as normas da instituição responsável pela instalação. Se você não ficar satisfeito,
+        pode reclamar à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) —
         <a href="https://www.gov.br/anpd" target="_blank" rel="noopener">gov.br/anpd</a>.
     </p>
 
@@ -480,7 +510,8 @@
     <p>
         Seguimos o art. 14 da LGPD: o tratamento de dados de crianças e adolescentes é feito no <strong>melhor interesse</strong>
         deles, com o mínimo de dados possível e, para menores de 16 anos, com autorização de um responsável registrada no
-        sistema. Responsáveis podem pedir a exclusão a qualquer momento pelo e-mail acima.
+        sistema. Responsáveis podem pedir a exclusão a qualquer momento pelo canal de contato divulgado pelo responsável
+        pela instalação.
     </p>
 
     <!-- ============================================================ -->
@@ -489,6 +520,14 @@
     <table>
         <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
         <tbody>
+            <tr>
+                <td>1.1</td>
+                <td>25/10/2026</td>
+                <td>O controlador passa a ser <strong>quem instala esta cópia</strong> do cripto.chat (o autor não é
+                    controlador das instalações de terceiros). Removido o e-mail fixo de privacidade, que passa a ser o
+                    divulgado pelo responsável pela instalação. Incluída a cláusula de autoria e crédito (1.5). Sem
+                    mudança no tratamento de dados.</td>
+            </tr>
             <tr>
                 <td>1.0</td>
                 <td>25/10/2026</td>
@@ -500,7 +539,8 @@
 
     <div class="caixa">
         <span class="caixa-titulo">📄 Documento vivo</span>
-        Quando este texto mudar, a versão é atualizada e o app pede um novo aceite no próximo acesso.
+        Quando este texto mudar, a versão é atualizada e o histórico acima registra o que mudou.
+        Se a mudança alterar <strong>o tratamento de dados</strong>, o app pede um novo aceite no próximo acesso.
         A data e a versão ficam registradas junto ao seu consentimento.
     </div>
 </main>
@@ -508,7 +548,10 @@
 <footer>
     © 2026 cripto.chat — Projeto educacional de criptografia<br>
     Licenciatura em Computação · UTFPR — Universidade Tecnológica Federal do Paraná<br>
-    Marlon Antonio Stoeberl — Rio Negro, Paraná
+    Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná<br>
+    <span style="font-size:11.5px;opacity:0.8">
+        Software de código aberto: quem instala esta cópia é o controlador dos dados e deve manter o crédito de autoria.
+    </span>
 </footer>
 
 </body>

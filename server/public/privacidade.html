@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="areia">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Termos de Uso, Privacidade e ECA Digital — cripto.chat</title>
+<meta name="description" content="Termos de Uso, Política de Privacidade (LGPD), aviso de cookies e rotina de proteção de crianças e adolescentes (Lei 15.211/2025 — ECA Digital) do cripto.chat.">
+<meta name="robots" content="index, follow">
+<style>
+    :root {
+        --bg-1: #eef2f8; --bg-2: #dbe4f2; --bg-3: #e9eef7;
+        --acento: #0b63c5; --acento-rgb: 11, 99, 197; --acento-esc: #084b99;
+        --painel-bg: #ffffff; --painel-borda: rgba(9, 37, 73, 0.15);
+        --texto: #16202d; --texto-forte: #28323f; --texto-medio: #4d5766;
+        --texto-suave: #4a5563; --texto-fraco: #5b6573; --texto-destaque: #0a58b0;
+        --aviso: #8a6100; --verde-txt: #0d8a44; --vermelho-txt: #c62828;
+        --campo-bg: #ffffff; --campo-borda: rgba(9, 37, 73, 0.3);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+        color: var(--texto); line-height: 1.7; font-size: 16px;
+        min-height: 100vh; padding: 0 16px 60px;
+    }
+    .topo {
+        position: sticky; top: 0; z-index: 10;
+        display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        max-width: 900px; margin: 0 auto; padding: 12px 0;
+        background: linear-gradient(180deg, var(--bg-1) 70%, rgba(238, 242, 248, 0));
+    }
+    .voltar {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: linear-gradient(135deg, var(--acento), var(--acento-esc));
+        color: #fff; text-decoration: none; font-weight: 600; font-size: 14px;
+        padding: 8px 14px; border-radius: 8px;
+    }
+    .voltar:hover { filter: brightness(1.1); }
+    .marca { font-weight: 700; color: var(--acento); font-size: 15px; }
+    .versao { margin-left: auto; font-size: 12px; color: var(--texto-fraco); }
+    main {
+        max-width: 900px; margin: 0 auto; background: var(--painel-bg);
+        border: 1px solid var(--painel-borda); border-radius: 14px;
+        padding: 28px 34px 34px; box-shadow: 0 10px 30px rgba(9, 37, 73, 0.07);
+    }
+    h1 { font-size: 28px; line-height: 1.25; color: var(--acento); margin-bottom: 6px; }
+    .sub { color: var(--texto-fraco); font-size: 13.5px; margin-bottom: 22px; }
+    h2 {
+        font-size: 21px; color: var(--texto-destaque); margin: 34px 0 12px;
+        padding-bottom: 6px; border-bottom: 1px solid var(--painel-borda);
+        scroll-margin-top: 70px;
+    }
+    h3 { font-size: 16.5px; color: var(--texto-forte); margin: 20px 0 8px; }
+    p { margin: 10px 0; }
+    ul, ol { margin: 10px 0 14px; padding-left: 26px; }
+    li { margin: 7px 0; }
+    li::marker { color: var(--acento); }
+    strong { color: var(--texto-forte); }
+    a { color: var(--acento); font-weight: 600; }
+    code {
+        background: #f1f5fb; border: 1px solid var(--painel-borda);
+        padding: 1px 6px; border-radius: 5px; font-size: 0.9em;
+    }
+    .indice {
+        display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 8px;
+        padding: 14px 16px; border: 1px dashed var(--painel-borda); border-radius: 12px;
+        background: rgba(var(--acento-rgb), 0.04);
+    }
+    .indice a {
+        font-size: 13px; text-decoration: none; padding: 5px 11px; border-radius: 999px;
+        border: 1px solid var(--painel-borda); background: #fff; color: var(--texto-medio);
+    }
+    .indice a:hover { border-color: var(--acento); color: var(--acento); }
+    .caixa {
+        border-radius: 12px; padding: 14px 18px; margin: 16px 0;
+        border: 1px solid var(--painel-borda); border-left: 4px solid var(--acento);
+        background: rgba(var(--acento-rgb), 0.05); font-size: 15px;
+    }
+    .caixa.verde { border-left-color: var(--verde-txt); background: rgba(13, 138, 68, 0.07); }
+    .caixa.aviso { border-left-color: #c98a00; background: rgba(201, 138, 0, 0.08); }
+    .caixa.vermelha { border-left-color: var(--vermelho-txt); background: rgba(198, 40, 40, 0.06); }
+    .caixa-titulo { display: block; font-weight: 700; margin-bottom: 6px; }
+    .tabela-wrap { overflow-x: auto; margin: 14px 0; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+    th, td { border: 1px solid var(--painel-borda); padding: 9px 11px; text-align: left; vertical-align: top; }
+    th { background: rgba(var(--acento-rgb), 0.1); color: var(--texto-destaque); font-size: 13px; }
+    tbody tr:nth-child(even) { background: rgba(9, 37, 73, 0.025); }
+    .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .resumo-item {
+        border: 1px solid var(--painel-borda); border-radius: 12px; padding: 14px 16px;
+        background: rgba(var(--acento-rgb), 0.04);
+    }
+    .resumo-item .ico { font-size: 22px; display: block; margin-bottom: 6px; }
+    .resumo-item strong { display: block; font-size: 14px; margin-bottom: 4px; color: var(--acento); }
+    .resumo-item span { font-size: 13.5px; color: var(--texto-medio); }
+    footer {
+        max-width: 900px; margin: 22px auto 0; text-align: center;
+        font-size: 12.5px; color: var(--texto-fraco); line-height: 1.8;
+    }
+    @media (max-width: 640px) {
+        body { font-size: 15.5px; padding: 0 10px 40px; }
+        main { padding: 18px 16px 24px; border-radius: 12px; }
+        h1 { font-size: 22px; }
+        h2 { font-size: 18.5px; }
+        .versao { width: 100%; margin-left: 0; }
+        table { font-size: 13px; }
+    }
+</style>
+</head>
+<body>
+
+<header class="topo">
+    <a class="voltar" href="index.html">← Voltar para o chat</a>
+    <span class="marca">🔐 cripto.chat</span>
+    <span class="versao">Documento v1.0 — 25/10/2026</span>
+</header>
+
+<main>
+    <h1>Termos de Uso, Privacidade e ECA Digital</h1>
+    <p class="sub">
+        Este documento reúne, em linguagem simples, as regras de uso do cripto.chat, o que fazemos (e o que
+        <strong>não</strong> fazemos) com os seus dados e a rotina de proteção de crianças e adolescentes.
+        Ao usar o sistema você declara que leu e entendeu este texto.
+    </p>
+
+    <nav class="indice" aria-label="Índice do documento">
+        <a href="#resumo">Resumo em 1 minuto</a>
+        <a href="#termos">1. Termos de Uso</a>
+        <a href="#privacidade">2. Política de Privacidade (LGPD)</a>
+        <a href="#cookies">3. Cookies e armazenamento local</a>
+        <a href="#eca">4. ECA Digital (Lei 15.211/2025)</a>
+        <a href="#marco">5. Marco Civil da Internet</a>
+        <a href="#direitos">6. Seus direitos e contato</a>
+        <a href="#historico">7. Histórico de versões</a>
+    </nav>
+
+    <h2 id="resumo">Resumo em 1 minuto</h2>
+    <div class="resumo">
+        <div class="resumo-item">
+            <span class="ico">🍪</span>
+            <strong>Não usamos cookies</strong>
+            <span>Nenhum cookie de rastreamento, publicidade ou analytics. Só o armazenamento local do próprio navegador.</span>
+        </div>
+        <div class="resumo-item">
+            <span class="ico">🗑️</span>
+            <strong>Conversas não ficam no servidor</strong>
+            <span>As mensagens passam pela memória do servidor apenas para serem entregues e são descartadas.</span>
+        </div>
+        <div class="resumo-item">
+            <span class="ico">🔑</span>
+            <strong>O desenvolvedor não lê o E2E</strong>
+            <span>No modo ponta a ponta a chave privada nunca sai do seu navegador. Nas cifras simétricas da demonstração, a chave viaja junto (é proposital, para a aula).</span>
+        </div>
+        <div class="resumo-item">
+            <span class="ico">🧒</span>
+            <strong>Menores de 16 precisam de autorização</strong>
+            <span>O acesso às salas exige declaração de idade e, para menores de 16, autorização de um responsável.</span>
+        </div>
+    </div>
+
+    <div class="caixa aviso">
+        <span class="caixa-titulo">⚠️ O que você precisa saber antes de continuar</span>
+        O cripto.chat é um <strong>projeto educacional</strong> (Licenciatura em Computação — UTFPR) usado em sala de aula.
+        Ele demonstra como a criptografia funciona. <strong>Não é um mensageiro seguro para a vida real</strong> e não deve ser
+        usado para informações sensíveis, documentos, senhas ou dados de terceiros.
+    </div>
+
+    <!-- ============================================================ -->
+    <h2 id="termos">1. Termos de Uso</h2>
+
+    <h3>1.1 O que é o cripto.chat</h3>
+    <p>
+        O cripto.chat é um <strong>objeto educacional</strong> de código aberto para o ensino de criptografia. Ele permite
+        criar salas de conversa e trocar mensagens cifradas com diferentes algoritmos (César, Vigenère, XOR, AES-256-GCM,
+        RSA-2048 e ECC P-256), além de mostrar, em tempo real, o que um servidor consegue ou não ver.
+    </p>
+    <p>
+        O serviço é oferecido <strong>sem fins comerciais</strong>, sem cobrança, sem publicidade e sem venda de dados.
+        Pode ser descontinuado, reiniciado ou ter funcionalidades alteradas a qualquer momento.
+    </p>
+
+    <h3>1.2 Quem pode usar</h3>
+    <ul>
+        <li><strong>18 anos ou mais:</strong> pode usar livremente, aceitando estes termos.</li>
+        <li><strong>16 e 17 anos:</strong> pode usar, com ciência de um responsável, aceitando estes termos.</li>
+        <li><strong>Menos de 16 anos:</strong> só pode entrar nas salas com <strong>autorização de um responsável legal</strong>,
+            registrada no próprio sistema (nome e e-mail do responsável). Sem essa autorização, o acesso fica limitado à
+            leitura do Guia Educacional.</li>
+    </ul>
+    <p>
+        A idade é <strong>declarada pelo próprio usuário</strong>. O sistema não coleta documentos, não usa reconhecimento
+        facial e não consulta bases externas. Em um produto comercial, essa verificação precisaria ser mais robusta —
+        esta é uma limitação assumida e declarada do projeto.
+    </p>
+
+    <h3>1.3 Regras de convivência</h3>
+    <p>Ao usar as salas, você concorda em <strong>não</strong>:</p>
+    <ul>
+        <li>ofender, humilhar, ameaçar, perseguir ou praticar <em>bullying</em> contra qualquer pessoa;</li>
+        <li>publicar discurso de ódio, conteúdo racista, machista, homofóbico, xenofóbico ou discriminatório;</li>
+        <li>enviar conteúdo ilegal, violento, sexual ou inadequado para o ambiente escolar;</li>
+        <li>divulgar dados pessoais seus ou de terceiros (endereço, telefone, documentos, fotos, senhas);</li>
+        <li>tentar quebrar, burlar ou sobrecarregar o sistema, as salas ou a criptografia dos colegas;</li>
+        <li>usar o chat para spam, propaganda, apostas, jogos de azar ou qualquer finalidade comercial;</li>
+        <li>se passar por outra pessoa, professor ou responsável.</li>
+    </ul>
+    <p>
+        O descumprimento pode levar à <strong>advertência, remoção da sala, bloqueio do acesso</strong> e, quando cabível,
+        comunicação à escola e aos responsáveis. O professor responsável pela turma é o ponto de contato para conduta.
+    </p>
+
+    <h3>1.4 Limites técnicos e de responsabilidade</h3>
+    <ul>
+        <li>As mensagens <strong>não são armazenadas no servidor</strong>. Ao sair da sala (ou quando ela fica vazia), o histórico desaparece.</li>
+        <li><strong>Quem guarda o conteúdo é você.</strong> Se você copiar, imprimir, fotografar ou salvar uma conversa, a guarda
+            e o uso dessas informações passam a ser de sua responsabilidade.</li>
+        <li>Nas cifras <strong>simétricas</strong> da demonstração (César, Vigenère, XOR e AES), a chave viaja junto com a mensagem:
+            é exatamente isso que a <strong>Sala ADM</strong> mostra. Portanto, nessas opções, o professor/monitor <em>consegue</em> ler.
+            Apenas no modo <strong>E2E</strong> (RSA/ECC) o servidor vê somente texto cifrado.</li>
+        <li>O serviço pode ficar indisponível, perder mensagens em trânsito ou ser reiniciado sem aviso.</li>
+        <li>O projeto não se responsabiliza por danos decorrentes do uso indevido, de informações sensíveis compartilhadas
+            no chat ou de cópias feitas por outros participantes.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="privacidade">2. Política de Privacidade (LGPD — Lei 13.709/2018)</h2>
+
+    <h3>2.1 Quem é o controlador</h3>
+    <p>
+        <strong>Controlador:</strong> Marlon Antonio Stoeberl — projeto educacional cripto.chat, Rio Negro/PR.<br>
+        <strong>Contato para privacidade:</strong> <a href="mailto:privacidade@cripto.chat">privacidade@cripto.chat</a>
+        <span style="font-size:12.5px;color:var(--texto-fraco)">(canal a ser mantido ativo pelo responsável do projeto)</span>
+    </p>
+    <p>
+        O projeto não é uma empresa e não tem fins econômicos. Ainda assim, tratamos dados pessoais e por isso seguimos
+        os princípios da LGPD: finalidade, adequação, necessidade, transparência, segurança, prevenção e
+        responsabilização.
+    </p>
+
+    <h3>2.2 Quais dados tratamos, onde ficam e por quê</h3>
+    <div class="tabela-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Dado</th>
+                <th>Onde fica</th>
+                <th>Para que serve</th>
+                <th>Base legal</th>
+                <th>Por quanto tempo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>E-mail</strong></td>
+                <td>Memória do servidor + <code>localStorage</code> do seu navegador</td>
+                <td>Enviar o código de acesso (OTP) e identificar você nas salas</td>
+                <td>Execução do serviço + consentimento</td>
+                <td>Até o logout, 30 min de inatividade ou reinício do servidor</td>
+            </tr>
+            <tr>
+                <td><strong>Nome de exibição</strong></td>
+                <td>Memória do servidor + <code>localStorage</code></td>
+                <td>Mostrar quem está na sala</td>
+                <td>Execução do serviço</td>
+                <td>Mesmo prazo do e-mail</td>
+            </tr>
+            <tr>
+                <td><strong>Mensagens</strong></td>
+                <td><strong>Somente em trânsito</strong> (memória do servidor)</td>
+                <td>Entregar aos participantes da sala</td>
+                <td>Execução do serviço</td>
+                <td><strong>Não são armazenadas</strong>: descartadas ao sair da sala ou reiniciar o servidor</td>
+            </tr>
+            <tr>
+                <td><strong>Chave pública</strong> (RSA / ECC)</td>
+                <td>Memória do servidor</td>
+                <td>Permitir que os colegas cifrem mensagens para você</td>
+                <td>Execução do serviço</td>
+                <td>Enquanto a sessão durar</td>
+            </tr>
+            <tr>
+                <td><strong>Chave privada</strong> (RSA / ECC)</td>
+                <td><strong>Apenas no seu navegador</strong> (<code>localStorage</code>)</td>
+                <td>Decifrar as mensagens que só você deve ler</td>
+                <td>Execução do serviço</td>
+                <td>Até você apagar os dados do navegador</td>
+            </tr>
+            <tr>
+                <td><strong>Registro de consentimento</strong></td>
+                <td>Arquivo no servidor (<code>server/consentimentos.jsonl</code>)</td>
+                <td>Comprovar que você aceitou os termos e declarou a idade (LGPD, art. 8º, §1º)</td>
+                <td>Obrigação legal / exercício regular de direitos</td>
+                <td>6 meses, com acesso restrito ao responsável</td>
+            </tr>
+            <tr>
+                <td><strong>Preferências</strong> (tema, tamanho da fonte, lembrar e-mail)</td>
+                <td><code>localStorage</code> do navegador</td>
+                <td>Manter a aparência e facilitar o próximo login</td>
+                <td>Consentimento (opcional)</td>
+                <td>Até você limpar os dados do navegador</td>
+            </tr>
+            <tr>
+                <td><strong>IP e navegador</strong></td>
+                <td>Junto ao registro de consentimento</td>
+                <td>Segurança e comprovação do aceite</td>
+                <td>Obrigação legal / legítimo interesse</td>
+                <td>6 meses</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="caixa verde">
+        <span class="caixa-titulo">✅ O que NÃO fazemos</span>
+        Não vendemos, alugamos ou compartilhamos dados com anunciantes. Não usamos cookies de rastreamento,
+        <em>pixels</em>, <em>fingerprinting</em> ou ferramentas de analytics. Não pedimos localização, câmera, microfone,
+        contatos, CPF, documentos ou dados de pagamento. Não criamos perfis comportamentais e não fazemos publicidade.
+    </div>
+
+    <h3>2.3 Compartilhamento com terceiros</h3>
+    <ul>
+        <li><strong>Provedor de hospedagem</strong> (ex.: Render, Plesk ou o computador da escola): processa as conexões e o
+            tráfego necessário para o site funcionar.</li>
+        <li><strong>Provedor de e-mail (SMTP)</strong>, quando configurado: recebe o seu e-mail apenas para enviar o código de acesso.
+            No <strong>MODO DEMO</strong> nenhum e-mail é enviado — o código aparece na própria tela.</li>
+        <li><strong>Nenhum outro compartilhamento</strong>. Não há transferência para fins comerciais.</li>
+    </ul>
+    <p>
+        Se o servidor estiver hospedado fora do Brasil, os dados de conexão podem ser processados no exterior.
+        Nesse caso, a transferência ocorre apenas para viabilizar o serviço, com base no art. 33 da LGPD.
+    </p>
+
+    <h3>2.4 Segurança</h3>
+    <ul>
+        <li>Conexões por <strong>HTTPS/WSS</strong> quando disponíveis (o app também gera certificado local).</li>
+        <li>A senha do MODO DEMO é guardada como <strong>hash SHA-256</strong>, nunca em texto puro.</li>
+        <li>As <strong>chaves privadas</strong> de E2E nunca saem do navegador do usuário.</li>
+        <li>Acesso ao servidor e ao arquivo de consentimentos restrito ao responsável pelo projeto.</li>
+        <li>Não há garantia absoluta de segurança: nenhum sistema é 100% invulnerável.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="cookies">3. Cookies e armazenamento local</h2>
+    <div class="caixa">
+        <span class="caixa-titulo">🍪 Este site não usa cookies</span>
+        O cripto.chat <strong>não utiliza cookies</strong> — nem essenciais, nem de desempenho, nem de publicidade.
+        Por isso você não vê um banner pedindo para “aceitar cookies”: não há nada a aceitar nesse ponto.
+    </div>
+    <p>
+        Para funcionar, o navegador guarda algumas informações no <strong>armazenamento local</strong>
+        (<code>localStorage</code> e <code>sessionStorage</code>). Elas ficam no <strong>seu</strong> dispositivo, não são enviadas
+        automaticamente para o servidor e você pode apagá-las a qualquer momento.
+    </p>
+    <div class="tabela-wrap">
+    <table>
+        <thead>
+            <tr><th>Chave</th><th>O que guarda</th><th>Essencial?</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>cripto_chat_sessao</code></td><td>E-mail e nome para não pedir login a cada atualização</td><td>Sim</td></tr>
+            <tr><td><code>cripto_chat_consentimento</code></td><td>Sua escolha neste aviso (data, versão e itens aceitos)</td><td>Sim</td></tr>
+            <tr><td><code>cripto_chat_idade</code></td><td>Faixa de idade declarada e, se for o caso, o responsável</td><td>Sim</td></tr>
+            <tr><td><code>cripto_chat_tema</code></td><td>Tema visual escolhido</td><td>Não (preferência)</td></tr>
+            <tr><td><code>cripto_chat_fonte</code></td><td>Tamanho da fonte escolhido</td><td>Não (preferência)</td></tr>
+            <tr><td><code>cripto_chat_email_lembrado</code></td><td>Seu e-mail para preencher no próximo login</td><td>Não (opcional)</td></tr>
+            <tr><td><code>cripto_chat_e2e_*</code> / <code>cripto_chat_ecc_*</code></td><td>Par de chaves do E2E (a privada fica só aqui)</td><td>Sim, se você usar E2E</td></tr>
+            <tr><td><code>pwa_install_dismissed</code></td><td>Que você fechou o convite de instalar o app</td><td>Não</td></tr>
+        </tbody>
+    </table>
+    </div>
+    <p>
+        No menu <strong>🔒 Privacidade</strong>, dentro do chat, você pode revisar o consentimento e apagar todos esses dados
+        deste navegador com um clique.
+    </p>
+
+    <!-- ============================================================ -->
+    <h2 id="eca">4. ECA Digital — Lei 15.211/2025</h2>
+    <p>
+        A Lei 15.211/2025 (ECA Digital) estabelece o dever de cuidado com crianças e adolescentes em produtos e serviços
+        digitais. Para um projeto escolar, adotamos a seguinte rotina:
+    </p>
+    <div class="tabela-wrap">
+    <table>
+        <thead>
+            <tr><th>Exigência da lei</th><th>Como o cripto.chat atende</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Verificação de idade</strong></td>
+                <td>Pergunta obrigatória após o login, antes de entrar nas salas, com três faixas (18+, 16–17 e menos de 16).</td>
+            </tr>
+            <tr>
+                <td><strong>Consentimento dos responsáveis</strong> (menores de 16)</td>
+                <td>O acesso às salas fica bloqueado até que um responsável informe nome, e-mail e autorize expressamente.
+                    Sem isso, o usuário só acessa o Guia Educacional (modo leitura).</td>
+            </tr>
+            <tr>
+                <td><strong>Dever de cuidado e ambiente seguro</strong></td>
+                <td>Salas escolares, professor responsável e Sala ADM de acompanhamento em tempo real.</td>
+            </tr>
+            <tr>
+                <td><strong>Regras claras e linguagem acessível</strong></td>
+                <td>Estes Termos de Uso e o Guia Educacional, escritos em linguagem simples.</td>
+            </tr>
+            <tr>
+                <td><strong>Canal de denúncia</strong></td>
+                <td>O professor da turma e o e-mail de privacidade. O botão <strong>Sair</strong> e o fechamento da sala
+                    encerram a sessão imediatamente.</td>
+            </tr>
+            <tr>
+                <td><strong>Proibição de publicidade, apostas e caixas de recompensa</strong></td>
+                <td>O sistema não tem anúncios, apostas, loot boxes, compras, moedas ou perfilamento.</td>
+            </tr>
+            <tr>
+                <td><strong>Transparência sobre dados</strong></td>
+                <td>Seção 2 deste documento e o painel 🔒 Privacidade, com opção de apagar os dados.</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+    <div class="caixa aviso">
+        <span class="caixa-titulo">⚠️ Limite importante</span>
+        A verificação de idade é <strong>declaratória</strong>. O projeto não tem como confirmar documentalmente a idade nem
+        a identidade do responsável. Por isso, o uso em sala de aula deve ser <strong>acompanhado pelo professor</strong>, e a
+        escola deve colher as autorizações formais dos responsáveis conforme suas próprias normas. Em um serviço comercial,
+        seria necessário um mecanismo de verificação mais robusto.
+    </div>
+
+    <h3>4.1 Rotina sugerida para o professor</h3>
+    <ol>
+        <li>Antes da aula, envie aos responsáveis o link deste documento e colha a autorização da escola.</li>
+        <li>Peça aos alunos que leiam o resumo e aceitem os termos no primeiro acesso.</li>
+        <li>Confira, na <strong>Sala ADM</strong>, se todos concluíram a confirmação de idade.</li>
+        <li>Alunos menores de 16 sem autorização permanecem em <strong>modo leitura</strong> (Guia Educacional).</li>
+        <li>Em caso de conduta inadequada, encerre a sala e comunique a coordenação.</li>
+        <li>Ao final, oriente os alunos a usar <strong>🔒 Privacidade → Apagar meus dados</strong> nos computadores compartilhados.</li>
+    </ol>
+
+    <!-- ============================================================ -->
+    <h2 id="marco">5. Marco Civil da Internet (Lei 12.965/2014)</h2>
+    <ul>
+        <li><strong>Privacidade e liberdade de expressão:</strong> o projeto não monitora o conteúdo das conversas para fins
+            comerciais e não interfere no tráfego.</li>
+        <li><strong>Informação clara sobre coleta:</strong> este documento descreve exatamente o que é tratado (art. 10).</li>
+        <li><strong>Guarda de registros de acesso:</strong> o art. 15 se aplica a provedores de aplicação constituídos como
+            pessoa jurídica com fins econômicos. O cripto.chat é um <strong>projeto educacional sem fins econômicos</strong> e
+            não se enquadra nessa obrigação. Ainda assim, guardamos apenas o registro de consentimento por 6 meses, com
+            acesso restrito, e o eliminamos quando solicitado.</li>
+        <li><strong>Responsabilidade por conteúdo de terceiros:</strong> as mensagens são de responsabilidade de quem as envia.
+            O professor pode encerrar a sala a qualquer momento.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="direitos">6. Seus direitos e como exercê-los (LGPD, art. 18)</h2>
+    <p>Você pode, a qualquer momento:</p>
+    <ul>
+        <li><strong>confirmar</strong> se tratamos dados seus e <strong>acessar</strong> esses dados;</li>
+        <li><strong>corrigir</strong> dados incompletos ou desatualizados (inclusive o nome de exibição, pelo botão ✎);</li>
+        <li>pedir <strong>anonimização, bloqueio ou eliminação</strong> de dados desnecessários ou excessivos;</li>
+        <li>pedir a <strong>eliminação</strong> dos dados tratados com base no consentimento;</li>
+        <li>solicitar <strong>portabilidade</strong> dos dados;</li>
+        <li>ser informado sobre <strong>compartilhamentos</strong> e sobre a possibilidade de não consentir;</li>
+        <li><strong>revogar o consentimento</strong> a qualquer momento.</li>
+    </ul>
+    <h3>6.1 Como fazer</h3>
+    <ul>
+        <li><strong>No próprio app:</strong> menu <strong>🔒 Privacidade</strong> → revisar consentimento, apagar dados do navegador
+            ou solicitar exclusão dos registros do servidor.</li>
+        <li><strong>Por e-mail:</strong> <a href="mailto:privacidade@cripto.chat">privacidade@cripto.chat</a> — respondemos em até
+            15 dias.</li>
+        <li><strong>Registros do servidor:</strong> podem ser apagados pelo responsável com o comando
+            <code>node scripts/limpar-consentimentos.js --email=seu@email.com</code>.</li>
+    </ul>
+    <p>
+        Se você não ficar satisfeito, pode reclamar à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) —
+        <a href="https://www.gov.br/anpd" target="_blank" rel="noopener">gov.br/anpd</a>.
+    </p>
+
+    <h3>6.2 Crianças e adolescentes</h3>
+    <p>
+        Seguimos o art. 14 da LGPD: o tratamento de dados de crianças e adolescentes é feito no <strong>melhor interesse</strong>
+        deles, com o mínimo de dados possível e, para menores de 16 anos, com autorização de um responsável registrada no
+        sistema. Responsáveis podem pedir a exclusão a qualquer momento pelo e-mail acima.
+    </p>
+
+    <!-- ============================================================ -->
+    <h2 id="historico">7. Histórico de versões</h2>
+    <div class="tabela-wrap">
+    <table>
+        <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>1.0</td>
+                <td>25/10/2026</td>
+                <td>Primeira versão: Termos de Uso, Política de Privacidade, aviso de cookies, rotina de idade e ECA Digital.</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="caixa">
+        <span class="caixa-titulo">📄 Documento vivo</span>
+        Quando este texto mudar, a versão é atualizada e o app pede um novo aceite no próximo acesso.
+        A data e a versão ficam registradas junto ao seu consentimento.
+    </div>
+</main>
+
+<footer>
+    © 2026 cripto.chat — Projeto educacional de criptografia<br>
+    Licenciatura em Computação · UTFPR — Universidade Tecnológica Federal do Paraná<br>
+    Marlon Antonio Stoeberl — Rio Negro, Paraná
+</footer>
+
+</body>
+</html>

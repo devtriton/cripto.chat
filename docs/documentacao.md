@@ -385,7 +385,112 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 
 ---
 
-## 16. Glossário — palavras difíceis explicadas
+## 16. Privacidade, LGPD e ECA Digital
+
+Esta parte é importante para os adultos — mas também vale a pena as crianças saberem: **o cripto.chat não guarda as conversas no servidor**.
+
+### 16.1 O aviso que aparece antes de entrar
+
+Na primeira vez que você abre o chat, aparece uma janela com três escolhas:
+
+1. **Aceitar e continuar** — aceita os Termos de Uso, a Política de Privacidade e, se quiser, deixa marcado o item opcional de **lembrar o e-mail**.
+2. **Aceitar só o essencial** — aceita apenas o que é necessário para o chat funcionar (sem lembrar o e-mail).
+3. **Rejeitar** — o login fica bloqueado. Você ainda pode **ler o Guia Educacional** e usar a **Demonstração**, que não pedem login.
+
+O aceite é guardado **no navegador** (`localStorage`) e uma cópia mínima vai para o servidor, para o professor conseguir comprovar que o aluno leu e aceitou (LGPD, art. 8º, §1º).
+
+### 16.2 O site não usa cookies
+
+O cripto.chat **não usa cookies** — nem de publicidade, nem de medição. Por isso o aviso é só informativo e pode ser fechado no **✕**. O que existe é o **armazenamento local do navegador**:
+
+| Chave | Para que serve |
+|---|---|
+| `cripto_chat_sessao` | não pedir login a cada atualização |
+| `cripto_chat_consentimento` | lembrar o seu aceite (data e versão) |
+| `cripto_chat_idade` | lembrar a faixa de idade declarada |
+| `cripto_chat_tema` / `cripto_chat_fonte` | aparência escolhida |
+| `cripto_chat_email_lembrado` | preencher o e-mail no próximo login (opcional) |
+| `cripto_chat_e2e_*` / `cripto_chat_ecc_*` | chaves de criptografia (a privada fica só no seu computador) |
+
+### 16.3 Conversas não ficam no servidor
+
+- As mensagens passam pela **memória** do servidor apenas para serem entregues e são **descartadas**.
+- Quando a última pessoa sai da sala, a sala e o histórico **desaparecem**.
+- **Quem guarda o conteúdo é quem copia, imprime, fotografa ou salva.** Essa guarda é de responsabilidade do usuário.
+- Nas cifras **simétricas** da demonstração (César, Vigenère, XOR e AES), a chave viaja junto — é de propósito, para a aula. A **Sala ADM** mostra isso. Só no modo **E2E (RSA/ECC)** o servidor vê apenas texto cifrado.
+
+### 16.4 Confirmação de idade (ECA Digital — Lei 15.211/2025)
+
+Depois do login, antes de entrar nas salas, o chat pergunta a idade:
+
+| Resposta | O que acontece |
+|---|---|
+| **18 anos ou mais** | entra normalmente, depois de aceitar as regras de convivência |
+| **16 ou 17 anos** | entra normalmente, com ciência das regras |
+| **Menos de 16 anos** | precisa da **autorização de um responsável** (nome, e-mail e declaração). Sem isso, fica em **modo leitura** |
+
+No **modo leitura**, as salas ficam bloqueadas (aba cinza) e o aluno pode estudar o **Guia Educacional** e a **Demonstração**. O botão **“Informar autorização do responsável”** reabre a pergunta para quem conseguir a autorização depois.
+
+A idade é **declarada pelo próprio usuário**. O projeto não pede documentos, não usa reconhecimento facial e não consulta bases externas. Em um produto comercial, essa verificação precisaria ser mais forte.
+
+### 16.5 Rotina sugerida para o professor
+
+1. Antes da aula, envie aos responsáveis o link de **`privacidade.html`** e colha a autorização conforme as normas da escola.
+2. Peça aos alunos para ler o resumo e aceitar os termos no primeiro acesso.
+3. Confira, na **Sala ADM**, se todos concluíram a confirmação de idade.
+4. Alunos menores de 16 sem autorização permanecem em **modo leitura**.
+5. Em caso de conduta inadequada, encerre a sala e comunique a coordenação.
+6. Em computadores compartilhados, oriente o uso de **🔒 Privacidade → Apagar dados deste navegador**.
+
+### 16.6 Direitos do titular (LGPD, art. 18)
+
+O botão **🔒 Privacidade** (no rodapé, depois do login) mostra:
+
+- os Termos aceitos (data e versão);
+- a idade declarada;
+- o aviso de que não há cookies nem conversas guardadas;
+- **Rever consentimento** — volta à janela de aceite;
+- **Documento completo** — abre `privacidade.html`;
+- **Pedir exclusão no servidor** — abre um e-mail para `privacidade@cripto.chat` e registra o pedido;
+- **Apagar dados deste navegador** — remove sessão, consentimento, idade, preferências e chaves, e recarrega a página.
+
+### 16.7 Registro no servidor e exclusão
+
+O servidor grava **uma linha por aceite, recusa ou declaração de idade** em:
+
+```
+server/consentimentos.jsonl
+```
+
+Esse arquivo:
+
+- **não é versionado** (está no `.gitignore`);
+- tem **retenção de 6 meses** (o servidor remove registros antigos ao iniciar e a cada 24h);
+- pode ser consultado ou apagado pelo responsável:
+
+```bash
+# resumo (e-mails mascarados)
+node scripts/limpar-consentimentos.js --listar
+
+# apagar os registros de um e-mail (titular ou responsável)
+node scripts/limpar-consentimentos.js --email=aluno@exemplo.com
+
+# apagar tudo (com confirmação)
+node scripts/limpar-consentimentos.js --todos
+```
+
+No **GitHub Pages** não existe servidor: o registro em arquivo não é criado, mas o aceite continua guardado no navegador.
+
+### 16.8 Marco Civil da Internet (Lei 12.965/2014)
+
+- O projeto **informa com clareza** quais dados trata e para quê (art. 10).
+- **Não monitora** o conteúdo das conversas para fins comerciais e **não interfere** no tráfego.
+- A guarda obrigatória de registros de acesso (art. 15) vale para provedores com fins econômicos. O cripto.chat é um **projeto educacional sem fins econômicos**; ainda assim, guarda apenas o registro de consentimento por 6 meses, com acesso restrito, e o elimina quando solicitado.
+- As mensagens são de responsabilidade de quem as envia; o professor pode encerrar a sala a qualquer momento.
+
+---
+
+## 17. Glossário — palavras difíceis explicadas
 
 - **Chat:** conversa pela internet, escrita.
 - **E-mail:** o seu endereço na internet, que contém o caractere @ (exemplo: `nome@exemplo.com`).

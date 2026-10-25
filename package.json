@@ -7,6 +7,7 @@
     "start": "node server/server.js",
     "dev": "node server/server.js",
     "sync": "node scripts/sync-public.js",
+    "limpar:consent": "node scripts/limpar-consentimentos.js",
     "prestart": "node scripts/sync-public.js",
     "predev": "node scripts/sync-public.js",
     "postinstall": "node scripts/sync-public.js"

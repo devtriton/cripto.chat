@@ -348,11 +348,61 @@ Para alterar o guia, edite apenas `docs/documentacao.md` e rode `npm run sync`.
 
 ---
 
+## 🔒 Privacidade, LGPD e ECA Digital
+
+O cripto.chat foi pensado para uso escolar e segue, de forma proporcional ao projeto, o
+**Marco Civil da Internet (Lei 12.965/2014)**, a **LGPD (Lei 13.709/2018)** e a
+**Lei 15.211/2025 (ECA Digital)**.
+
+### O que o app faz
+
+- **Consentimento no primeiro acesso:** aceitar tudo, aceitar só o essencial ou rejeitar.
+  Quem rejeita não faz login, mas continua podendo ler o Guia Educacional e usar a Demonstração.
+- **Sem cookies:** o site não usa cookies. Um aviso informativo e fechável explica que apenas o
+  `localStorage` do navegador é usado.
+- **Conversas não são armazenadas:** o servidor mantém salas, usuários e mensagens apenas em
+  memória. Ao sair da sala (ou quando ela fica vazia), o histórico desaparece. A guarda de
+  cópias é responsabilidade de quem as faz.
+- **Confirmação de idade após o login:** 18+, 16–17 ou menos de 16. Menores de 16 precisam de
+  autorização de um responsável (nome + e-mail + declaração); sem ela, ficam em **modo leitura**
+  (Guia/Demonstração, salas bloqueadas).
+- **Painel 🔒 Privacidade:** mostra o consentimento e a idade, permite revisar a escolha, abrir o
+  documento completo, pedir exclusão no servidor e apagar os dados do navegador.
+- **Registro de auditoria:** o servidor grava `server/consentimentos.jsonl` (uma linha por
+  aceite/recusa/idade), com retenção de **6 meses**, acesso restrito e exclusão sob solicitação.
+
+### Documento completo
+
+O texto jurídico (Termos de Uso, Política de Privacidade, Cookies, ECA Digital, Marco Civil,
+direitos do titular e histórico de versões) fica em **`privacidade.html`**, publicado junto com
+o app e linkado no modal de consentimento, na tela de login e no rodapé.
+
+### Exclusão de registros (responsável)
+
+```bash
+# resumo (e-mails mascarados)
+node scripts/limpar-consentimentos.js --listar
+
+# apagar os registros de um titular (ou do responsável)
+node scripts/limpar-consentimentos.js --email=aluno@exemplo.com
+
+# apagar tudo
+node scripts/limpar-consentimentos.js --todos
+```
+
+> **Limite declarado:** a verificação de idade é **declaratória**. O projeto não coleta
+> documentos, não usa reconhecimento facial e não consulta bases externas. Em um serviço
+> comercial, seria necessário um mecanismo mais robusto. O uso em sala de aula deve ser
+> acompanhado pelo professor.
+
+---
+
 ## 🗂️ Estrutura do Projeto
 
 ```
 cripto.chat/
 ├── index.html                    # Interface completa (fonte única — GitHub Pages)
+├── privacidade.html              # Termos, LGPD, cookies e ECA Digital
 ├── manifest.json                 # Manifesto PWA (ícones, atalhos, modo standalone)
 ├── sw.js                         # Service Worker (cache, offline e auto-atualização)
 ├── version.json                  # Versão atual (checada pelo app ao abrir)
@@ -361,11 +411,13 @@ cripto.chat/
 │   └── documentacao.md           # Guia de uso (exibido na página Documentação)
 ├── scripts/
 │   ├── sync-public.js            # Copia a raiz → server/public (npm run sync)
+│   ├── limpar-consentimentos.js  # Exclusão de registros (LGPD art. 18)
 │   └── gerar-certificado.ps1     # (Opcional) regenera o certificado manualmente
 ├── server/
 │   ├── server.js                 # HTTP + HTTPS + WebSocket, OTP, salas e ADM
 │   ├── .env / .env.example       # Variáveis de ambiente (SMTP, portas, SSL)
 │   ├── demo-config.json          # Senha mestre (hash) + flag do MODO DEMO
+│   ├── consentimentos.jsonl      # Registro LGPD (gerado em runtime; não versionado)
 │   ├── ssl/                      # Certificado autoassinado (gerado automaticamente)
 │   │   ├── key.pem
 │   │   └── cert.pem

@@ -59,6 +59,153 @@ function isModoDemo() {
 }
 
 // ============================================================
+// LGPD / ECA DIGITAL — REGISTRO DE CONSENTIMENTO
+// ------------------------------------------------------------
+// Único dado persistido em disco (além de demo-config.json): um
+// registro mínimo por aceite/recusa/idade, em JSONL, com acesso
+// restrito ao responsável e retenção de 6 meses.
+// ============================================================
+
+const CONSENT_FILE = path.join(__dirname, 'consentimentos.jsonl');
+const CONSENT_MAX_BYTES = 8 * 1024;   // 8 KB por requisição
+const CONSENT_LIMITE_HORA = 30;       // por IP, evita abuso
+const consentControle = new Map();    // ip -> { inicio, total }
+
+function consentPermitido(ip) {
+  const agora = Date.now();
+  const janela = 60 * 60 * 1000;
+  const atual = consentControle.get(ip);
+  if (!atual || agora - atual.inicio > janela) {
+    consentControle.set(ip, { inicio: agora, total: 1 });
+    return true;
+  }
+  if (atual.total >= CONSENT_LIMITE_HORA) return false;
+  atual.total++;
+  return true;
+}
+
+function limparTextoConsent(valor, max) {
+  if (typeof valor !== 'string') return '';
+  return valor.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
+}
+
+function tratarConsentimento(req, res) {
+  const responder = (status, corpo) => {
+    res.writeHead(status, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store'
+    });
+    res.end(JSON.stringify(corpo));
+  };
+
+  const ip = ((req.headers['x-forwarded-for'] || '').split(',')[0] || '').trim()
+    || (req.socket && req.socket.remoteAddress) || 'desconhecido';
+
+  if (!consentPermitido(ip)) {
+    responder(429, { ok: false, erro: 'Muitas requisições. Tente novamente mais tarde.' });
+    return;
+  }
+
+  const tipoConteudo = String(req.headers['content-type'] || '').toLowerCase();
+  if (!tipoConteudo.startsWith('application/json')) {
+    responder(415, { ok: false, erro: 'Envie JSON (Content-Type: application/json).' });
+    return;
+  }
+
+  let tamanho = 0;
+  let abortado = false;
+  const partes = [];
+
+  req.on('data', (pedaco) => {
+    if (abortado) return;
+    tamanho += pedaco.length;
+    if (tamanho > CONSENT_MAX_BYTES) {
+      abortado = true;
+      responder(413, { ok: false, erro: 'Corpo muito grande.' });
+      req.removeAllListeners('data');
+      req.resume();
+      return;
+    }
+    partes.push(pedaco);
+  });
+
+  req.on('end', () => {
+    if (abortado) return;
+
+    let dados;
+    try {
+      dados = JSON.parse(Buffer.concat(partes).toString('utf8'));
+    } catch (e) {
+      responder(400, { ok: false, erro: 'JSON inválido.' });
+      return;
+    }
+    if (!dados || typeof dados !== 'object' || Array.isArray(dados)) {
+      responder(400, { ok: false, erro: 'Formato inválido.' });
+      return;
+    }
+
+    const tipos = ['consentimento', 'recusa', 'idade', 'exclusao_solicitada'];
+    const tipo = tipos.indexOf(dados.tipo) !== -1 ? dados.tipo : 'desconhecido';
+    const responsavel = (dados.responsavel && typeof dados.responsavel === 'object')
+      ? dados.responsavel : {};
+
+    const registro = {
+      registradoEm: new Date().toISOString(),
+      tipo,
+      versao: limparTextoConsent(dados.versao, 32),
+      email: limparTextoConsent(dados.email, 160).toLowerCase(),
+      faixaIdade: limparTextoConsent(dados.faixa, 16),
+      autorizado: dados.autorizado === true,
+      modoLeitura: dados.modoLeitura === true,
+      lembrarEmail: dados.lembrarEmail === true,
+      responsavelNome: limparTextoConsent(dados.responsavelNome || responsavel.nome, 80),
+      responsavelEmail: limparTextoConsent(dados.responsavelEmail || responsavel.email, 160).toLowerCase(),
+      ip,
+      userAgent: limparTextoConsent(req.headers['user-agent'], 300)
+    };
+
+    try {
+      fs.appendFileSync(CONSENT_FILE, JSON.stringify(registro) + os.EOL, { mode: 0o600 });
+      responder(200, { ok: true });
+    } catch (e) {
+      console.error('[Consent] Falha ao gravar registro:', e.message);
+      responder(500, { ok: false, erro: 'Não foi possível registrar.' });
+    }
+  });
+
+  req.on('error', () => {
+    if (!abortado) {
+      abortado = true;
+      responder(400, { ok: false, erro: 'Falha na leitura da requisição.' });
+    }
+  });
+}
+
+// Retenção de 6 meses: remove registros antigos ao iniciar e a cada 24h.
+function podarConsentimentos() {
+  try {
+    if (!fs.existsSync(CONSENT_FILE)) return;
+    const limite = Date.now() - 180 * 24 * 60 * 60 * 1000;
+    const linhas = fs.readFileSync(CONSENT_FILE, 'utf8').split(/\r?\n/).filter(Boolean);
+    const mantidas = linhas.filter((linha) => {
+      try {
+        const registro = JSON.parse(linha);
+        return new Date(registro.registradoEm).getTime() >= limite;
+      } catch (e) {
+        return false;
+      }
+    });
+    if (mantidas.length !== linhas.length) {
+      fs.writeFileSync(CONSENT_FILE, mantidas.join(os.EOL) + (mantidas.length ? os.EOL : ''));
+      console.log('[Consent] Retenção aplicada: removidos', linhas.length - mantidas.length, 'registro(s) com mais de 6 meses.');
+    }
+  } catch (e) {
+    console.warn('[Consent] Falha ao aplicar a retenção:', e.message);
+  }
+}
+
+
+// ============================================================
 // CONFIGURAÇÃO DE EMAIL (SMTP)
 // ============================================================
 
@@ -337,6 +484,13 @@ const requestHandler = (req, res) => {
       res.end();
       return;
     }
+  }
+
+  // LGPD / ECA Digital: registro de consentimento e declaração de idade
+  // (POST JSON, corpo máximo de 8 KB, gravado em consentimentos.jsonl)
+  if (req.method === 'POST' && req.url.split('?')[0] === '/api/consent') {
+    tratarConsentimento(req, res);
+    return;
   }
 
   // Trata apenas requisições GET e HEAD
@@ -1213,6 +1367,10 @@ function gerarIdSala() {
 
 const PORTA = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+
+// LGPD: aplica a retenção de 6 meses e reagenda a limpeza diária
+podarConsentimentos();
+setInterval(podarConsentimentos, 24 * 60 * 60 * 1000).unref();
 
 if (isNaN(Number(PORTA))) {
   // Socket UNIX / Named Pipe (utilizado pelo Phusion Passenger no Plesk / cPanel)

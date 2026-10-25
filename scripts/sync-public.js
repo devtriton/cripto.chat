@@ -18,7 +18,7 @@ const path = require('path');
 const RAIZ = path.resolve(__dirname, '..');
 const DESTINO = path.join(RAIZ, 'server', 'public');
 
-const ARQUIVOS = ['index.html', 'manifest.json', 'sw.js', 'version.json'];
+const ARQUIVOS = ['index.html', 'privacidade.html', 'manifest.json', 'sw.js', 'version.json'];
 const PASTAS = ['icons', 'docs'];
 
 let falhas = 0;

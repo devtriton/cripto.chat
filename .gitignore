@@ -6,3 +6,5 @@ server/ssl/
 .DS_Store
 Thumbs.db
 *.log
+# Registro de consentimentos (LGPD) — dado pessoal, nunca versionar
+server/consentimentos.jsonl

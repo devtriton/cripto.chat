@@ -857,6 +857,154 @@ body {
             .guia-capa h2 { font-size: 19px; }
         }
 
+        /* ============================================================
+           CONSENTIMENTO (LGPD), AVISO DE COOKIES E CONFIRMAÇÃO DE IDADE
+           (ECA Digital — Lei 15.211/2025)
+           ============================================================ */
+        .consent-overlay {
+            position: fixed; inset: 0; z-index: 99990;
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px; overflow-y: auto;
+            background: rgba(6, 12, 22, 0.72);
+            -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+        }
+        .consent-card {
+            width: 100%; max-width: 580px; max-height: calc(100vh - 32px);
+            overflow-y: auto; text-align: left;
+            background: var(--popup-bg); color: var(--texto);
+            border: 1px solid var(--painel-borda); border-radius: 16px;
+            padding: 22px 24px 20px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+            animation: consentIn 0.18s ease-out;
+        }
+        @keyframes consentIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .consent-selo {
+            display: inline-block; padding: 4px 11px; border-radius: 999px;
+            background: rgba(var(--acento-rgb), 0.12);
+            border: 1px solid rgba(var(--acento-rgb), 0.32);
+            color: var(--acento); font-size: 11.5px; font-weight: 700;
+            letter-spacing: 0.3px; margin-bottom: 10px;
+        }
+        .consent-selo.vermelho {
+            background: rgba(198, 40, 40, 0.12); border-color: rgba(198, 40, 40, 0.4);
+            color: var(--vermelho-txt);
+        }
+        .consent-titulo { font-size: 21px; line-height: 1.3; color: var(--texto-destaque); margin: 0 0 8px; }
+        .consent-texto { font-size: 14px; line-height: 1.6; color: var(--texto-medio); margin-bottom: 14px; }
+        .consent-texto strong, .consent-item-txt strong { color: var(--texto-forte); }
+        .consent-item {
+            display: flex; gap: 10px; align-items: flex-start;
+            padding: 10px 12px; margin-bottom: 9px; cursor: pointer;
+            border: 1px solid var(--painel-borda); border-radius: 10px;
+            background: rgba(var(--acento-rgb), 0.04);
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .consent-item:hover { border-color: rgba(var(--acento-rgb), 0.45); }
+        .consent-item input[type="checkbox"],
+        .consent-item input[type="radio"] {
+            flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px;
+            accent-color: var(--acento); cursor: pointer;
+        }
+        .consent-item-txt { font-size: 13.5px; line-height: 1.55; color: var(--texto-medio); }
+        .consent-tag {
+            display: inline-block; font-size: 9.5px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.4px;
+            padding: 1px 6px; border-radius: 4px; margin-right: 4px;
+            vertical-align: 1px;
+        }
+        .consent-tag.obrig { background: rgba(var(--acento-rgb), 0.16); color: var(--acento); }
+        .consent-tag.opc { background: rgba(13, 138, 68, 0.14); color: var(--verde-txt); }
+        .consent-nota {
+            font-size: 12.5px; line-height: 1.55; color: var(--texto-fraco);
+            background: rgba(var(--acento-rgb), 0.05); border-radius: 8px;
+            padding: 9px 12px; margin: 12px 0 4px;
+        }
+        .consent-acoes { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+        .consent-acoes button { flex: 1 1 auto; min-width: 140px; }
+        .btn-link {
+            background: none; border: 0; padding: 9px 12px; cursor: pointer;
+            color: var(--texto-fraco); font-size: 13px; font-family: inherit;
+            text-decoration: underline; text-underline-offset: 3px;
+        }
+        .btn-link:hover { color: var(--vermelho-txt); }
+        .consent-rodape {
+            margin-top: 12px; font-size: 11.5px; color: var(--texto-fraco);
+            line-height: 1.5; text-align: center;
+        }
+        .consent-card a { color: var(--acento); font-weight: 600; }
+        .consent-alerta {
+            border-left: 3px solid var(--aviso); border-radius: 8px;
+            background: rgba(201, 138, 0, 0.1); padding: 10px 12px;
+            font-size: 13px; line-height: 1.55; margin: 12px 0;
+        }
+        .consent-campo { margin-bottom: 10px; }
+        .consent-campo label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; color: var(--texto-forte); }
+        .consent-campo input {
+            width: 100%; padding: 9px 11px; border-radius: 8px; font-family: inherit;
+            background: var(--campo-bg); color: var(--texto);
+            border: 1px solid var(--campo-borda); font-size: 14px;
+        }
+        .consent-campo input:focus { outline: none; border-color: var(--acento); }
+        /* Aviso de cookies (não bloqueia nada) */
+        .cookie-bar {
+            position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%);
+            z-index: 99980; display: flex; align-items: flex-start; gap: 10px;
+            width: calc(100% - 24px); max-width: 640px;
+            padding: 12px 14px; border-radius: 12px;
+            background: var(--popup-bg); color: var(--texto-medio);
+            border: 1px solid var(--painel-borda);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+            font-size: 12.5px; line-height: 1.5; text-align: left;
+        }
+        .cookie-bar .cookie-ico { font-size: 18px; line-height: 1.2; }
+        .cookie-bar a { color: var(--acento); font-weight: 600; }
+        .cookie-fechar {
+            flex: 0 0 auto; background: none; border: 0; cursor: pointer;
+            color: var(--texto-fraco); font-size: 15px; line-height: 1;
+            padding: 2px 4px; border-radius: 6px;
+        }
+        .cookie-fechar:hover { color: var(--texto-forte); background: rgba(var(--acento-rgb), 0.1); }
+        /* Login bloqueado (usuário recusou os termos) */
+        .login-bloqueado { opacity: 0.45; pointer-events: none; filter: grayscale(0.4); }
+        .login-legal {
+            margin-top: 14px; padding-top: 12px; font-size: 11.5px;
+            border-top: 1px dashed var(--painel-borda); color: var(--texto-fraco);
+            text-align: center; line-height: 1.8;
+        }
+        .login-legal a { color: var(--acento); text-decoration: none; font-weight: 600; }
+        .login-legal a:hover { text-decoration: underline; }
+        .login-legal span { margin: 0 5px; opacity: 0.5; }
+        /* Aviso de restrição (menor de 16 sem autorização) */
+        .restricao-aviso {
+            border: 1px solid rgba(198, 40, 40, 0.35);
+            border-left: 4px solid var(--vermelho-txt);
+            background: rgba(198, 40, 40, 0.07);
+            border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;
+            font-size: 14px; line-height: 1.6;
+        }
+        .restricao-aviso strong { color: var(--vermelho-txt); }
+        .tab.tab-restrita { opacity: 0.55; }
+        /* Painel "Meus dados" */
+        .priv-linha {
+            display: flex; justify-content: space-between; gap: 10px;
+            padding: 8px 0; border-bottom: 1px dashed var(--painel-borda);
+            font-size: 13.5px;
+        }
+        .priv-linha:last-of-type { border-bottom: 0; }
+        .priv-linha strong { color: var(--texto-forte); }
+        .priv-linha span { color: var(--texto-medio); text-align: right; }
+        .priv-acoes { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+        .priv-acoes button { flex: 1 1 45%; }
+
+        @media (max-width: 768px) {
+            .consent-card { padding: 18px 16px 16px; border-radius: 14px; }
+            .consent-titulo { font-size: 18.5px; }
+            .consent-texto { font-size: 13.5px; }
+            .consent-acoes button { flex: 1 1 100%; min-width: 0; }
+            .cookie-bar { bottom: 64px; font-size: 12px; }
+            .priv-acoes button { flex: 1 1 100%; }
+        }
+
         /* ===== RESPONSIVO (dispositivos móveis) ===== */
         @media (max-width: 768px) {
             .container { padding: 0 12px; }
@@ -1200,6 +1348,12 @@ body {
                 <button class="btn-secondary" onclick="voltarParaEmail()">Voltar</button>
             </div>
             <div class="login-copyright">© 2026 cripto.chat — Projeto educacional de criptografia<br>Licenciatura em Computação<br>UTFPR — Universidade Tecnológica Federal do Paraná<br>Marlon Antonio Stoeberl — Rio Negro, Paraná</div>
+            <div class="login-legal">
+                <a href="privacidade.html#termos" target="_blank" rel="noopener">Termos de Uso</a><span>·</span>
+                <a href="privacidade.html#privacidade" target="_blank" rel="noopener">Privacidade</a><span>·</span>
+                <a href="privacidade.html#cookies" target="_blank" rel="noopener">Cookies</a><span>·</span>
+                <a href="privacidade.html#eca" target="_blank" rel="noopener">ECA Digital</a>
+            </div>
         </div>
 
         <!-- ========== PAINEL PRINCIPAL ========== -->
@@ -1213,6 +1367,17 @@ body {
                 </div>
                 <div class="tab" onclick="switchTab('educacional')" data-tab="educacional" title="Guia Educacional">
                     <span class="tab-icon">📖</span><span class="tab-full">Guia Educacional</span><span class="tab-short">Guia</span>
+                </div>
+            </div>
+
+            <!-- Aviso permanente do modo leitura (ECA Digital) -->
+            <div id="restricaoLeitura" class="restricao-aviso hidden">
+                <strong>🔒 Modo leitura (menor de 16 sem autorização)</strong><br>
+                Para entrar nas salas de bate-papo, um <strong>responsável legal</strong> precisa autorizar o uso
+                (Lei 15.211/2025 — ECA Digital). Enquanto isso, você pode estudar o
+                <strong>Guia Educacional</strong> e a <strong>Demonstração</strong>.
+                <div style="margin-top: 10px;">
+                    <button class="btn-secondary" onclick="reabrirGateIdade()">Informar autorização do responsável</button>
                 </div>
             </div>
 
@@ -1990,6 +2155,216 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         </div>
     </div>
 
+    <!-- ============================================================
+         CONSENTIMENTO DE USO (LGPD / Marco Civil da Internet)
+         Aparece antes do login e só libera o chat com o aceite.
+         ============================================================ -->
+    <div id="consentOverlay" class="consent-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="consentTitulo">
+        <div class="consent-card">
+            <div id="consentForm">
+                <span class="consent-selo">🔒 Antes de entrar</span>
+                <h2 class="consent-titulo" id="consentTitulo">Seus dados e suas escolhas</h2>
+                <p class="consent-texto">
+                    O <strong>cripto.chat</strong> é um projeto educacional. Para usar as salas, precisamos do seu aceite
+                    aos termos abaixo. Leia com calma — nada aqui é letra miúda.
+                </p>
+
+                <label class="consent-item">
+                    <input type="checkbox" id="consentTermos" onchange="atualizarBotaoConsent()">
+                    <span class="consent-item-txt">
+                        <span class="consent-tag obrig">Obrigatório</span>
+                        Li e aceito os
+                        <a href="privacidade.html#termos" target="_blank" rel="noopener">Termos de Uso</a>
+                        e a
+                        <a href="privacidade.html#privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.
+                    </span>
+                </label>
+
+                <label class="consent-item">
+                    <input type="checkbox" id="consentDados" onchange="atualizarBotaoConsent()">
+                    <span class="consent-item-txt">
+                        <span class="consent-tag obrig">Obrigatório</span>
+                        Entendi que o chat <strong>não guarda as conversas no servidor</strong>, que
+                        <strong>eu sou responsável</strong> pelo que copio, salvo ou compartilho e que o
+                        <strong>desenvolvedor não tem acesso</strong> ao conteúdo das mensagens ponta a ponta (E2E).
+                    </span>
+                </label>
+
+                <label class="consent-item">
+                    <input type="checkbox" id="consentLembrar">
+                    <span class="consent-item-txt">
+                        <span class="consent-tag opc">Opcional</span>
+                        Aceito que este navegador <strong>lembre meu e-mail</strong> para facilitar o próximo login.
+                        Você pode desmarcar — o chat funciona igual.
+                    </span>
+                </label>
+
+                <div class="consent-nota">
+                    🍪 <strong>Este site não usa cookies.</strong> Guardamos apenas informações no seu navegador
+                    (sessão, tema, fonte e chaves de criptografia).
+                    <a href="privacidade.html#cookies" target="_blank" rel="noopener">Ver detalhes</a>.
+                </div>
+
+                <div class="consent-acoes">
+                    <button id="consentAceitar" class="btn-primary" onclick="aceitarConsentimento(true)" disabled>
+                        Aceitar e continuar
+                    </button>
+                    <button class="btn-secondary" onclick="aceitarConsentimento(false)">
+                        Aceitar só o essencial
+                    </button>
+                    <button class="btn-link" onclick="recusarConsentimento()">Rejeitar</button>
+                </div>
+                <p class="consent-rodape">
+                    Você pode rever ou revogar esta escolha a qualquer momento em
+                    <strong>🔒 Privacidade</strong>.
+                </p>
+            </div>
+
+            <div id="consentRecusado" class="hidden">
+                <span class="consent-selo vermelho">🚫 Sem o aceite, não é possível entrar</span>
+                <h2 class="consent-titulo">Você optou por não aceitar</h2>
+                <p class="consent-texto">
+                    Para enviar o código de acesso e identificar você nas salas, o chat precisa tratar seu
+                    <strong>e-mail</strong> e o <strong>nome de exibição</strong>. Como você recusou os itens essenciais,
+                    <strong>as salas de bate-papo ficam bloqueadas</strong> — e isso está correto: sem consentimento, não tratamos os dados.
+                </p>
+                <p class="consent-texto">Você ainda pode:</p>
+                <ul class="consent-texto" style="padding-left: 22px;">
+                    <li>ler o <a href="privacidade.html" target="_blank" rel="noopener">documento completo</a> (Termos, LGPD e ECA Digital);</li>
+                    <li>estudar o <strong>Guia Educacional</strong>, que não exige login nem dados pessoais.</li>
+                </ul>
+                <div class="consent-acoes">
+                    <button class="btn-primary" onclick="reverConsentimento()">Rever a decisão</button>
+                    <button class="btn-secondary" onclick="abrirGuiaSemLogin()">Abrir o Guia Educacional</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         AVISO DE COOKIES (informativo — pode ser fechado)
+         ============================================================ -->
+    <div id="cookieBar" class="cookie-bar hidden" role="status">
+        <span class="cookie-ico">🍪</span>
+        <div class="cookie-txt">
+            <strong>Este site não usa cookies.</strong>
+            Guardamos apenas informações no seu navegador (sessão, tema, fonte e chaves de criptografia).
+            <a href="privacidade.html#cookies" target="_blank" rel="noopener">Saiba mais</a>.
+        </div>
+        <button class="cookie-fechar" onclick="fecharAvisoCookies()" aria-label="Fechar aviso de cookies" title="Fechar">✕</button>
+    </div>
+
+    <!-- ============================================================
+         CONFIRMAÇÃO DE IDADE E REGRAS (ECA Digital — Lei 15.211/2025)
+         Aparece depois do login, antes de entrar nas salas.
+         ============================================================ -->
+    <div id="idadeOverlay" class="consent-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="idadeTitulo">
+        <div class="consent-card">
+            <span class="consent-selo">🧒 Confirmação de idade</span>
+            <h2 class="consent-titulo" id="idadeTitulo">Quantos anos você tem?</h2>
+            <p class="consent-texto">
+                A <strong>Lei 15.211/2025 (ECA Digital)</strong> e a <strong>LGPD</strong> exigem que ambientes com salas
+                de conversa confirmem a idade e protejam crianças e adolescentes. Sua resposta fica guardada apenas
+                neste navegador e no registro de consentimento do servidor.
+            </p>
+
+            <label class="consent-item">
+                <input type="radio" name="faixaIdade" value="18" onchange="atualizarGateIdade()">
+                <span class="consent-item-txt"><strong>Tenho 18 anos ou mais</strong></span>
+            </label>
+            <label class="consent-item">
+                <input type="radio" name="faixaIdade" value="16" onchange="atualizarGateIdade()">
+                <span class="consent-item-txt"><strong>Tenho 16 ou 17 anos</strong></span>
+            </label>
+            <label class="consent-item">
+                <input type="radio" name="faixaIdade" value="menor" onchange="atualizarGateIdade()">
+                <span class="consent-item-txt"><strong>Tenho menos de 16 anos</strong></span>
+            </label>
+
+            <div id="idadeResponsavel" class="hidden">
+                <div class="consent-alerta">
+                    <strong>Menores de 16 anos precisam de autorização de um responsável.</strong>
+                    Preencha os dados de quem autoriza. Se preferir, você pode continuar apenas lendo o Guia Educacional.
+                </div>
+                <div class="consent-campo">
+                    <label for="respNome">Nome do responsável legal</label>
+                    <input type="text" id="respNome" maxlength="80" placeholder="Nome completo" oninput="atualizarGateIdade()">
+                </div>
+                <div class="consent-campo">
+                    <label for="respEmail">E-mail do responsável</label>
+                    <input type="email" id="respEmail" maxlength="120" placeholder="responsavel@exemplo.com" oninput="atualizarGateIdade()">
+                </div>
+                <label class="consent-item">
+                    <input type="checkbox" id="respAutorizo" onchange="atualizarGateIdade()">
+                    <span class="consent-item-txt">
+                        Declaro que sou o responsável legal e <strong>autorizo</strong> o uso do chat por este menor,
+                        ciente de que as mensagens não são armazenadas no servidor.
+                    </span>
+                </label>
+            </div>
+
+            <label class="consent-item">
+                <input type="checkbox" id="idadeRegras" onchange="atualizarGateIdade()">
+                <span class="consent-item-txt">
+                    <span class="consent-tag obrig">Obrigatório</span>
+                    Concordo com as <strong>Regras de Convivência</strong>: não ofender, não praticar bullying, não divulgar
+                    dados pessoais de colegas e não enviar conteúdo ilegal.
+                </span>
+            </label>
+            <label class="consent-item">
+                <input type="checkbox" id="idadeAdm" onchange="atualizarGateIdade()">
+                <span class="consent-item-txt">
+                    <span class="consent-tag obrig">Obrigatório</span>
+                    Entendi que este é um <strong>ambiente educacional acompanhado pelo professor</strong> (Sala ADM) e que
+                    <strong>as conversas não ficam guardadas no servidor</strong>.
+                </span>
+            </label>
+
+            <div class="consent-acoes">
+                <button id="idadeConfirmar" class="btn-primary" onclick="confirmarIdade()" disabled>
+                    Confirmar e entrar
+                </button>
+                <button id="idadeSoLeitura" class="btn-secondary hidden" onclick="entrarModoLeitura()">
+                    Só ler o Guia
+                </button>
+                <button class="btn-link" onclick="sairSemConfirmarIdade()">Sair</button>
+            </div>
+            <p class="consent-rodape">
+                Sua idade é <strong>declarada por você</strong>. Este projeto não coleta documentos nem faz reconhecimento facial.
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PAINEL "MEUS DADOS" (direitos do titular — LGPD art. 18)
+         ============================================================ -->
+    <div id="privacidadeOverlay" class="consent-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="privTitulo">
+        <div class="consent-card">
+            <span class="consent-selo">🔒 Privacidade</span>
+            <h2 class="consent-titulo" id="privTitulo">Meus dados</h2>
+            <p class="consent-texto">
+                Aqui você vê o que está guardado e pode mudar de ideia quando quiser.
+            </p>
+            <div class="priv-linha"><strong>Termos aceitos</strong><span id="privConsent">—</span></div>
+            <div class="priv-linha"><strong>Idade declarada</strong><span id="privIdade">—</span></div>
+            <div class="priv-linha"><strong>Cookies</strong><span>Nenhum (o site não usa cookies)</span></div>
+            <div class="priv-linha"><strong>Conversas no servidor</strong><span>Não armazenadas</span></div>
+            <div class="priv-linha"><strong>Chave privada E2E</strong><span>Somente neste navegador</span></div>
+            <div class="priv-acoes">
+                <button class="btn-secondary" onclick="revisarConsentimento()">Rever consentimento</button>
+                <button class="btn-secondary" onclick="window.open('privacidade.html','_blank','noopener')">Documento completo</button>
+                <button class="btn-secondary" onclick="solicitarExclusaoServidor()">Pedir exclusão no servidor</button>
+                <button class="btn-primary" onclick="apagarMeusDados()">Apagar dados deste navegador</button>
+            </div>
+            <p class="consent-rodape">
+                A exclusão no navegador remove sessão, consentimento, idade, preferências e chaves. É imediata e não pode ser desfeita.
+            </p>
+            <div class="consent-acoes">
+                <button class="btn-link" onclick="fecharPrivacidade()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== RODAPÉ FIXO (usuário) ===== -->
     <div id="topbarUserRow" class="footer-bar hidden">
         <div class="fb-left">
@@ -2001,6 +2376,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             <span id="userEmailDisplay" class="tu-email"></span>
         </div>
         <div class="fb-right">
+            <button class="btn-secondary tu-btn" onclick="abrirPrivacidade()" title="Privacidade e meus dados">🔒 Privacidade</button>
             <button class="btn-secondary tu-btn fb-sair" onclick="desconectar()">Sair</button>
         </div>
     </div>
@@ -2010,8 +2386,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ESTADO GLOBAL
         // ============================================================
         // Versão do app (atualizar a cada release)
-        const APP_VERSION = '2.3.5';
-        const APP_BUILD = '2026-10-24';
+        const APP_VERSION = '2.4.0';
+        const APP_BUILD = '2026-10-25';
         const MODO = detectarModo();
         let canal = null;
         let currentUser = null;
@@ -2056,6 +2432,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // Restaurar sessão salva (para não sair ao atualizar a página)
         function restaurarSessaoSalva() {
             if (MODO === 'pages') return; // pages: verificar depois
+            if (!consentimentoValido()) return false; // sem aceite não restaura dados
             let salvo = null;
             try { salvo = JSON.parse(localStorage.getItem('cripto_chat_sessao')); } catch (e) { salvo = null; }
             if (salvo && salvo.email) {
@@ -2244,6 +2621,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // LOGIN COM OTP
         // ============================================================
         function solicitarOTP() {
+            if (!exigirConsentimento()) return;
             const email = document.getElementById('loginEmail').value.trim();
             if (!email || !email.includes('@')) {
                 alert('Digite um email válido.');
@@ -2824,6 +3202,10 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
             // Atualiza o ícone de conexão no rodapé
             const online = MODO === 'pages' || (canal && canal.readyState === WebSocket.OPEN);
             atualizarStatusConexao(!!online);
+            // Privacidade / ECA Digital: retoma o modo normal e confere a idade
+            sairModoVisitante();
+            salvarEmailLembrado();
+            if (consentimentoValido()) verificarGateIdade();
         }
 
         function editarNome() {
@@ -2964,6 +3346,10 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 window.resetPwaInstallBtn();
             }
             }
+            // Privacidade: volta ao estado de consentimento e sai do modo visitante
+            sairModoVisitante();
+            inicializarPrivacidade();
+            preencherEmailLembrado();
         }
 
         // ============================================================
@@ -3068,6 +3454,14 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         }
 
         function switchTab(tabName) {
+            if (tabName === 'salas' && (modoVisitante || restricaoIdadeAtiva() || !currentUser)) {
+                if (restricaoIdadeAtiva() || modoVisitante) {
+                    const aviso = document.getElementById('restricaoLeitura');
+                    if (aviso) aviso.classList.remove('hidden');
+                    alert('As salas de bate-papo estão bloqueadas no modo leitura. Para liberar, um responsável legal precisa autorizar o uso (Lei 15.211/2025 — ECA Digital).');
+                }
+                tabName = 'educacional';
+            }
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
@@ -3273,6 +3667,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // SALAS
         // ============================================================
         function criarSala() {
+            if (!podeUsarSalas()) return;
             const nome = document.getElementById('novaSalaNome').value.trim();
             if (!nome) { alert('Digite um nome para a sala.'); return; }
 
@@ -3291,6 +3686,7 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         }
 
         function entrarNaSala(salaId, nome) {
+            if (!podeUsarSalas()) return;
             if (MODO === 'pages') {
                 enviar({ tipo: 'entrar_sala', salaId, email: currentUser.email, nome: currentUser.nome, nomeSala: nome });
                 currentSala = salasLocais[salaId] || { id: salaId, nome, usuarios: [] };
@@ -4918,6 +5314,566 @@ Assinatura do Aluno: _________________________________________________
             });
         }
     });
+
+    // ============================================================
+    // PRIVACIDADE — CONSENTIMENTO (LGPD / MARCO CIVIL), AVISO DE
+    // COOKIES E CONFIRMAÇÃO DE IDADE (ECA DIGITAL — LEI 15.211/2025)
+    // ------------------------------------------------------------
+    // O consentimento fica no navegador (localStorage). O servidor
+    // recebe uma cópia mínima para auditoria em
+    // server/consentimentos.jsonl (mantida por 6 meses).
+    // ============================================================
+    const CONSENT_VERSION = '2026-10-25';
+    const CHAVE_CONSENT = 'cripto_chat_consentimento';
+    const CHAVE_IDADE = 'cripto_chat_idade';
+    const CHAVE_EMAIL_LEMBRADO = 'cripto_chat_email_lembrado';
+    const CHAVE_AVISO_COOKIES = 'cripto_chat_aviso_cookies';
+
+    let consentimentoAtual = null;   // { aceito, versao, data, lembrarEmail }
+    let idadeAtual = null;           // { faixa, autorizado, responsavel, data, versao }
+    let modoVisitante = false;       // Guia/Demo sem login (após recusa)
+
+    function lerJsonLocal(chave) {
+        try {
+            const bruto = localStorage.getItem(chave);
+            return bruto ? JSON.parse(bruto) : null;
+        } catch (e) { return null; }
+    }
+
+    function salvarJsonLocal(chave, valor) {
+        try { localStorage.setItem(chave, JSON.stringify(valor)); }
+        catch (e) { console.warn('[Privacidade] Falha ao salvar ' + chave + ':', e); }
+    }
+
+    function removerChaveLocal(chave) {
+        try { localStorage.removeItem(chave); } catch (e) {}
+    }
+
+    function esconderOverlay(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    }
+
+    function formatarDataHora(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleString('pt-BR'); }
+        catch (e) { return String(iso); }
+    }
+
+    function consentimentoValido() {
+        return !!(consentimentoAtual
+            && consentimentoAtual.aceito === true
+            && consentimentoAtual.versao === CONSENT_VERSION);
+    }
+
+    function restricaoIdadeAtiva() {
+        return !!(idadeAtual
+            && idadeAtual.faixa === 'menor'
+            && idadeAtual.autorizado !== true);
+    }
+
+    // ------------------------------------------------------------
+    // CONSENTIMENTO DE USO (LGPD)
+    // ------------------------------------------------------------
+    function atualizarBotaoConsent() {
+        const termos = document.getElementById('consentTermos');
+        const dados = document.getElementById('consentDados');
+        const btn = document.getElementById('consentAceitar');
+        if (btn) btn.disabled = !(termos && termos.checked && dados && dados.checked);
+    }
+
+    function aplicarEstadoConsentimento() {
+        const painel = document.getElementById('loginPanel');
+        if (!painel) return;
+        painel.classList.toggle('login-bloqueado', !consentimentoValido());
+    }
+
+    function exigirConsentimento() {
+        if (consentimentoValido()) return true;
+        const form = document.getElementById('consentForm');
+        const recusado = document.getElementById('consentRecusado');
+        const overlay = document.getElementById('consentOverlay');
+        if (consentimentoAtual && consentimentoAtual.aceito === false) {
+            if (form) form.classList.add('hidden');
+            if (recusado) recusado.classList.remove('hidden');
+        } else {
+            if (recusado) recusado.classList.add('hidden');
+            if (form) form.classList.remove('hidden');
+        }
+        if (overlay) overlay.classList.remove('hidden');
+        return false;
+    }
+
+    function aceitarConsentimento(comOpcionais) {
+        const termos = document.getElementById('consentTermos');
+        const dados = document.getElementById('consentDados');
+        const lembrar = document.getElementById('consentLembrar');
+
+        if (!termos || !dados || !termos.checked || !dados.checked) {
+            alert('Para continuar, marque os dois itens obrigatórios. Se preferir, use "Rejeitar" — o Guia Educacional continua disponível sem login.');
+            return;
+        }
+
+        const lembrarEmail = comOpcionais ? !!(lembrar && lembrar.checked) : false;
+        consentimentoAtual = {
+            aceito: true,
+            versao: CONSENT_VERSION,
+            data: new Date().toISOString(),
+            termos: true,
+            semArmazenamento: true,
+            lembrarEmail: lembrarEmail
+        };
+        salvarJsonLocal(CHAVE_CONSENT, consentimentoAtual);
+
+        if (lembrarEmail) {
+            if (currentUser) {
+                try { localStorage.setItem(CHAVE_EMAIL_LEMBRADO, currentUser.email); } catch (e) {}
+            }
+        } else {
+            removerChaveLocal(CHAVE_EMAIL_LEMBRADO);
+        }
+
+        esconderOverlay('consentOverlay');
+        aplicarEstadoConsentimento();
+        preencherEmailLembrado();
+        registrarConsentimentoServidor('consentimento', {
+            lembrarEmail: lembrarEmail,
+            itensObrigatorios: ['termos_privacidade', 'sem_armazenamento_servidor'],
+            itemOpcional: lembrarEmail ? 'lembrar_email' : null
+        });
+
+        // Se já estava logado (revisão pelo painel), a idade é revalidada
+        if (currentUser && !MODO_ADM) verificarGateIdade();
+    }
+
+    function recusarConsentimento() {
+        consentimentoAtual = {
+            aceito: false,
+            versao: CONSENT_VERSION,
+            data: new Date().toISOString()
+        };
+        salvarJsonLocal(CHAVE_CONSENT, consentimentoAtual);
+        removerChaveLocal(CHAVE_EMAIL_LEMBRADO);
+
+        const form = document.getElementById('consentForm');
+        const recusado = document.getElementById('consentRecusado');
+        if (form) form.classList.add('hidden');
+        if (recusado) recusado.classList.remove('hidden');
+        aplicarEstadoConsentimento();
+        registrarConsentimentoServidor('recusa', {});
+
+        // Sem consentimento não há tratamento de dados: encerra a sessão.
+        if (currentUser) {
+            esconderOverlay('consentOverlay');
+            desconectar();
+        }
+    }
+
+    function reverConsentimento() {
+        fecharPrivacidade();
+        consentimentoAtual = null;
+        idadeAtual = null;
+        removerChaveLocal(CHAVE_CONSENT);
+        removerChaveLocal(CHAVE_IDADE);
+
+        const form = document.getElementById('consentForm');
+        const recusado = document.getElementById('consentRecusado');
+        const overlay = document.getElementById('consentOverlay');
+        if (form) form.classList.remove('hidden');
+        if (recusado) recusado.classList.add('hidden');
+        if (overlay) overlay.classList.remove('hidden');
+
+        const termos = document.getElementById('consentTermos');
+        const dados = document.getElementById('consentDados');
+        const lembrar = document.getElementById('consentLembrar');
+        if (termos) termos.checked = false;
+        if (dados) dados.checked = false;
+        if (lembrar) lembrar.checked = false;
+        atualizarBotaoConsent();
+        aplicarEstadoConsentimento();
+    }
+
+    // Painel "Meus dados": o botão "Rever consentimento" usa a mesma ação
+    function revisarConsentimento() {
+        reverConsentimento();
+    }
+
+    // ------------------------------------------------------------
+    // AVISO DE COOKIES (apenas informativo — pode ser fechado)
+    // ------------------------------------------------------------
+    function fecharAvisoCookies() {
+        try { localStorage.setItem(CHAVE_AVISO_COOKIES, 'fechado'); } catch (e) {}
+        const barra = document.getElementById('cookieBar');
+        if (barra) barra.classList.add('hidden');
+    }
+
+    // ------------------------------------------------------------
+    // CONFIRMAÇÃO DE IDADE (ECA DIGITAL — LEI 15.211/2025)
+    // ------------------------------------------------------------
+    function faixaSelecionada() {
+        const el = document.querySelector('input[name="faixaIdade"]:checked');
+        return el ? el.value : null;
+    }
+
+    function atualizarGateIdade() {
+        const faixa = faixaSelecionada();
+        const regras = document.getElementById('idadeRegras');
+        const adm = document.getElementById('idadeAdm');
+        const boxResp = document.getElementById('idadeResponsavel');
+        const btn = document.getElementById('idadeConfirmar');
+        const btnLeitura = document.getElementById('idadeSoLeitura');
+
+        if (boxResp) boxResp.classList.toggle('hidden', faixa !== 'menor');
+        if (btnLeitura) btnLeitura.classList.toggle('hidden', faixa !== 'menor');
+
+        let pode = false;
+        if (faixa === '18' || faixa === '16') {
+            pode = !!(regras && regras.checked && adm && adm.checked);
+        } else if (faixa === 'menor') {
+            const nome = document.getElementById('respNome');
+            const email = document.getElementById('respEmail');
+            const autorizo = document.getElementById('respAutorizo');
+            const nomeOk = !!(nome && nome.value.trim().length >= 3);
+            const emailOk = !!(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()));
+            pode = !!(regras && regras.checked && adm && adm.checked
+                && nomeOk && emailOk && autorizo && autorizo.checked);
+        }
+        if (btn) btn.disabled = !pode;
+    }
+
+    function abrirGateIdade() {
+        const overlay = document.getElementById('idadeOverlay');
+        if (!overlay) return;
+
+        document.querySelectorAll('input[name="faixaIdade"]').forEach((r) => { r.checked = false; });
+        ['idadeRegras', 'idadeAdm', 'respAutorizo'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        });
+        ['respNome', 'respEmail'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+
+        if (idadeAtual && idadeAtual.faixa) {
+            const radio = document.querySelector('input[name="faixaIdade"][value="' + idadeAtual.faixa + '"]');
+            if (radio) radio.checked = true;
+            if (idadeAtual.faixa === 'menor' && idadeAtual.responsavel) {
+                const nome = document.getElementById('respNome');
+                const email = document.getElementById('respEmail');
+                if (nome) nome.value = idadeAtual.responsavel.nome || '';
+                if (email) email.value = idadeAtual.responsavel.email || '';
+            }
+        }
+
+        atualizarGateIdade();
+        overlay.classList.remove('hidden');
+    }
+
+    function confirmarIdade() {
+        const faixa = faixaSelecionada();
+        if (!faixa) return;
+
+        const responsavel = faixa === 'menor' ? {
+            nome: (document.getElementById('respNome') || {}).value ? document.getElementById('respNome').value.trim() : '',
+            email: (document.getElementById('respEmail') || {}).value ? document.getElementById('respEmail').value.trim() : ''
+        } : null;
+
+        idadeAtual = {
+            faixa: faixa,
+            autorizado: true,
+            responsavel: responsavel,
+            data: new Date().toISOString(),
+            versao: CONSENT_VERSION
+        };
+        salvarJsonLocal(CHAVE_IDADE, idadeAtual);
+        esconderOverlay('idadeOverlay');
+        aplicarRestricaoIdade();
+        registrarConsentimentoServidor('idade', {
+            faixa: faixa,
+            autorizado: true,
+            modoLeitura: false,
+            responsavelNome: responsavel ? responsavel.nome : '',
+            responsavelEmail: responsavel ? responsavel.email : ''
+        });
+    }
+
+    function entrarModoLeitura() {
+        idadeAtual = {
+            faixa: 'menor',
+            autorizado: false,
+            responsavel: null,
+            modoLeitura: true,
+            data: new Date().toISOString(),
+            versao: CONSENT_VERSION
+        };
+        salvarJsonLocal(CHAVE_IDADE, idadeAtual);
+        esconderOverlay('idadeOverlay');
+        aplicarRestricaoIdade();
+        registrarConsentimentoServidor('idade', {
+            faixa: 'menor',
+            autorizado: false,
+            modoLeitura: true
+        });
+    }
+
+    function sairSemConfirmarIdade() {
+        esconderOverlay('idadeOverlay');
+        desconectar();
+    }
+
+    function reabrirGateIdade() {
+        if (!currentUser) {
+            alert('Entre com seu e-mail para informar a autorização do responsável.');
+            return;
+        }
+        abrirGateIdade();
+    }
+
+    function aplicarRestricaoIdade() {
+        const restrito = restricaoIdadeAtiva();
+        const aviso = document.getElementById('restricaoLeitura');
+        if (aviso) aviso.classList.toggle('hidden', !restrito);
+        const abaSalas = document.querySelector('.tab[data-tab="salas"]');
+        if (abaSalas) abaSalas.classList.toggle('tab-restrita', restrito);
+        if (restrito) {
+            if (currentSala) sairDaSala();
+            switchTab('educacional');
+        }
+    }
+
+    function verificarGateIdade() {
+        if (MODO_ADM) return;                 // aba do professor não pede idade
+        if (modoVisitante || !currentUser) return;
+        if (idadeAtual && idadeAtual.versao === CONSENT_VERSION && idadeAtual.faixa) {
+            aplicarRestricaoIdade();
+            return;
+        }
+        abrirGateIdade();
+    }
+
+    function podeUsarSalas() {
+        if (!consentimentoValido()) { exigirConsentimento(); return false; }
+        if (modoVisitante || restricaoIdadeAtiva()) {
+            const aviso = document.getElementById('restricaoLeitura');
+            if (aviso) aviso.classList.remove('hidden');
+            alert('Seu acesso às salas está bloqueado. Para liberar, um responsável legal precisa autorizar o uso (Lei 15.211/2025 — ECA Digital). Você pode continuar no Guia Educacional.');
+            switchTab('educacional');
+            return false;
+        }
+        if (!currentUser) {
+            alert('Entre com seu e-mail para participar das salas de bate-papo.');
+            return false;
+        }
+        if (!idadeAtual) { verificarGateIdade(); return false; }
+        return true;
+    }
+
+    // ------------------------------------------------------------
+    // MODO VISITANTE — Guia/Demo sem login (após recusar os termos)
+    // ------------------------------------------------------------
+    function abrirGuiaSemLogin() {
+        modoVisitante = true;
+        esconderOverlay('consentOverlay');
+        esconderOverlay('idadeOverlay');
+
+        document.getElementById('loginPanel').classList.add('hidden');
+        document.getElementById('mainPanel').classList.remove('hidden');
+        document.getElementById('dashboardArea').classList.remove('hidden');
+        document.getElementById('chatArea').classList.add('hidden');
+        document.getElementById('tabsBar').classList.remove('hidden');
+        document.getElementById('pageHeader').classList.remove('hidden');
+        document.getElementById('btnSalaADM').classList.add('hidden');
+        document.getElementById('topbarUserRow').classList.remove('hidden');
+
+        const emailDisplay = document.getElementById('userEmailDisplay');
+        const nomeDisplay = document.getElementById('userNameDisplay');
+        if (emailDisplay) emailDisplay.textContent = 'modo leitura';
+        if (nomeDisplay) nomeDisplay.textContent = 'Visitante';
+        const edit = document.querySelector('.fb-edit');
+        if (edit) edit.classList.add('hidden');
+
+        const aviso = document.getElementById('restricaoLeitura');
+        if (aviso) aviso.classList.remove('hidden');
+        const abaSalas = document.querySelector('.tab[data-tab="salas"]');
+        if (abaSalas) abaSalas.classList.add('tab-restrita');
+
+        switchTab('educacional');
+        if (typeof toggleTopbarMenu === 'function') toggleTopbarMenu(true);
+    }
+
+    function sairModoVisitante() {
+        modoVisitante = false;
+        const edit = document.querySelector('.fb-edit');
+        if (edit) edit.classList.remove('hidden');
+    }
+
+    // ------------------------------------------------------------
+    // PAINEL "MEUS DADOS" (LGPD, art. 18)
+    // ------------------------------------------------------------
+    function abrirPrivacidade() {
+        const c = consentimentoAtual;
+        const i = idadeAtual;
+
+        const elC = document.getElementById('privConsent');
+        if (elC) {
+            if (c && c.aceito === true) {
+                elC.textContent = 'Aceito em ' + formatarDataHora(c.data) + ' · v' + c.versao;
+            } else if (c && c.aceito === false) {
+                elC.textContent = 'Recusado em ' + formatarDataHora(c.data);
+            } else {
+                elC.textContent = 'Ainda não respondido';
+            }
+        }
+
+        const elI = document.getElementById('privIdade');
+        if (elI) {
+            if (!i) {
+                elI.textContent = 'Não informada';
+            } else if (i.faixa === '18') {
+                elI.textContent = '18 anos ou mais';
+            } else if (i.faixa === '16') {
+                elI.textContent = '16 ou 17 anos';
+            } else if (i.faixa === 'menor' && i.autorizado === true) {
+                elI.textContent = 'Menos de 16 — autorizado pelo responsável';
+            } else {
+                elI.textContent = 'Menos de 16 — modo leitura';
+            }
+        }
+
+        const overlay = document.getElementById('privacidadeOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+    }
+
+    function fecharPrivacidade() {
+        esconderOverlay('privacidadeOverlay');
+    }
+
+    function apagarMeusDados() {
+        if (!confirm('Apagar TODOS os dados guardados neste navegador (sessão, consentimento, idade, preferências e chaves de criptografia)?\n\nEsta ação é imediata e não pode ser desfeita.')) {
+            return;
+        }
+        const chaves = [];
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.indexOf('cripto_chat_') === 0 || k === 'pwa_install_dismissed')) chaves.push(k);
+            }
+        } catch (e) {}
+        chaves.forEach((k) => removerChaveLocal(k));
+        try { sessionStorage.clear(); } catch (e) {}
+        alert('Dados apagados. A página será recarregada para começar do zero.');
+        window.location.reload();
+    }
+
+    function solicitarExclusaoServidor() {
+        const email = (currentUser && currentUser.email) || '';
+        registrarConsentimentoServidor('exclusao_solicitada', { email: email });
+
+        const assunto = encodeURIComponent('LGPD — Exclusão dos meus registros (cripto.chat)');
+        const corpo = encodeURIComponent(
+            'Olá,\n\n' +
+            'Solicito a exclusão dos meus registros de consentimento do cripto.chat.\n\n' +
+            'E-mail usado no chat: ' + (email || '(não informado)') + '\n' +
+            'Data do pedido: ' + new Date().toLocaleString('pt-BR') + '\n\n' +
+            'Obrigado(a).'
+        );
+        window.location.href = 'mailto:privacidade@cripto.chat?subject=' + assunto + '&body=' + corpo;
+    }
+
+    // ------------------------------------------------------------
+    // E-MAIL LEMBRADO (item opcional do consentimento)
+    // ------------------------------------------------------------
+    function preencherEmailLembrado() {
+        if (!consentimentoValido() || !consentimentoAtual.lembrarEmail) return;
+        let email = null;
+        try { email = localStorage.getItem(CHAVE_EMAIL_LEMBRADO); } catch (e) {}
+        const campo = document.getElementById('loginEmail');
+        if (email && campo && !campo.value) campo.value = email;
+    }
+
+    function salvarEmailLembrado() {
+        if (!currentUser) return;
+        if (consentimentoValido() && consentimentoAtual.lembrarEmail) {
+            try { localStorage.setItem(CHAVE_EMAIL_LEMBRADO, currentUser.email); } catch (e) {}
+        } else {
+            removerChaveLocal(CHAVE_EMAIL_LEMBRADO);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // REGISTRO NO SERVIDOR (auditoria — LGPD art. 8º, §1º)
+    // Em GitHub Pages (MODO 'pages') não existe servidor: falha em silêncio.
+    // ------------------------------------------------------------
+    function registrarConsentimentoServidor(tipo, extra) {
+        if (MODO === 'pages') return;
+        const dados = Object.assign({
+            tipo: tipo,
+            versao: CONSENT_VERSION,
+            email: (currentUser && currentUser.email) || null,
+            data: new Date().toISOString()
+        }, extra || {});
+
+        try {
+            fetch('/api/consent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados),
+                keepalive: true
+            }).catch(() => {
+                console.warn('[Privacidade] Registro no servidor indisponível (modo offline).');
+            });
+        } catch (e) {
+            console.warn('[Privacidade] Falha ao registrar consentimento:', e);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // INICIALIZAÇÃO
+    // ------------------------------------------------------------
+    function inicializarPrivacidade() {
+        consentimentoAtual = lerJsonLocal(CHAVE_CONSENT);
+        idadeAtual = lerJsonLocal(CHAVE_IDADE);
+
+        // Documento mudou de versão → pede um novo aceite.
+        if (consentimentoAtual && consentimentoAtual.versao !== CONSENT_VERSION) {
+            console.log('[Privacidade] Versão do consentimento mudou — pedindo novo aceite.');
+            consentimentoAtual = null;
+            idadeAtual = null;
+            removerChaveLocal(CHAVE_CONSENT);
+            removerChaveLocal(CHAVE_IDADE);
+        }
+
+        const form = document.getElementById('consentForm');
+        const recusado = document.getElementById('consentRecusado');
+        const overlay = document.getElementById('consentOverlay');
+
+        if (overlay && form && recusado) {
+            if (!consentimentoAtual) {
+                form.classList.remove('hidden');
+                recusado.classList.add('hidden');
+                overlay.classList.remove('hidden');
+            } else if (consentimentoAtual.aceito !== true) {
+                form.classList.add('hidden');
+                recusado.classList.remove('hidden');
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        atualizarBotaoConsent();
+        aplicarEstadoConsentimento();
+        preencherEmailLembrado();
+
+        let avisoCookies = null;
+        try { avisoCookies = localStorage.getItem(CHAVE_AVISO_COOKIES); } catch (e) {}
+        const barra = document.getElementById('cookieBar');
+        if (barra && avisoCookies !== 'fechado') barra.classList.remove('hidden');
+    }
+
+    inicializarPrivacidade();
+
     // ========================================
     </script>
 </body>

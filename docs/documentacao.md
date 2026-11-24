@@ -150,6 +150,30 @@ Antes de enviar, você escolhe o **cadeado** (o algoritmo) e, se precisar, a **c
 
 > 🧪 Quer testar antes de mandar? Abra a aba **Demonstração Criptografia** e brinque com os algoritmos.
 
+### 10.1 Como a chave chega ao outro lado (sem viajar pela rede)
+
+Se a chave viajasse junto com a mensagem, o servidor poderia copiá-la e abrir tudo. Para evitar isso, os aplicativos combinam a chave por um cálculo em que **o segredo nunca é enviado**.
+
+Um exemplo com números pequenos, só para entender (não protege nada de verdade). O símbolo `mod 23` significa o resto da divisão por 23:
+
+1. Todos conhecem dois números públicos: `p = 23` e `g = 5`.
+2. Você escolhe um segredo só seu, `6`, e calcula `5⁶ mod 23 = 8`. Você envia o **8**.
+3. Seu colega escolhe `15` e calcula `5¹⁵ mod 23 = 19`. Ele envia o **19**.
+4. Você usa o 19 com o seu segredo: `19⁶ mod 23 = 2`.
+5. Ele usa o 8 com o segredo dele: `8¹⁵ mod 23 = 2`.
+
+Os dois chegam ao mesmo número, **2**, e o 2 nunca passou pela internet. Quem espionou viu apenas 23, 5, 8 e 19.
+
+> No cripto.chat a demonstração é mais simples: o E2E usa RSA-2048 ou ECC P-256, e a chave privada fica no navegador. A conta acima serve só para entender a ideia da **troca de chaves**.
+
+### 10.2 A chave pública não abre a mensagem
+
+Ela serve para **combinar** a chave. Quem cifra o texto é o AES, logo depois. É por isso que os aplicativos usam as duas coisas juntas: o cálculo assimétrico combina o segredo e o AES cifra o conteúdo — a chamada **criptografia híbrida**.
+
+### 10.3 Por que a chave muda a cada mensagem
+
+Nos aplicativos de verdade, cada mensagem usa uma chave própria, derivada da anterior e apagada depois de usada. É como usar uma chave nova para cada carta, em vez de uma só para a vida inteira: se alguém descobrir a chave de hoje, não abre as mensagens de ontem. O cripto.chat **não** faz essa troca contínua (Double Ratchet) — é uma das simplificações da demonstração.
+
 ---
 
 ## 11. A Sala ADM (o olho do servidor)
@@ -290,8 +314,12 @@ Quando o professor publica uma versão nova:
 
 ### Como rodar o projeto
 
+> **Pré-requisito:** instale o **Node.js** manualmente (https://nodejs.org). O
+> `iniciar.bat` **não instala** o Node.js — ele apenas verifica se já está instalado.
+
 **Windows — 1 clique:** dê duplo clique em **`iniciar.bat`**. Ele instala as
-dependências na primeira vez, sincroniza os arquivos, liga o servidor e abre o navegador.
+dependências na primeira vez (com `npm install`), sincroniza os arquivos, liga o
+servidor e abre o navegador.
 
 **Manual:**
 
@@ -325,8 +353,15 @@ dependências na primeira vez, sincroniza os arquivos, liga o servidor e abre o 
 
 ### Entrega de código OTP
 
-- **Por e-mail (padrão):** configure no arquivo `server/.env` as variáveis `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`.
-- **Modo demo (opcional):** o código aparece na tela, sem envio. Ligue pelo botão **MODO DEMO DESLIGADO** na tela de login (ele só aparece com o servidor conectado), com a **senha mestre** (padrão: `cripto2024` — troque-a em `server/demo-config.json`, campo `senhaHash`, que é o hash SHA-256 da senha).
+- **Modo demo (padrão neste repositório):** o código aparece na tela, sem envio. O
+  repositório já vem com `modoDemo: true` em `server/demo-config.json`. Para
+  desligar, clique no botão **MODO DEMO LIGADO** na tela de login (ele só aparece
+  com o servidor conectado) e digite a **senha mestre** (padrão: `cripto2024` —
+  troque-a em `server/demo-config.json`, campo `senhaHash`, que guarda o SHA-256
+  da senha).
+- **Por e-mail (opcional):** configure no arquivo `server/.env` as variáveis
+  `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`. Sem SMTP, o
+  envio é recusado com a mensagem "Serviço de email não configurado".
 
 ### Instalação do app pelos alunos (PWA)
 
@@ -376,7 +411,8 @@ Depois rode `npm run sync` (o `npm start` já faz isso).
 
 ### Arquivos importantes
 
-- `docs/documentacao.md` — este documento (fonte única).
+- `docs/documentacao.md` — este guia (aluno e professor). O `README.md` traz o manual de instalação e o `MANUTENCAO.md` traz os detalhes técnicos.
+- `docs/objeto-educacional/` — versões finais em PDF e DOCX dos dois documentos pedagógicos: **IIR** (Ilha Interdisciplinar de Racionalidade) e **3MP** (Metodologia dos Três Momentos Pedagógicos).
 - `npm run sync` — copia a raiz para `server/public` (pasta servida pelo servidor). Roda sozinho no `npm start`.
 - `server/ssl/` — certificado autoassinado gerado e renovado automaticamente.
 - `scripts/gerar-certificado.ps1` — regeneração manual do certificado (opcional).
@@ -397,7 +433,7 @@ Na primeira vez que você abre o chat, aparece uma janela com três escolhas:
 
 1. **Aceitar e continuar** — aceita os Termos de Uso, a Política de Privacidade e, se quiser, deixa marcado o item opcional de **lembrar o e-mail**.
 2. **Aceitar só o essencial** — aceita apenas o que é necessário para o chat funcionar (sem lembrar o e-mail).
-3. **Rejeitar** — o login fica bloqueado. Você ainda pode **ler o Guia Educacional** e usar a **Demonstração**, que não pedem login.
+3. **Rejeitar** — o login fica bloqueado. Você ainda pode **ler o Guia Educacional** e usar a aba **Demonstração**, que não pedem login nem dados pessoais.
 
 O aceite é guardado **no navegador** (`localStorage`) e uma cópia mínima vai para o servidor, para o professor conseguir comprovar que o aluno leu e aceitou (LGPD, art. 8º, §1º).
 
@@ -412,6 +448,7 @@ O cripto.chat **não usa cookies** — nem de publicidade, nem de medição. Por
 | `cripto_chat_idade` | lembrar a faixa de idade declarada |
 | `cripto_chat_tema` / `cripto_chat_fonte` | aparência escolhida |
 | `cripto_chat_email_lembrado` | preencher o e-mail no próximo login (opcional) |
+| `cripto_chat_aviso_cookies` | lembrar que o aviso informativo já foi fechado |
 | `cripto_chat_e2e_*` / `cripto_chat_ecc_*` | chaves de criptografia (a privada fica só no seu computador) |
 
 ### 16.3 Conversas não ficam no servidor
@@ -501,6 +538,8 @@ No **GitHub Pages** não existe servidor: o registro em arquivo não é criado, 
 - **Código OTP:** um código de 6 números, usado **uma vez só** para provar que o e-mail é seu.
 - **Criptografia:** transformar a mensagem em código para só quem tem a chave entender.
 - **Chave:** a palavra ou o número que trancou e destranca a mensagem.
+- **Chave pública:** a chave que pode ser mostrada a todo mundo; serve para combinar um segredo, não para abrir a mensagem sozinha.
+- **Troca de chaves:** o cálculo em que duas pessoas chegam ao mesmo segredo sem enviá-lo pela rede.
 - **Servidor:** o computador que guarda as salas e repassa as mensagens para todo mundo.
 - **Sala pública:** sala que qualquer pessoa logada pode ver e entrar.
 - **MODO DEMO:** modo em que o código aparece na tela em vez de ir por e-mail.

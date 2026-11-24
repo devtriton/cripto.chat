@@ -1,399 +1,493 @@
 # cripto.chat — Criptografia em Prática
 
-Sistema de comunicação segura com demonstração prática de criptografia.
-Funciona como **site** e como **app instalável (PWA)** no celular e no computador —
-uma alternativa à Play Store: o app é instalado direto do navegador, sem loja.
+**Chat educacional para demonstrar criptografia em sala de aula.** Funciona no
+navegador e pode ser instalado como app (PWA) no celular ou no computador, sem
+passar pela loja de aplicativos.
+
+> **Este é o manual do professor.** Ele ensina a baixar, instalar e usar o
+> cripto.chat no seu computador. Você não precisa saber programar.
+
+**Demonstração online:** <https://devtriton.github.io/cripto.chat/>
+*(serve para conhecer a interface; para a aula com vários aparelhos, instale
+localmente)*
+
+> ### Instalação rápida (Windows)
+>
+> 1. Baixe o ZIP:
+>    **<https://github.com/devtriton/cripto.chat/archive/refs/heads/master.zip>**
+>    (ou abra o repositório → **Code** → **Download ZIP**).
+> 2. Extraia o ZIP e dê **dois cliques em `iniciar.bat`**.
+> 3. Abra <http://localhost:3000> e entre com qualquer e-mail: o código de
+>    acesso aparece na tela.
+>
+> Você precisa do **Node.js** instalado (<https://nodejs.org>). O `iniciar.bat`
+> **não instala o Node.js**: ele apenas verifica se já está instalado. Para
+> instalar o app no celular, instale também o **Git for Windows**. O passo a
+> passo completo está abaixo.
 
 ---
 
-## 🚀 Início rápido (professores)
+## Sumário
 
-### Pré-requisitos
+1. [O que é o cripto.chat](#1-o-que-é-o-criptochat)
+2. [Antes de começar](#2-antes-de-começar)
+3. [Baixar o projeto](#3-baixar-o-projeto)
+4. [Instalar no Windows (1 clique)](#4-instalar-no-windows-1-clique)
+5. [Instalar no macOS ou Linux](#5-instalar-no-macos-ou-linux)
+6. [Primeiro acesso (MODO DEMO)](#6-primeiro-acesso-modo-demo)
+7. [Usar no celular e instalar como app](#7-usar-no-celular-e-instalar-como-app)
+8. [Se algo der errado](#8-se-algo-der-errado)
+9. [Roteiro rápido para a aula](#9-roteiro-rápido-para-a-aula)
+10. [Funcionalidades](#10-funcionalidades)
+11. [Privacidade e LGPD](#11-privacidade-e-lgpd)
+12. [Para mantenedores](#12-para-mantenedores)
 
-- **Node.js 18 ou superior** (já inclui o `npm`) — [nodejs.org](https://nodejs.org)
-- **Windows:** o `iniciar.bat` cuida do resto
-- **Opcional:** Git for Windows (fornece o `openssl.exe` usado no certificado HTTPS)
+---
 
-### Windows — 1 clique
+## 1. O que é o cripto.chat?
 
-Dê **duplo clique em `iniciar.bat`**. Ele:
+O cripto.chat é uma sala de conversa em tempo real criada para a aula. Os alunos
+trocam mensagens e escolhem, antes de enviar, como elas serão protegidas: sem
+criptografia, Cifra de César, Vigenère, XOR, AES-256 ou ponta a ponta
+(RSA-2048 / ECC P-256).
 
-1. confere se o Node.js está instalado;
-2. instala as dependências na primeira execução;
-3. sincroniza os arquivos públicos;
-4. sobe o servidor (HTTP + HTTPS);
-5. abre o navegador em `http://localhost:3000`.
+O diferencial é a **Sala ADM**: uma aba que mostra exatamente o que o servidor
+consegue ver em cada modo. O aluno não apenas ouve a explicação — ele observa
+a mensagem legível, a chave que viaja junto ou o texto cifrado que o servidor
+não consegue abrir.
 
-O terminal fica aberto mostrando os endereços e os logs. Para encerrar, feche a janela
-ou pressione `Ctrl+C`.
+O app funciona de duas formas:
 
-### Qualquer sistema (manual)
+| Forma | Endereço | O que funciona |
+|---|---|---|
+| **Online (demonstração)** | <https://devtriton.github.io/cripto.chat/> | Guia, demonstração e conversa entre abas do mesmo navegador. Não há servidor. |
+| **Local (completo)** | `http://localhost:3000` | Login por código, salas entre computadores e celulares, Sala ADM e instalação como app. |
+
+> Para a aula com a turma, use a **versão local**. A versão online serve para
+> conhecer o projeto e testar a interface sem instalar nada.
+
+---
+
+## 2. Antes de começar
+
+| Item | Obrigatório? | Para que serve | Onde obter |
+|---|---|---|---|
+| Computador com Windows, macOS ou Linux | Sim | Rodar o servidor da turma | — |
+| **Node.js 20 ou superior (LTS)** | Sim | Liga o servidor do chat | <https://nodejs.org> |
+| **Git for Windows** | Recomendado no Windows | Traz o OpenSSL usado no certificado HTTPS | <https://git-scm.com> |
+| Internet | Só na instalação | Baixar as dependências (e enviar e-mail, se configurado) | — |
+| Celulares ou tablets | Opcional | Entrar na mesma rede e instalar o app | Mesma rede Wi-Fi do PC |
+
+**Tempo estimado:** 5 a 10 minutos na primeira vez.
+
+Observações importantes:
+
+- Não é preciso saber programar nem usar o terminal. No Windows, tudo é feito
+  com dois cliques.
+- **O Node.js é instalado manualmente**, pelo site oficial. O `iniciar.bat` não
+  instala o Node.js: ele apenas verifica se ele já está no computador.
+- O primeiro start baixa as dependências do projeto (algumas dezenas de MB).
+  Depois disso, o chat funciona sem internet, desde que os aparelhos estejam na
+  mesma rede.
+- No Windows, **instale o Git for Windows** se quiser que os celulares
+  instalem o app. Sem ele, o chat funciona no PC, mas o HTTPS automático
+  (necessário para instalar o PWA) fica indisponível.
+- Em computadores da escola, pode ser necessário pedir ao setor de TI para
+  liberar a instalação do Node.js e as portas **3000** e **3443**.
+
+---
+
+## 3. Baixar o projeto
+
+### Opção A — Baixar o ZIP (mais fácil)
+
+> **Atalho:** [baixar o ZIP diretamente](https://github.com/devtriton/cripto.chat/archive/refs/heads/master.zip).
+
+1. Abra **<https://github.com/devtriton/cripto.chat>** (ou use o atalho acima).
+2. Clique no botão verde **Code** → **Download ZIP**.
+3. Salve o arquivo e **extraia** o conteúdo (botão direito → **Extrair tudo…**).
+4. Escolha uma pasta simples, de preferência sem acentos nem espaços:
+   `C:\cripto.chat`.
+5. Abra a pasta e confirme que o arquivo **`iniciar.bat`** está lá.
+
+> **Importante:** não execute o app de dentro do ZIP. O Windows permite
+> visualizar os arquivos sem extrair, mas o servidor precisa deles gravados no
+> disco. Extraia primeiro.
+
+### Opção B — Clonar com Git
+
+Se você já usa Git:
+
+```bash
+git clone https://github.com/devtriton/cripto.chat.git
+cd cripto.chat
+```
+
+> O ZIP do GitHub pode criar uma pasta chamada `cripto.chat-master`. O nome não
+> importa; o que importa é que `iniciar.bat` esteja dentro dela.
+
+O download **não inclui** a pasta `node_modules` (dependências) nem o arquivo
+`server/.env` (configuração de e-mail). O primeiro start instala as
+dependências; o `.env` é opcional, porque o **MODO DEMO já vem ligado**.
+
+---
+
+## 4. Instalar no Windows (1 clique)
+
+1. Abra a pasta do projeto.
+2. Dê **duplo clique em `iniciar.bat`**.
+3. Se o Windows perguntar algo, permita a execução.
+   - Se aparecer o aviso do **Firewall do Windows**, marque **Rede privada** e
+     clique em **Permitir acesso**. Isso é necessário para os celulares
+     entrarem.
+4. Aguarde. Na primeira vez, a janela mostra a instalação das dependências e
+   pode levar de 1 a 3 minutos.
+5. O navegador abre sozinho em **<http://localhost:3000>**.
+6. **Deixe a janela preta aberta** enquanto estiver usando o chat. Para
+   encerrar, feche a janela ou pressione `Ctrl+C`.
+
+A janela do servidor mostra os endereços. Anote o endereço **HTTPS na rede
+local**, parecido com:
+
+```text
+HTTPS na rede local: https://192.168.0.60:3443
+```
+
+É esse endereço que os celulares vão usar.
+
+| Endereço | Para que serve |
+|---|---|
+| `http://localhost:3000` | Uso no próprio PC |
+| `https://localhost:3443` | Versão segura no próprio PC (PWA instalável) |
+| `http://192.168.x.x:3000` | Acesso pela rede → redireciona sozinho para HTTPS |
+| `https://192.168.x.x:3443` | Versão segura na rede (celulares instalam o app por aqui) |
+
+### O que o `iniciar.bat` faz
+
+| Etapa | O que acontece |
+|---|---|
+| 1 | Confere se o Node.js está instalado |
+| 2 | Instala as dependências na primeira execução (`npm install`) |
+| 3 | Sincroniza os arquivos que o servidor entrega |
+| 4 | Sobe o servidor HTTP (porta 3000) e HTTPS (porta 3443) |
+| 5 | Abre o navegador em `http://localhost:3000` |
+
+Se a janela abrir e fechar na hora, veja a seção
+[8. Se algo der errado](#8-se-algo-der-errado).
+
+### Instalar sem o `iniciar.bat`
+
+Abra o **Prompt de Comando** na pasta do projeto (digite `cmd` na barra de
+endereço do Explorador e pressione Enter) e execute:
+
+```bat
+npm install
+npm start
+```
+
+O resultado é o mesmo. O `npm start` também sincroniza os arquivos antes de
+subir o servidor.
+
+---
+
+## 5. Instalar no macOS ou Linux
+
+1. Instale o **Node.js LTS** em <https://nodejs.org>.
+2. Abra o Terminal na pasta do projeto.
+3. Execute:
 
 ```bash
 npm install
 npm start
 ```
 
-O `npm start` executa automaticamente o `scripts/sync-public.js` (copia `index.html`,
-`manifest.json`, `sw.js`, `version.json`, `icons/` e `docs/` da raiz para
-`server/public/`, a pasta servida ao navegador). Sincronização manual: `npm run sync`.
+4. Abra **<http://localhost:3000>** no navegador.
+5. Para encerrar, pressione `Ctrl+C`.
 
-### Endereços
+No macOS e no Linux, o OpenSSL normalmente já está disponível para gerar o
+certificado HTTPS. Se o servidor avisar que não encontrou o OpenSSL ou que não
+conseguiu gerar o certificado, instale-o pelo gerenciador de pacotes da sua
+distribuição (ou pelo Homebrew, no macOS) e inicie de novo. Se o executável não
+estiver no `PATH`, defina `OPENSSL_PATH` com o caminho completo.
 
-| Endereço | Para que serve |
+---
+
+## 6. Primeiro acesso (MODO DEMO)
+
+O repositório já vem com o **MODO DEMO ligado**: o código de acesso aparece na
+tela, sem precisar configurar e-mail. É o melhor caminho para a primeira aula.
+
+1. Abra **<http://localhost:3000>**.
+2. Leia e aceite o aviso de **privacidade e consentimento**.
+   - **Aceitar e continuar** usa as opções marcadas (inclusive lembrar o
+     e-mail, se você marcar).
+   - **Aceitar só o essencial** faz o mesmo, sem lembrar o e-mail.
+   - **Rejeitar** bloqueia as salas; o Guia Educacional continua disponível.
+3. Digite um e-mail de teste (por exemplo, `professor@escola.com`) e clique em
+   **Enviar Código**. Use um e-mail diferente para cada participante.
+4. O código de **6 dígitos** aparece na própria tela. Digite-o.
+5. Responda à **confirmação de idade**. Menores de 16 anos precisam do nome,
+   e-mail e autorização de um responsável; sem isso, podem usar o Guia e a
+   Demonstração (as salas ficam bloqueadas).
+6. Pronto: crie uma sala ou entre em uma existente.
+
+> **Senha do MODO DEMO:** se o modo estiver desligado, o botão
+> **MODO DEMO DESLIGADO** (na tela de login) pede a senha mestre. A senha
+> padrão é **`cripto2024`**. Ela pode ser trocada em
+> `server/demo-config.json` — veja
+> [MANUTENCAO.md](MANUTENCAO.md#5-modo-demo-e-senha-mestre).
+
+### Envio real de código por e-mail (opcional)
+
+Para usar e-mails de verdade, copie `server/.env.example` para `server/.env` e
+preencha os dados SMTP. No Gmail, use uma **senha de app** de 16 caracteres,
+não a senha normal da conta. Depois, reinicie o servidor.
+
+Sem SMTP configurado, o envio por e-mail é recusado com a mensagem
+*"Serviço de email não configurado"*. Nesse caso, use o MODO DEMO.
+
+> O arquivo `server/.env` está no `.gitignore` e **nunca** deve ser publicado.
+
+---
+
+## 7. Usar no celular e instalar como app
+
+O celular precisa estar na **mesma rede Wi-Fi** do computador que está rodando
+o servidor.
+
+1. No computador, veja na janela preta o endereço **HTTPS na rede local**
+   (ex.: `https://192.168.0.60:3443`).
+2. No celular, abra esse endereço no **Chrome** (Android) ou **Safari**
+   (iPhone/iPad).
+3. Na primeira vez, o navegador avisa que o certificado não é confiável. Isso é
+   normal em rede local. Toque em **Avançados** → **Continuar para o
+   endereço** (ou equivalente).
+4. Faça login normalmente.
+5. Instale o app:
+   - **Android (Chrome):** toque em **📱 Instalar** e confirme.
+   - **iPhone/iPad (Safari):** toque em **Compartilhar** (□↑) →
+     **Adicionar à Tela de Início** → **Adicionar**.
+   - **Computador (Chrome/Edge):** use o ícone de instalação na barra de
+     endereço ou o botão **📱 Instalar**.
+
+Depois de instalado, o app abre em tela cheia, com ícone próprio, sem a barra
+do navegador.
+
+> **Não use `localhost` no celular.** `localhost` significa "este aparelho". No
+> celular, use o IP do computador (o endereço `192.168.x.x` ou `10.x.x.x`).
+
+### Se o celular não abrir o endereço
+
+- Confirme que os dois estão na **mesma rede** (não adianta um no Wi-Fi e outro
+  no 4G).
+- No Windows, permita o Node.js no **Firewall** para **redes privadas**.
+- Muitas redes de escola usam **isolamento de clientes**: os aparelhos não se
+  enxergam. Nesse caso, use um roteador/hotspot do professor ou peça ao TI para
+  liberar a comunicação entre os aparelhos.
+- Se o PC tiver várias placas de rede (Wi-Fi e cabo), experimente o outro
+  endereço IP mostrado na janela preta.
+
+---
+
+## 8. Se algo der errado
+
+| Problema | O que fazer |
 |---|---|
-| `http://localhost:3000` | Uso local no PC (desenvolvimento) |
-| `https://localhost:3443` | Versão segura (PWA instalável) |
-| `http://192.168.x.x:3000` | Acesso pela rede local → **redireciona sozinho** para HTTPS |
-| `https://192.168.x.x:3443` | Versão segura na rede (celulares instalam o app por aqui) |
-
-> 🔒 O certificado é **autoassinado e gerado automaticamente** na primeira execução.
-> No celular, o Chrome mostra um aviso uma única vez:
-> **Avançados → Continuar para o endereço**. Depois disso o acesso é direto.
-
-### Configuração (opcional)
-
-O servidor sobe **sem nenhuma configuração**. O **modo demo já vem ligado** no
-repositório (`server/demo-config.json`), então o código de acesso aparece na tela.
-
-Para enviar o código por e-mail de verdade:
-
-1. Copie `server/.env.example` para `server/.env`.
-2. Preencha `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM`.
-   - No Gmail, use uma **senha de app** de 16 caracteres (não a senha da conta).
-3. Reinicie o servidor.
-
-> 📧 Sem SMTP configurado o envio por e-mail é recusado com a mensagem
-> *"Serviço de email não configurado"* — nesse caso use o **MODO DEMO**.
-
-> 🔐 O `server/.env` está no `.gitignore` e **nunca** é versionado.
-
-#### Senha mestre do MODO DEMO
-
-A senha padrão é `cripto2024`. Para trocar, gere o hash SHA-256 e grave em
-`server/demo-config.json` no campo `senhaHash`:
-
-```bash
-node -e "console.log(require('crypto').createHash('sha256').update('NOVA_SENHA').digest('hex'))"
-```
-
-O campo `modoDemo` do mesmo arquivo guarda o estado do botão (ligado/desligado).
-
-### Scripts npm
-
-| Comando | O que faz |
-|---|---|
-| `npm start` | Sincroniza `server/public` e sobe o servidor (HTTP 3000 + HTTPS 3443) |
-| `npm run dev` | Igual ao `npm start` (sem watch) |
-| `npm run sync` | Copia a raiz para `server/public` |
-| `node generate-icons.js` | Regenera os PNGs a partir de `icons/icon.svg` |
+| O `iniciar.bat` diz que o Node.js não foi encontrado | Instale o Node.js LTS em <https://nodejs.org>, feche e abra a janela e tente de novo. |
+| A janela preta abre e fecha sozinha | Abra o Prompt de Comando na pasta e rode `iniciar.bat` ou `npm start` para ler o erro. |
+| "A porta 3000 já está em uso" / "Já existe um cripto.chat rodando" | Feche a outra janela do servidor. Se não achar, reinicie o computador. |
+| O navegador não abre sozinho | Abra manualmente <http://localhost:3000>. |
+| A página fica carregando ou não abre | Confira se a janela preta mostra `Rodando em http://localhost:3000`. Se não, veja o erro nela. |
+| A primeira instalação falhou | Verifique a internet e tente `npm install` de novo. Em rede com proxy, configure o npm. |
+| O celular não acessa | Mesma rede Wi-Fi; firewall liberado para rede privada; use o IP correto; veja o isolamento de clientes. |
+| "Sua conexão não é particular" | Normal com certificado autoassinado. **Avançados → Continuar** (uma vez por aparelho). |
+| O botão **Instalar** só mostra instruções | A página está em HTTP pela rede. Use `https://IP:3443`. No iPhone, a instalação é manual pelo menu Compartilhar. |
+| O código de 6 dígitos não aparece | O MODO DEMO pode estar desligado ou o servidor caiu. Veja a logo (vermelha = sem conexão), recarregue e confira o modo. |
+| O e-mail com o código não chega | Sem SMTP configurado, use o MODO DEMO. Se configurou, confira a senha de app e a caixa de spam. |
+| O app continua na versão antiga | Toque no **🔄** no topo, feche e abra o app, ou puxe para atualizar. Se persistir, desinstale e instale de novo. |
+| A logo fica vermelha e piscando | O servidor está desligado ou a rede caiu. Verifique a janela preta e a conexão. |
+| O certificado parou de valer depois de trocar o IP | Reinicie o servidor (ele regenera) e aceite o aviso de novo nos aparelhos. |
+| "npm não é reconhecido" | O Node.js não está no PATH. Reinstale marcando a opção de adicionar ao PATH ou reinicie o PC. |
 
 ---
 
-## 🔐 HTTPS automático
+## 9. Roteiro rápido para a aula
 
-O Chrome só permite **instalar o PWA** em *contextos seguros* (HTTPS ou localhost).
-Para isso, o servidor cuida de tudo sozinho:
+### Preparação (5 minutos antes)
 
-- **Gera** o certificado em `server/ssl/` (`key.pem` + `cert.pem`) se ele não existir.
-- **Regenera** automaticamente quando:
-  - o **IP da máquina mudou** (compara o campo SAN do certificado com os IPs atuais);
-  - o certificado está a **menos de 7 dias** de expirar;
-  - o arquivo está corrompido.
-- Usa o OpenSSL do **Git for Windows** (ou o que estiver no PATH, ou `OPENSSL_PATH`).
-- **Redireciona** acessos HTTP feitos pela rede (IP) para o HTTPS equivalente.
-  `localhost` permanece em HTTP para não atrapalhar testes locais.
-- Escuta **HTTP na porta 3000** e **HTTPS na porta 3443** ao mesmo tempo, com o mesmo
-  código de arquivos estáticos e o mesmo servidor WebSocket (`ws://` e `wss://`).
-- As conexões WebSocket usam automaticamente o protocolo da página
-  (`wss://` quando a página é HTTPS).
+1. Ligue o computador e execute o `iniciar.bat`.
+2. Abra `http://localhost:3000` e faça login com um e-mail de professor.
+3. Crie a sala **Turma A**.
+4. Deixe a janela preta aberta e anote o endereço HTTPS da rede.
+5. Peça aos alunos para acessar o endereço no celular ou em outro computador.
 
-### Variáveis de ambiente úteis
+### Demonstração 1 — o servidor lê tudo (texto claro)
 
-| Variável | Padrão | Efeito |
-|---|---|---|
-| `PORT` | `3000` | Porta HTTP |
-| `HOST` | `0.0.0.0` | Interface de escuta |
-| `HTTPS_PORT` | `3443` | Porta HTTPS (`0` desativa o HTTPS local) |
-| `SSL_KEY_PATH` | — | Caminho de uma chave real (ex.: Let's Encrypt) |
-| `SSL_CERT_PATH` | — | Caminho do certificado real correspondente |
-| `OPENSSL_PATH` | — | Caminho do `openssl.exe`, se não estiver no PATH |
+1. Aluno A e aluno B entram na mesma sala.
+2. Aluno A escolhe **Sem criptografia** e envia "A prova é amanhã".
+3. Abra a **Sala ADM** (botão no topo; no celular, no menu ☰).
+4. A mensagem aparece em texto claro, destacada em **verde**: o servidor viu
+   tudo.
 
-### Produção (domínio real, sem aviso de certificado)
+### Demonstração 2 — a chave viaja junto (César)
 
-- **Render/Plesk/proxy reverso:** o TLS já é terminado pela plataforma. Defina
-  `HTTPS_PORT=0` para não abrir a porta 3443 com certificado autoassinado.
-- **VPS com domínio:** aponte `SSL_KEY_PATH` e `SSL_CERT_PATH` para os arquivos do
-  Let's Encrypt (Certbot). Aí a instalação do app é **100% silenciosa**, sem aviso.
-- **Rede local (escola):** recomenda-se **IP fixo** (reserva DHCP) no PC servidor.
-  Se o IP mudar, o certificado é regenerado, mas os celulares precisam aceitar o
-  aviso de novo.
+1. Aluno A escolhe **Cifra de César**, chave `3`, e envia `OLA`.
+2. Na Sala ADM, a mensagem aparece com o texto cifrado e a chave `3`.
+3. Clique em **🔓 Descriptografar**: o servidor lê `OLA`.
+4. Aluno B vê a mensagem já descriptografada: a chave chegou junto no pacote.
+5. Explique: a chave viajou junto com a mensagem; por isso o servidor também
+   consegue abrir.
 
----
+### Demonstração 3 — ponta a ponta (E2E)
 
-## 📱 Instalação como app (PWA)
+1. Aluno A escolhe **E2E — RSA-2048** ou **E2E — ECC P-256**.
+2. Envie uma mensagem.
+3. Na Sala ADM, ela aparece em **vermelho**, cifrada, sem botão para abrir.
+4. Explique: a chave privada nunca saiu do navegador do aluno. O servidor viu
+   apenas o texto cifrado.
 
-O botão fica **ao lado da logo**, no topo, e aparece **somente no navegador**
-(nunca dentro do app instalado):
+### Demonstração 4 — sala vazia desaparece
 
-| Estado detectado | Botão | Ação |
-|---|---|---|
-| App não instalado | **📱 Instalar** | Instala (prompt nativo do Chrome/Edge) |
-| App já instalado, aberto no navegador | **📱 Abrir app** | Abre a versão instalada e tenta fechar a aba |
-| Dentro do app (standalone) | *oculto* | — |
-| Usuário clicou no **✕** | *oculto na sessão* | Volta após logout/login |
+1. Todos saem da sala **Turma A**.
+2. A sala some da lista de salas.
+3. Explique: o servidor não guarda histórico nem salas vazias.
 
-### Como o "Abrir app" funciona
+### Regras que os alunos precisam saber
 
-O navegador **não oferece API** para iniciar um PWA instalado nem para fechar uma
-aba que não foi aberta por script. A implementação usa o melhor caminho por
-plataforma:
+- **30 minutos sem interagir** → logout automático.
+- **Um e-mail por vez**: o mesmo e-mail não pode estar logado em dois aparelhos
+  ao mesmo tempo (abas do mesmo navegador são permitidas).
+- **Nomes únicos**: se dois alunos tiverem o mesmo nome, o sistema acrescenta um
+  número (`Maria`, `Maria2`…).
+- **Mensagens não ficam salvas**: ao sair da sala, o histórico desaparece. Se
+  precisar de registro, use o botão 🖨️ para imprimir o relatório.
+- **@nome** envia mensagem direta; **#nome** menciona em público.
 
-- **Android (Chrome/Edge, HTTPS):** `intent://` apontando para o escopo do WebAPK.
-  O Android entrega o link ao app instalado; se o app não responder, o
-  `browser_fallback_url` devolve `?abrir=app&falhou=1` e o app mostra as
-  instruções ("abra pelo ícone na tela inicial").
-- **iPhone/iPad:** overlay com instruções (o Safari não permite iniciar o PWA
-  por link) e botão **Fechar esta aba**.
-- **Desktop:** overlay sugerindo **Abrir no app** da barra de endereço ou o
-  atalho instalado no sistema.
+### Conceitos que a aula demonstra
 
-Sempre que possível o código chama `window.close()`. Ele **só funciona** em abas
-abertas por script; nas demais o overlay informa que é preciso fechar pela **✕**
-da aba. Ao carregar `?abrir=app` dentro do app instalado, a URL é limpa com
-`history.replaceState` para não deixar parâmetros visíveis.
-
-### Android (Chrome)
-
-1. Abra `https://IP-DO-PC:3443` (o acesso HTTP pela rede já redireciona).
-2. Aceite o aviso de certificado **uma vez**.
-3. Faça login → toque em **📱 Instalar** → confirme no diálogo do Chrome.
-4. O app aparece na tela inicial com ícone próprio e abre em tela cheia.
-
-### iPhone / iPad (Safari)
-
-O iOS não oferece prompt de instalação por código. O botão **📱 Instalar** mostra as
-instruções: **Compartilhar (□↑) → Adicionar à Tela de Início → Adicionar**.
-
-### Atualizações
-
-- O app verifica `version.json` ao abrir.
-- Quando há versão nova, surge o botão **🔄** no topo (e/ou o app recarrega sozinho).
-- Ao voltar o foco para a página (ou `visibilitychange`), a atualização é verificada.
-- No celular, **puxar para atualizar** também dispara a checagem.
-- O Service Worker faz `skipWaiting` + `controllerchange` e recarrega automaticamente.
-
-### Versão do app (mantenedores)
-
-Ao publicar mudanças, mantenha os três sincronizados:
-
-1. `index.html` → `APP_VERSION` / `APP_BUILD`
-2. `sw.js` → `APP_VERSION` e `CACHE_NAME` (incremente `v1`, `v2`, …)
-3. `version.json` → `version` / `build`
-
-Depois rode `npm run sync` (ou `npm start`, que já sincroniza).
+1. **Criptografia simétrica**: a mesma chave cifra e decifra.
+2. **Confidencialidade**: sem a chave, não é possível ler a mensagem.
+3. **Canal inseguro**: o servidor não consegue ler mensagens E2E.
+4. **Força bruta**: César cai com 26 tentativas; AES-256 é inviável.
+5. **Autenticação**: login por e-mail + código OTP de 6 dígitos.
+6. **HTTPS e certificados**: o cadeado do navegador protege a conexão.
+7. **PWA**: instalar um site como app, sem loja de aplicativos.
+8. **Troca de chaves**: como dois dispositivos chegam ao mesmo segredo sem
+   enviá-lo pela rede (ECDH na demonstração; Diffie–Hellman com números
+   pequenos no Guia).
 
 ---
 
-## 🧑‍🎓 Como usar (aluno)
+## 10. Funcionalidades
 
-1. **Abra o cripto.chat** no endereço informado pelo professor (ou pelo ícone do app,
-   se já instalou).
-2. **Digite seu e-mail** e toque em **Enviar código**.
-3. **Pegue o código de 6 dígitos**: ele chega por e-mail ou aparece na tela quando o
-   professor está com o **MODO DEMO** ligado. Vale por 5 minutos.
-4. **Entre em uma sala**: crie uma sala nova ou toque em uma da lista.
-5. **Converse**: escolha o algoritmo no combo, digite a chave (quando houver) e envie.
+### Autenticação e salas
 
-Dicas rápidas:
-
-- Use `@nome` para mensagem direta e `#nome` para mencionar alguém em público.
-- **30 minutos sem interagir** = logout automático.
-- Se o celular apagar a tela, você sai da sala e **volta sozinho** ao reabrir —
-  perde apenas as mensagens do intervalo.
-- Se todos saírem, a sala é apagada.
-
----
-
-## ✨ Funcionalidades
-
-### Autenticação
-- Login com email + código OTP de 6 dígitos (validade de 5 minutos)
-- **Padrão:** o código é enviado por email (SMTP)
-- **Opcional (MODO DEMO):** o código é exibido na própria tela, sem envio de email
-  - Ative pelo botão **MODO DEMO DESLIGADO** na tela de login, com a senha mestre
-  - O botão só aparece quando o servidor está conectado
-  - Senha padrão: `cripto2024` (hash SHA-256 em `server/demo-config.json`)
-- Variáveis SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-
-### Salas de Bate-Papo
-- **Somente salas públicas**: não existem salas privadas nem salas com senha
-- A lista de salas é enviada a todos os usuários logados
-- As mensagens são entregues **em tempo real**; o servidor não guarda banco de dados
-  nem histórico. O navegador mantém apenas uma cópia local (últimas 200) para o relatório
-
-### Regras do chat
-- **Sala vazia é excluída**: se o último participante sair, a sala deixa de existir
-- **30 minutos de inatividade**: o usuário é desconectado da sala e faz logoff
-- Salas públicas visíveis para todos os usuários autenticados
-- **Um e-mail por vez**: não é possível fazer login com um e-mail que já tenha
-  sessão ativa. A tentativa é recusada com aviso — feche a outra aba/aparelho e
-  tente de novo. *(Abas do mesmo usuário que restauram a sessão continuam
-  permitidas — necessário para refresh e para a Sala ADM.)*
-- **Nomes únicos**: se o nome derivado do e-mail já existir, o sistema acrescenta
-  numeração (`Maria`, `Maria2`, `Maria3`…). A mesma regra vale na troca de nome;
-  o servidor devolve o nome final e o app avisa quando houve ajuste.
+- Login com e-mail + código OTP de 6 dígitos (validade de 5 minutos).
+- **MODO DEMO:** o código aparece na tela, sem envio de e-mail.
+- **Somente salas públicas**: não existem salas privadas nem salas com senha.
+- A lista de salas é enviada a todos os usuários logados.
+- **Sala vazia é excluída**: se o último participante sair, a sala deixa de
+  existir.
+- **30 minutos de inatividade**: o usuário é desconectado e faz logoff.
+- O servidor não guarda banco de dados nem histórico. O navegador mantém apenas
+  uma cópia local (últimas 200 mensagens) para o relatório.
 
 ### Mensagens
-- **Normal**: visível para todos na sala
-- **Com @usuario**: mensagem direta (só o destinatário lê)
-- **Com #usuario**: menção pública (todos veem, usuário é destacado)
+
+- **Normal**: visível para todos na sala.
+- **Com `@usuario`**: mensagem direta (só o destinatário lê).
+- **Com `#usuario`**: menção pública (todos veem, o usuário é destacado).
 
 ### Criptografia
-O usuário escolhe o algoritmo antes de enviar:
-- **Sem criptografia**: texto claro (visível para todos e para o ADM)
-- **Cifra de César**: deslocamento de letras por N posições
-- **Cifra de Vigenère**: usa palavra-chave para variar deslocamento
-- **XOR**: operação bit a bit com chave
-- **AES-256**: criptografia forte (simplificada para demonstração)
-- **E2E RSA-2048 / ECC P-256**: a chave privada nunca sai do navegador
 
-### Sala ADM
-Representa a visão do servidor:
-- **Mensagem sem criptografia**: aparece em texto claro (verde)
-- **Mensagem simétrica**: o servidor vê a chave que viaja junto (amarelo)
-- **Mensagem E2E**: aparece cifrada (vermelho) — o servidor não tem a chave
+| Opção no combo | Chave | A Sala ADM consegue ler? |
+|---|---|---|
+| Sem criptografia | — | **Sim**, em texto claro (verde) |
+| Cifra de César | deslocamento (0–25) | **Sim**, porque a chave viaja junto |
+| Cifra de Vigenère | palavra-chave | **Sim**, porque a chave viaja junto |
+| XOR | chave de texto | **Sim**, porque a chave viaja junto |
+| AES-256-GCM | senha | **Sim na demonstração**, porque a chave viaja junto |
+| E2E — RSA-2048 | par de chaves | **Não**: só a chave privada do navegador abre |
+| E2E — ECC P-256 | par de chaves | **Não**: só a chave privada do navegador abre |
 
-### Proteções de sessão
-- **F5 / Ctrl+R bloqueados** silenciosamente (evita recarregar e sair da sala sem querer)
-- **Recarregar** pelo botão do navegador, fechar aba ou puxar para atualizar
-  mostra o diálogo nativo de confirmação (exigência de segurança do navegador)
-- **Logout** somente pelo botão **Sair** — e, dentro de uma sala, com confirmação
-- **30 minutos** sem interação → logoff automático
-- **Suspensão do celular**: quando o Android/iOS suspende o navegador/app
-  (tela apagada ou segundo plano), a conexão cai e o servidor remove o usuário
-  da sala — se for o último, a sala é apagada. É esperado.
-- **Recuperação automática**: ao voltar ao app, o cliente testa o WebSocket
-  (ping/pong), reconecta se necessário e reentra na mesma sala sozinho. Se a
-  sala foi apagada, volta ao painel principal; se a sessão foi perdida, volta
-  ao login.
-- **O que se perde na suspensão**: apenas as mensagens trocadas durante o
-  intervalo em que o aparelho esteve suspenso. O histórico que já estava na
-  tela continua visível, e o envio/recebimento volta assim que reconecta —
-  não há banco de dados nem histórico no servidor para reenviar o intervalo.
+> No AES da demonstração, a chave é enviada junto para que os colegas consigam
+> ler. Em um sistema real, a chave nunca viajaria com a mensagem.
 
-### Interface
-- Altura do chat calculada dinamicamente (janela − topo − rodapé − padding)
-- Campo de mensagem com 2 linhas; combo de criptografia + botão **Enviar** lado a lado
-- Cabeçalho do chat compacto, com ícone 🖨️ para imprimir o relatório
-- Logo com indicador de conexão: **borda e brilho verdes** (online) ou
-  **vermelhos piscando** (offline)
-- Layout responsivo para celular
-- Botão de instalação do PWA ao lado da logo (ver seção acima)
+### Interface e recursos
+
+- Layout responsivo para celular e computador.
+- Instalação como app (PWA) ao lado da logo, quando o navegador permite.
+- Indicador de conexão na logo: borda e brilho **verdes** (online) ou
+  **vermelhos piscando** (offline).
+- Botão 🖨️ para imprimir o relatório da conversa.
+- **Guia Educacional** e **📖 Doc** disponíveis antes e depois do login.
+- Recuperação automática da sessão e da sala quando o celular volta do segundo
+  plano.
+- Proteções de sessão: F5/Ctrl+R bloqueados, logout apenas pelo botão **Sair** e
+  logoff automático por inatividade.
+
+### Guia do aluno
+
+O texto do **📖 Doc** fica em `docs/documentacao.md`, escrito com palavras
+simples para crianças a partir de 5 anos. A página também tem o botão
+**Gerar PDF**. Para alterar o guia, edite apenas esse arquivo e rode
+`npm run sync`.
 
 ---
 
-## 🎭 Demonstração para Apresentação
+## 11. Privacidade e LGPD
 
-### Cenário 1: Mensagem em Texto Claro
-1. Abra o servidor
-2. Crie uma sala pública
-3. Entre com dois usuários diferentes
-4. Envie mensagem sem criptografia
-5. Abra a Sala ADM → mensagem aparece legível
-
-### Cenário 2: Mensagem Criptografada
-1. Escolha "Cifra de César" no combo
-2. Defina chave = 3
-3. Envie mensagem
-4. Abra a Sala ADM → mensagem aparece cifrada (ex: "Olá" → "Rocá")
-5. Para ler, o destinatário precisa: algoritmo = César, chave = 3
-
-### Cenário 3: Sala Pública e Sala Vazia
-1. Crie uma sala pública "Turma A"
-2. Abra outra aba com outro usuário → a sala "Turma A" aparece na lista dele
-3. Todos entram e conversam
-4. Se todos saírem, a sala desaparece da lista (sala vazia = excluída)
-
-### Cenário 4: MODO DEMO (OTP na tela)
-1. Clique em **MODO DEMO DESLIGADO** (na tela de login) e digite a senha mestre
-2. Faça logout e digite um email
-3. O código de 6 dígitos aparece na tela (não vai por email)
-4. Digite o código e entre
-
-### Cenário 5: Inatividade de 30 minutos
-1. Entre em uma sala e fique 30 minutos sem interagir
-2. O servidor desconecta a sessão e avisa
-3. Faça login novamente para voltar
-
-### Cenário 6: Instalar o app no celular
-1. No celular, acesse `https://IP-DO-PC:3443`
-2. Aceite o certificado uma vez (Avançados → Continuar)
-3. Faça login → **📱 Instalar** → confirme
-4. Abra o app pela tela inicial: sem barra de navegador
-5. No navegador, o botão passa a mostrar **📱 Abrir app**
-
----
-
-## 📄 Documentação de Uso (página "Documentação")
-
-Existe um guia de uso escrito com palavras simples, para alunos **a partir de 5 anos**:
-
-- **Arquivo:** `docs/documentacao.md` (fonte única do texto)
-- **Página no app:** clique em **📖 Doc** no topo — o botão aparece antes e depois do
-  login. A página também tem um botão flutuante **Gerar PDF**.
-- A página busca o arquivo e o renderiza como texto formatado (títulos, listas, citações).
-
-Para alterar o guia, edite apenas `docs/documentacao.md` e rode `npm run sync`.
-
----
-
-## 🔒 Privacidade, LGPD e ECA Digital
-
-O cripto.chat foi pensado para uso escolar e segue, de forma proporcional ao projeto, o
-**Marco Civil da Internet (Lei 12.965/2014)**, a **LGPD (Lei 13.709/2018)** e a
-**Lei 15.211/2025 (ECA Digital)**.
+O cripto.chat foi pensado para uso escolar e segue, de forma proporcional ao
+projeto, o **Marco Civil da Internet (Lei 12.965/2014)**, a **LGPD (Lei
+13.709/2018)** e a **Lei 15.211/2025 (ECA Digital)**.
 
 ### O que o app faz
 
-- **Consentimento no primeiro acesso:** aceitar tudo, aceitar só o essencial ou rejeitar.
-  Quem rejeita não faz login, mas continua podendo ler o Guia Educacional e usar a Demonstração.
-- **Sem cookies:** o site não usa cookies. Um aviso informativo e fechável explica que apenas o
-  `localStorage` do navegador é usado.
-- **Conversas não são armazenadas:** o servidor mantém salas, usuários e mensagens apenas em
-  memória. Ao sair da sala (ou quando ela fica vazia), o histórico desaparece. A guarda de
-  cópias é responsabilidade de quem as faz.
-- **Confirmação de idade após o login:** 18+, 16–17 ou menos de 16. Menores de 16 precisam de
-  autorização de um responsável (nome + e-mail + declaração); sem ela, ficam em **modo leitura**
-  (Guia/Demonstração, salas bloqueadas).
-- **Painel 🔒 Privacidade:** mostra o consentimento e a idade, permite revisar a escolha, abrir o
-  documento completo, pedir exclusão no servidor e apagar os dados do navegador.
-- **Registro de auditoria:** o servidor grava `server/consentimentos.jsonl` (uma linha por
-  aceite/recusa/idade), com retenção de **6 meses**, acesso restrito e exclusão sob solicitação.
+- **Consentimento no primeiro acesso:** aceitar tudo, aceitar só o essencial ou
+  rejeitar. Quem rejeita não faz login, mas continua podendo ler o Guia
+  Educacional.
+- **Sem cookies:** o site não usa cookies. Um aviso informativo e fechável
+  explica que apenas o `localStorage` do navegador é usado.
+- **Conversas não são armazenadas:** o servidor mantém salas, usuários e
+  mensagens apenas em memória. Ao sair da sala (ou quando ela fica vazia), o
+  histórico desaparece.
+- **Confirmação de idade após o login:** 18+, 16–17 ou menos de 16. Menores de
+  16 precisam de autorização de um responsável (nome, e-mail e declaração); sem
+  ela, ficam em **modo leitura** (Guia/Demonstração, salas bloqueadas).
+- **Painel 🔒 Privacidade:** mostra o consentimento e a idade, permite revisar a
+  escolha, abrir o documento completo, pedir exclusão no servidor e apagar os
+  dados do navegador.
+- **Registro de auditoria:** o servidor grava `server/consentimentos.jsonl`
+  (uma linha por aceite/recusa/idade), com retenção de **6 meses**.
 
 ### Quem é o controlador (importante para quem instala)
 
-O cripto.chat é **software de código aberto**. O autor **não é controlador** dos dados das
-instalações feitas por terceiros e **não tem acesso** a elas.
+O cripto.chat é um projeto educacional de código aberto. O autor **não é
+controlador** dos dados das instalações feitas por terceiros e **não tem
+acesso** a elas.
 
-**Quem instala e mantém uma cópia é o controlador dos dados** perante a LGPD (art. 5º, VI) —
-em geral a escola, a instituição, o professor ou a pessoa que disponibilizou o endereço. Essa
-pessoa ou instituição deve:
+**Quem instala e mantém uma cópia é o controlador dos dados** perante a LGPD
+(art. 5º, VI) — em geral a escola, a instituição, o professor ou a pessoa que
+disponibilizou o endereço. Essa pessoa ou instituição deve:
 
-1. **divulgar um canal de contato** para pedidos de privacidade (o documento e o app não trazem
-   um e-mail fixo justamente porque cada instalação é autônoma);
-2. **manter visível o crédito de autoria** ao desenvolvedor, como consta no rodapé e na tela de
-   login: *“Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná”*;
-3. responder aos pedidos de titulares e responsáveis e aplicar a exclusão dos registros.
+1. **divulgar um canal de contato** para pedidos de privacidade (o documento e
+   o app não trazem um e-mail fixo justamente porque cada instalação é
+   autônoma);
+2. **manter visível o crédito de autoria** ao desenvolvedor, como consta no
+   rodapé e na tela de login: *“Desenvolvido por Marlon Antonio Stoeberl — Rio
+   Negro, Paraná”*;
+3. responder aos pedidos de titulares e responsáveis e aplicar a exclusão dos
+   registros.
 
-O crédito de autoria não transfere ao autor a responsabilidade pelo tratamento de dados nem a
-condição de controlador.
+O crédito de autoria não transfere ao autor a responsabilidade pelo tratamento
+de dados nem a condição de controlador.
 
 ### Documento completo
 
-O texto jurídico (Termos de Uso, Política de Privacidade, Cookies, ECA Digital, Marco Civil,
-direitos do titular e histórico de versões) fica em **`privacidade.html`**, publicado junto com
-o app e linkado no modal de consentimento, na tela de login e no rodapé.
+O texto jurídico (Termos de Uso, Política de Privacidade, Cookies, ECA Digital,
+Marco Civil, direitos do titular e histórico de versões) fica em
+**`privacidade.html`**, publicado junto com o app e linkado no modal de
+consentimento, na tela de login e no rodapé.
 
 ### Exclusão de registros (responsável)
 
@@ -408,99 +502,36 @@ node scripts/limpar-consentimentos.js --email=aluno@exemplo.com
 node scripts/limpar-consentimentos.js --todos
 ```
 
-> **Limite declarado:** a verificação de idade é **declaratória**. O projeto não coleta
-> documentos, não usa reconhecimento facial e não consulta bases externas. Em um serviço
-> comercial, seria necessário um mecanismo mais robusto. O uso em sala de aula deve ser
-> acompanhado pelo professor.
+> **Limite declarado:** a verificação de idade é **declaratória**. O projeto não
+> coleta documentos, não usa reconhecimento facial e não consulta bases
+> externas. O uso em sala de aula deve ser acompanhado pelo professor.
 
 ---
 
-## 🗂️ Estrutura do Projeto
+## 12. Para mantenedores
 
-```
-cripto.chat/
-├── index.html                    # Interface completa (fonte única — GitHub Pages)
-├── privacidade.html              # Termos, LGPD, cookies e ECA Digital
-├── manifest.json                 # Manifesto PWA (ícones, atalhos, modo standalone)
-├── sw.js                         # Service Worker (cache, offline e auto-atualização)
-├── version.json                  # Versão atual (checada pelo app ao abrir)
-├── icons/                        # Ícones PWA (192/512, normal e maskable)
-├── docs/
-│   └── documentacao.md           # Guia de uso (exibido na página Documentação)
-├── scripts/
-│   ├── sync-public.js            # Copia a raiz → server/public (npm run sync)
-│   ├── limpar-consentimentos.js  # Exclusão de registros (LGPD art. 18)
-│   └── gerar-certificado.ps1     # (Opcional) regenera o certificado manualmente
-├── server/
-│   ├── server.js                 # HTTP + HTTPS + WebSocket, OTP, salas e ADM
-│   ├── .env / .env.example       # Variáveis de ambiente (SMTP, portas, SSL)
-│   ├── demo-config.json          # Senha mestre (hash) + flag do MODO DEMO
-│   ├── consentimentos.jsonl      # Registro LGPD (gerado em runtime; não versionado)
-│   ├── ssl/                      # Certificado autoassinado (gerado automaticamente)
-│   │   ├── key.pem
-│   │   └── cert.pem
-│   └── public/                   # Cópia servida pelo servidor (gerada pelo sync)
-├── iniciar.bat                   # Início em 1 clique (Windows)
-├── generate-icons.js             # Regenera os ícones PNG a partir de icons/icon.svg
-├── render.yaml                   # Deploy no Render
-├── package.json
-├── README.md
-├── .gitignore
-└── .gitattributes
-```
+Os detalhes técnicos (scripts, HTTPS automático, variáveis de ambiente,
+estrutura, deploy e atualização do PWA) estão em
+**[MANUTENCAO.md](MANUTENCAO.md)**.
+
+Resumo rápido:
+
+- `npm start` sobe o servidor e sincroniza `server/public`; `npm run sync` faz
+  apenas a sincronização.
+- Antes de publicar, atualize `index.html` (`APP_VERSION`/`APP_BUILD`), `sw.js`
+  (`APP_VERSION`/`CACHE_NAME`) e `version.json`, e rode o sync.
+- **GitHub Pages** funciona sem servidor (abas via `BroadcastChannel`).
+  **Render** já está configurado em `render.yaml`. **VPS/Plesk** usa
+  `SSL_KEY_PATH`/`SSL_CERT_PATH` com Let's Encrypt.
+- Nunca versione `server/.env`, `server/ssl/` nem
+  `server/consentimentos.jsonl` — eles já estão no `.gitignore`.
 
 ---
 
-## 🌐 Deploy
+## Créditos
 
-### GitHub Pages (modo BroadcastChannel)
+**Desenvolvido por Marlon Antonio Stoeberl — Rio Negro, Paraná.**
 
-O projeto está disponível em: **https://devtriton.github.io/cripto.chat/**
-
-No GitHub Pages não há servidor: as abas conversam via `BroadcastChannel`.
-- Abra a página em **múltiplas abas ou janelas**
-- Cada aba representa um usuário diferente
-- As mensagens são trocadas entre as abas sem servidor
-
-```bash
-git add .
-git commit -m "descricao das mudancas"
-git push origin master
-```
-
-O GitHub Pages atualiza automaticamente em ~1 minuto após o push.
-
-### Servidor próprio
-
-- **Windows/LAN (professores):** use `iniciar.bat`; acesse pelo IP do PC.
-- **Render:** já configurado em `render.yaml`. Defina `HTTPS_PORT=0` (TLS gerenciado).
-- **VPS/Plesk com domínio:** use `SSL_KEY_PATH`/`SSL_CERT_PATH` com Let's Encrypt
-  para instalação do app sem aviso de certificado.
-
----
-
-## 🧰 Solução de problemas
-
-| Sintoma | Causa provável | Solução |
-|---|---|---|
-| Botão **Instalar** só mostra instruções | Página aberta em HTTP | Use HTTPS (`https://IP:3443`). Pela rede, o redirecionamento é automático |
-| Chrome não mostra "Instalar app" no menu | Site em HTTP (não é contexto seguro) | Acesse por HTTPS |
-| Aviso "Sua conexão não é particular" | Certificado autoassinado | Normal em rede local: **Avançados → Continuar** (uma vez por aparelho) |
-| Ícone do app continua o antigo | Cache/instalação anterior | Desinstale o app, limpe o cache do Chrome e reinstale |
-| App não pega a versão nova | Service Worker em cache | Toque no **🔄** no topo, feche e abra o app, ou puxe para atualizar |
-| "Já existe um cripto.chat rodando" | Porta 3000 ocupada | Feche a outra janela do servidor ou reinicie o PC |
-| Logo vermelha e piscando | Servidor desconectado | Verifique se o servidor está ligado e a conexão de rede |
-| Certificado deixou de valer após mudar o IP | IP novo fora do SAN | Reinicie o servidor (regenera sozinho) e aceite o aviso de novo |
-| SMTP não configurado | Sem credenciais de email | Ative o MODO DEMO ou configure `SMTP_*` em `server/.env` |
-
----
-
-## 🎓 Conceitos Educacionais Demonstrados
-
-1. **Criptografia Simétrica**: mesma chave para cifrar e decifrar
-2. **Confidencialidade**: sem a chave, não é possível ler a mensagem
-3. **Canal inseguro**: o servidor "confiável" não consegue ler mensagens E2E
-4. **Força Bruta**: César é vulnerável (só 26 chaves), AES é seguro (2^256 chaves)
-5. **Autenticação**: login por email + código OTP de 6 dígitos (uso único, 5 minutos)
-6. **HTTPS e certificados**: como o cadeado do navegador protege a conexão
-7. **PWA**: instalar um site como app, sem loja de aplicativos
+Projeto educacional para demonstração de criptografia em sala de aula, no
+contexto da Licenciatura em Computação da **UTFPR — Universidade Tecnológica
+Federal do Paraná**.

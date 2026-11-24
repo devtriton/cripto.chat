@@ -218,7 +218,7 @@ conectado.
 Ao publicar mudanças, mantenha os três atualizados:
 
 1. `index.html` → `APP_VERSION` / `APP_BUILD`
-2. `sw.js` → `APP_VERSION` e `CACHE_NAME` (incremente `v11`, `v12`, …)
+2. `sw.js` → `APP_VERSION` e `CACHE_NAME` (incremente `v12`, `v13`, …)
 3. `version.json` → `version` / `build`
 
 Depois rode `npm run sync` (ou `npm start`, que já sincroniza).

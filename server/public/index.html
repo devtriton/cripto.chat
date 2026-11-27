@@ -900,6 +900,16 @@ body {
             transition: border-color 0.15s, background 0.15s;
         }
         .consent-item:hover { border-color: rgba(var(--acento-rgb), 0.45); }
+        .consent-item.invalido {
+            border-color: rgba(198, 40, 40, 0.6);
+            background: rgba(198, 40, 40, 0.08);
+        }
+        .consent-item.invalido .consent-item-txt,
+        .consent-item.invalido .consent-item-txt strong { color: var(--vermelho-txt); }
+        .consent-item.invalido .consent-tag.obrig { background: rgba(198, 40, 40, 0.18); color: var(--vermelho-txt); }
+        .consent-campo.invalido label { color: var(--vermelho-txt); }
+        .consent-campo.invalido input { border-color: var(--vermelho-txt); }
+        .consent-erro { color: var(--vermelho-txt); font-size: 12.5px; font-weight: 600; margin: 6px 0 0; }
         .consent-item input[type="checkbox"],
         .consent-item input[type="radio"] {
             flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px;
@@ -2205,8 +2215,12 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                     <a href="privacidade.html#cookies" target="_blank" rel="noopener">Ver detalhes</a>.
                 </div>
 
+                <p id="consentErro" class="consent-erro hidden" role="alert">
+                    Marque os itens obrigatórios destacados em vermelho para continuar.
+                </p>
+
                 <div class="consent-acoes">
-                    <button id="consentAceitar" class="btn-primary" onclick="aceitarConsentimento(true)" disabled>
+                    <button id="consentAceitar" class="btn-primary" onclick="aceitarConsentimento(true)">
                         Aceitar e continuar
                     </button>
                     <button class="btn-secondary" onclick="aceitarConsentimento(false)">
@@ -2322,8 +2336,12 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
                 </span>
             </label>
 
+            <p id="idadeErro" class="consent-erro hidden" role="alert">
+                Marque os itens obrigatórios destacados em vermelho para continuar.
+            </p>
+
             <div class="consent-acoes">
-                <button id="idadeConfirmar" class="btn-primary" onclick="confirmarIdade()" disabled>
+                <button id="idadeConfirmar" class="btn-primary" onclick="confirmarIdade()">
                     Confirmar e entrar
                 </button>
                 <button id="idadeSoLeitura" class="btn-secondary hidden" onclick="entrarModoLeitura()">
@@ -2390,8 +2408,8 @@ Rápida                                     Mais lenta (por isso o AES cuida do 
         // ESTADO GLOBAL
         // ============================================================
         // Versão do app (atualizar a cada release)
-        const APP_VERSION = '2.5.0';
-        const APP_BUILD = '2026-11-24';
+        const APP_VERSION = '2.5.1';
+        const APP_BUILD = '2026-11-27';
         const MODO = detectarModo();
         let canal = null;
         let currentUser = null;
@@ -5379,11 +5397,44 @@ Assinatura do Aluno: _________________________________________________
     // ------------------------------------------------------------
     // CONSENTIMENTO DE USO (LGPD)
     // ------------------------------------------------------------
-    function atualizarBotaoConsent() {
+    let consentValidacaoAtiva = false;
+
+    function marcarItemConsent(input, invalido) {
+        if (!input) return;
+        input.setAttribute('aria-invalid', invalido ? 'true' : 'false');
+        const item = input.closest('.consent-item') || input.closest('.consent-campo');
+        if (item) item.classList.toggle('invalido', !!invalido);
+    }
+
+    function limparValidacaoConsent() {
+        document.querySelectorAll('#consentForm .consent-item.invalido, #consentForm .consent-campo.invalido')
+            .forEach((el) => el.classList.remove('invalido'));
+        document.querySelectorAll('#consentForm [aria-invalid="true"]')
+            .forEach((el) => el.setAttribute('aria-invalid', 'false'));
+        const erro = document.getElementById('consentErro');
+        if (erro) erro.classList.add('hidden');
+    }
+
+    // Valida os itens obrigatórios e pinta em vermelho o que estiver faltando.
+    function validarConsentimento() {
         const termos = document.getElementById('consentTermos');
         const dados = document.getElementById('consentDados');
-        const btn = document.getElementById('consentAceitar');
-        if (btn) btn.disabled = !(termos && termos.checked && dados && dados.checked);
+        const erro = document.getElementById('consentErro');
+        const termosOk = !!(termos && termos.checked);
+        const dadosOk = !!(dados && dados.checked);
+
+        marcarItemConsent(termos, !termosOk);
+        marcarItemConsent(dados, !dadosOk);
+
+        const valido = termosOk && dadosOk;
+        if (erro) erro.classList.toggle('hidden', valido);
+        return valido;
+    }
+
+    function atualizarBotaoConsent() {
+        // Depois da primeira tentativa, revalida ao vivo para o vermelho sumir
+        // assim que o usuário marcar o item que faltava.
+        if (consentValidacaoAtiva) validarConsentimento();
     }
 
     function aplicarEstadoConsentimento() {
@@ -5413,10 +5464,14 @@ Assinatura do Aluno: _________________________________________________
         const dados = document.getElementById('consentDados');
         const lembrar = document.getElementById('consentLembrar');
 
-        if (!termos || !dados || !termos.checked || !dados.checked) {
-            alert('Para continuar, marque os dois itens obrigatórios. Se preferir, use "Rejeitar" — o Guia Educacional continua disponível sem login.');
+        consentValidacaoAtiva = true;
+        if (!validarConsentimento()) {
+            const primeiro = document.querySelector('#consentForm .consent-item.invalido input');
+            if (primeiro) primeiro.focus();
             return;
         }
+        consentValidacaoAtiva = false;
+        limparValidacaoConsent();
 
         const lembrarEmail = comOpcionais ? !!(lembrar && lembrar.checked) : false;
         consentimentoAtual = {
@@ -5493,6 +5548,8 @@ Assinatura do Aluno: _________________________________________________
         if (termos) termos.checked = false;
         if (dados) dados.checked = false;
         if (lembrar) lembrar.checked = false;
+        consentValidacaoAtiva = false;
+        limparValidacaoConsent();
         atualizarBotaoConsent();
         aplicarEstadoConsentimento();
     }
@@ -5519,35 +5576,87 @@ Assinatura do Aluno: _________________________________________________
         return el ? el.value : null;
     }
 
-    function atualizarGateIdade() {
+    let idadeValidacaoAtiva = false;
+
+    function marcarCampoIdade(id, invalido) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('aria-invalid', invalido ? 'true' : 'false');
+        const box = el.closest('.consent-campo') || el.closest('.consent-item');
+        if (box) box.classList.toggle('invalido', !!invalido);
+    }
+
+    function limparValidacaoIdade() {
+        document.querySelectorAll('#idadeOverlay .consent-item.invalido, #idadeOverlay .consent-campo.invalido')
+            .forEach((el) => el.classList.remove('invalido'));
+        document.querySelectorAll('#idadeOverlay [aria-invalid="true"]')
+            .forEach((el) => el.setAttribute('aria-invalid', 'false'));
+        const erro = document.getElementById('idadeErro');
+        if (erro) erro.classList.add('hidden');
+    }
+
+    // Valida a faixa etária, os itens obrigatórios e (para menores) os dados
+    // do responsável, pintando em vermelho tudo o que estiver faltando.
+    function validarGateIdade() {
+        limparValidacaoIdade();
+
         const faixa = faixaSelecionada();
         const regras = document.getElementById('idadeRegras');
         const adm = document.getElementById('idadeAdm');
-        const boxResp = document.getElementById('idadeResponsavel');
-        const btn = document.getElementById('idadeConfirmar');
-        const btnLeitura = document.getElementById('idadeSoLeitura');
+        const erro = document.getElementById('idadeErro');
+        let valido = true;
 
-        if (boxResp) boxResp.classList.toggle('hidden', faixa !== 'menor');
-        if (btnLeitura) btnLeitura.classList.toggle('hidden', faixa !== 'menor');
-
-        let pode = false;
-        if (faixa === '18' || faixa === '16') {
-            pode = !!(regras && regras.checked && adm && adm.checked);
-        } else if (faixa === 'menor') {
+        if (!faixa) {
+            document.querySelectorAll('input[name="faixaIdade"]')
+                .forEach((radio) => marcarItemConsent(radio, true));
+            valido = false;
+        }
+        if (!(regras && regras.checked)) {
+            marcarItemConsent(regras, true);
+            valido = false;
+        }
+        if (!(adm && adm.checked)) {
+            marcarItemConsent(adm, true);
+            valido = false;
+        }
+        if (faixa === 'menor') {
             const nome = document.getElementById('respNome');
             const email = document.getElementById('respEmail');
             const autorizo = document.getElementById('respAutorizo');
             const nomeOk = !!(nome && nome.value.trim().length >= 3);
             const emailOk = !!(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()));
-            pode = !!(regras && regras.checked && adm && adm.checked
-                && nomeOk && emailOk && autorizo && autorizo.checked);
+
+            if (!nomeOk) { marcarCampoIdade('respNome', true); valido = false; }
+            if (!emailOk) { marcarCampoIdade('respEmail', true); valido = false; }
+            if (!(autorizo && autorizo.checked)) {
+                marcarItemConsent(autorizo, true);
+                valido = false;
+            }
         }
-        if (btn) btn.disabled = !pode;
+
+        if (erro) erro.classList.toggle('hidden', valido);
+        return valido;
+    }
+
+    function atualizarGateIdade() {
+        const faixa = faixaSelecionada();
+        const boxResp = document.getElementById('idadeResponsavel');
+        const btnLeitura = document.getElementById('idadeSoLeitura');
+
+        if (boxResp) boxResp.classList.toggle('hidden', faixa !== 'menor');
+        if (btnLeitura) btnLeitura.classList.toggle('hidden', faixa !== 'menor');
+
+        // Depois da primeira tentativa, revalida ao vivo para o vermelho sumir
+        // assim que o usuário corrigir o que faltava.
+        if (idadeValidacaoAtiva) validarGateIdade();
     }
 
     function abrirGateIdade() {
         const overlay = document.getElementById('idadeOverlay');
         if (!overlay) return;
+
+        idadeValidacaoAtiva = false;
+        limparValidacaoIdade();
 
         document.querySelectorAll('input[name="faixaIdade"]').forEach((r) => { r.checked = false; });
         ['idadeRegras', 'idadeAdm', 'respAutorizo'].forEach((id) => {
@@ -5575,9 +5684,16 @@ Assinatura do Aluno: _________________________________________________
     }
 
     function confirmarIdade() {
-        const faixa = faixaSelecionada();
-        if (!faixa) return;
+        idadeValidacaoAtiva = true;
+        if (!validarGateIdade()) {
+            const primeiro = document.querySelector('#idadeOverlay .consent-item.invalido input, #idadeOverlay .consent-campo.invalido input');
+            if (primeiro) primeiro.focus();
+            return;
+        }
+        idadeValidacaoAtiva = false;
+        limparValidacaoIdade();
 
+        const faixa = faixaSelecionada();
         const responsavel = faixa === 'menor' ? {
             nome: (document.getElementById('respNome') || {}).value ? document.getElementById('respNome').value.trim() : '',
             email: (document.getElementById('respEmail') || {}).value ? document.getElementById('respEmail').value.trim() : ''
